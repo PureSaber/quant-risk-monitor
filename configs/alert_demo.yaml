@@ -1,0 +1,14 @@
+nav:
+  source: equity
+  path: tests/fixtures/capital_curves.csv
+  column: ols
+
+rules:
+  max_drawdown: 0.10
+  daily_loss: 0.03
+  single_name_weight: 0.30
+
+holdings:
+  path: tests/fixtures/holdings_alert.csv
+  symbol_col: symbol
+  weight_col: weight
