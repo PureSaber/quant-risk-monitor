@@ -48,11 +48,13 @@ def run_check(config_path: Path) -> CheckResult:
     return _merge_results(*results) if results else CheckResult()
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Check portfolio risk rules")
-    parser.add_argument("--config", required=True)
-    parser.add_argument("--out", required=True)
-    args = parser.parse_args()
+    sub = parser.add_subparsers(dest="command", required=True)
+    check = sub.add_parser("check", help="Run risk checks")
+    check.add_argument("--config", required=True)
+    check.add_argument("--out", required=True)
+    args = parser.parse_args(argv)
 
     result = run_check(Path(args.config))
     out_path = Path(args.out)
