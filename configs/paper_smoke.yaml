@@ -1,0 +1,14 @@
+nav:
+  source: spread
+  path: ../quant-paper-sim/state/nav.csv
+  column: nav
+
+holdings:
+  path: ../quant-paper-sim/state/holdings.csv
+  symbol_col: symbol
+  weight_col: weight
+
+rules:
+  max_drawdown: 0.15
+  daily_loss: 0.05
+  single_name_weight: 0.35

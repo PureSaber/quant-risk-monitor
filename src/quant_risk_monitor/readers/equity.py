@@ -29,7 +29,7 @@ def load_spread_nav(path: Path, nav_col: str = "nav") -> pd.Series:
 
 
 def load_holdings_weights(path: Path, symbol_col: str, weight_col: str) -> pd.Series:
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, dtype={symbol_col: str})
     if symbol_col not in df.columns or weight_col not in df.columns:
         raise ValueError(f"missing columns in {path}")
     weights = pd.to_numeric(df[weight_col], errors="coerce").fillna(0.0)

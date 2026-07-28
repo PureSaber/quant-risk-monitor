@@ -8,12 +8,13 @@ from quant_risk_monitor.models import Alert, Severity
 def check_single_name_weight(weights: pd.Series, max_weight: float) -> list[Alert]:
     if weights.empty:
         return []
-    total = float(weights.sum())
-    if total <= 0:
-        return []
-    normalized = weights / total
-    worst_symbol = normalized.idxmax()
-    worst_weight = float(normalized.max())
+    w = weights.astype(float)
+    total = float(w.sum())
+    # Weights may already be portfolio fractions (sum < 1 when cash exists).
+    if total > 1.01:
+        w = w / total
+    worst_symbol = w.idxmax()
+    worst_weight = float(w.max())
     if worst_weight > max_weight:
         return [
             Alert(
