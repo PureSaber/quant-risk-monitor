@@ -19,14 +19,27 @@ def _merge_results(*results: CheckResult) -> CheckResult:
     return CheckResult(alerts=alerts)
 
 
+def _resolve_config_path(config_path: Path, raw: str) -> Path:
+    path = Path(raw)
+    if path.is_absolute():
+        return path
+    config_dir = config_path.parent
+    for base in (config_dir, config_dir.parent):
+        candidate = (base / path).resolve()
+        if candidate.is_file():
+            return candidate
+    return (config_dir / path).resolve()
+
+
 def run_check(config_path: Path) -> CheckResult:
+    config_path = config_path.resolve()
     with config_path.open(encoding="utf-8") as f:
         cfg = yaml.safe_load(f) or {}
 
     results: list[CheckResult] = []
     nav_cfg = cfg.get("nav") or {}
     if nav_cfg.get("path"):
-        path = Path(nav_cfg["path"])
+        path = _resolve_config_path(config_path, str(nav_cfg["path"]))
         source = str(nav_cfg.get("source", "equity"))
         if source == "equity":
             nav = load_capital_curve(path, str(nav_cfg.get("column", "ols")))
@@ -37,7 +50,7 @@ def run_check(config_path: Path) -> CheckResult:
     holdings_cfg = cfg.get("holdings") or {}
     if holdings_cfg.get("path"):
         weights = load_holdings_weights(
-            Path(holdings_cfg["path"]),
+            _resolve_config_path(config_path, str(holdings_cfg["path"])),
             str(holdings_cfg.get("symbol_col", "symbol")),
             str(holdings_cfg.get("weight_col", "weight")),
         )
