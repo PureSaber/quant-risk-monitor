@@ -7,7 +7,11 @@ from pathlib import Path
 import yaml
 
 from quant_risk_monitor.models import CheckResult
-from quant_risk_monitor.readers.equity import load_capital_curve, load_holdings_weights, load_spread_nav
+from quant_risk_monitor.readers.equity import (
+    load_capital_curve,
+    load_holdings_weights,
+    load_spread_nav,
+)
 from quant_risk_monitor.rules.concentration import check_single_name_weight
 from quant_risk_monitor.rules.drawdown import run_nav_rules
 
