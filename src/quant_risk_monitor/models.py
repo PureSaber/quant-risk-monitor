@@ -27,10 +27,15 @@ class Alert:
 @dataclass
 class CheckResult:
     alerts: list[Alert] = field(default_factory=list)
+    metrics: dict[str, Any] = field(default_factory=dict)
 
     @property
     def has_critical(self) -> bool:
         return any(a.severity == Severity.CRITICAL for a in self.alerts)
 
     def to_dict(self) -> dict[str, Any]:
-        return {"alerts": [a.to_dict() for a in self.alerts], "count": len(self.alerts)}
+        return {
+            "alerts": [a.to_dict() for a in self.alerts],
+            "count": len(self.alerts),
+            "metrics": self.metrics,
+        }

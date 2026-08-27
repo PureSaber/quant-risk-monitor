@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quant-risk-monitor"
-version = "0.1.0"
+version = "0.2.0"
 description = "Portfolio risk rule checker for equity and futures backtest outputs"
 readme = "README.md"
 license = { text = "MIT" }
