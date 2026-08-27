@@ -4,8 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
-import yaml
 import pandas as pd
+import yaml
 
 from quant_risk_monitor.analytics import (
     factor_exposures,
