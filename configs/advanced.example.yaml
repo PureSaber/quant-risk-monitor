@@ -1,0 +1,27 @@
+advanced:
+  returns:
+    path: fixtures/portfolio_returns.csv
+    column: net_return
+    confidence: 0.95
+  positions:
+    path: fixtures/positions.csv
+  asset_returns:
+    path: fixtures/asset_returns_wide.csv
+    date_column: date
+    shrinkage: 0.2
+    annualization: 252
+  scenarios:
+    path: fixtures/stress_scenarios.csv
+  liquidity:
+    path: fixtures/liquidity.csv
+    adv_column: average_daily_value
+    max_participation: 0.10
+  factor_exposures:
+    path: fixtures/factor_exposures.csv
+    symbol_column: symbol
+
+rules:
+  var_limit: 0.04
+  cvar_limit: 0.06
+  stress_loss_limit: 0.15
+  max_days_to_exit: 5

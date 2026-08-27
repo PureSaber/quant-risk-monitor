@@ -5,8 +5,17 @@ import json
 from pathlib import Path
 
 import yaml
+import pandas as pd
 
-from quant_risk_monitor.models import CheckResult
+from quant_risk_monitor.analytics import (
+    factor_exposures,
+    historical_var_cvar,
+    liquidity_days_to_exit,
+    risk_contributions,
+    shrink_covariance,
+    stress_test,
+)
+from quant_risk_monitor.models import Alert, CheckResult, Severity
 from quant_risk_monitor.readers.equity import (
     load_capital_curve,
     load_holdings_weights,
@@ -18,9 +27,136 @@ from quant_risk_monitor.rules.drawdown import run_nav_rules
 
 def _merge_results(*results: CheckResult) -> CheckResult:
     alerts = []
+    metrics = {}
     for r in results:
         alerts.extend(r.alerts)
-    return CheckResult(alerts=alerts)
+        metrics.update(r.metrics)
+    return CheckResult(alerts=alerts, metrics=metrics)
+
+
+def _run_advanced_checks(config_path: Path, cfg: dict) -> CheckResult:
+    advanced = cfg.get("advanced") or {}
+    if not advanced:
+        return CheckResult()
+    alerts: list[Alert] = []
+    metrics: dict = {}
+
+    returns_cfg = advanced.get("returns") or {}
+    if returns_cfg.get("path"):
+        returns = pd.read_csv(
+            _resolve_config_path(config_path, str(returns_cfg["path"]))
+        )
+        column = str(returns_cfg.get("column", "net_return"))
+        tail = historical_var_cvar(
+            returns[column], float(returns_cfg.get("confidence", 0.95))
+        )
+        metrics["tail_risk"] = {
+            "confidence": tail.confidence,
+            "var": tail.var,
+            "cvar": tail.cvar,
+            "observations": tail.observations,
+        }
+        limits = cfg.get("rules") or {}
+        for name, value in (("var", tail.var), ("cvar", tail.cvar)):
+            limit = limits.get(f"{name}_limit")
+            if limit is not None and value > float(limit):
+                alerts.append(
+                    Alert(
+                        rule_id=f"tail_{name}",
+                        severity=Severity.CRITICAL,
+                        message=f"{name.upper()} {value:.2%} exceeds {float(limit):.2%}",
+                        details={"value": value, "limit": float(limit)},
+                    )
+                )
+
+    positions_cfg = advanced.get("positions") or {}
+    weights = pd.Series(dtype=float)
+    positions = pd.DataFrame()
+    if positions_cfg.get("path"):
+        positions = pd.read_csv(
+            _resolve_config_path(config_path, str(positions_cfg["path"]))
+        )
+        if "date" in positions.columns:
+            positions = positions[positions["date"] == positions["date"].max()]
+        weights = positions.set_index("symbol")["weight"].astype(float)
+
+    scenarios_cfg = advanced.get("scenarios") or {}
+    if scenarios_cfg.get("path") and not weights.empty:
+        scenarios = pd.read_csv(
+            _resolve_config_path(config_path, str(scenarios_cfg["path"])), index_col=0
+        )
+        stressed = stress_test(weights, scenarios)
+        metrics["stress"] = stressed.to_dict(orient="index")
+        limit = (cfg.get("rules") or {}).get("stress_loss_limit")
+        if limit is not None and float(stressed["loss"].max()) > float(limit):
+            alerts.append(
+                Alert(
+                    rule_id="stress_loss",
+                    severity=Severity.CRITICAL,
+                    message="Stress loss exceeds configured limit",
+                    details={
+                        "worst_loss": float(stressed["loss"].max()),
+                        "limit": float(limit),
+                    },
+                )
+            )
+
+    liquidity_cfg = advanced.get("liquidity") or {}
+    if liquidity_cfg.get("path") and not positions.empty:
+        liquidity = pd.read_csv(
+            _resolve_config_path(config_path, str(liquidity_cfg["path"]))
+        ).set_index("symbol")
+        market_values = positions.set_index("symbol")["market_value"].astype(float)
+        report = liquidity_days_to_exit(
+            market_values,
+            liquidity[str(liquidity_cfg.get("adv_column", "average_daily_value"))],
+            max_participation=float(liquidity_cfg.get("max_participation", 0.1)),
+        )
+        metrics["liquidity"] = report.reset_index().to_dict(orient="records")
+        limit = (cfg.get("rules") or {}).get("max_days_to_exit")
+        if limit is not None and float(report["days_to_exit"].max()) > float(limit):
+            alerts.append(
+                Alert(
+                    rule_id="liquidity_days_to_exit",
+                    severity=Severity.CRITICAL,
+                    message="Portfolio cannot be liquidated within configured horizon",
+                    details={
+                        "max_days": float(report["days_to_exit"].max()),
+                        "limit": float(limit),
+                    },
+                )
+            )
+
+    asset_returns_cfg = advanced.get("asset_returns") or {}
+    if asset_returns_cfg.get("path") and not weights.empty:
+        asset_returns = pd.read_csv(
+            _resolve_config_path(config_path, str(asset_returns_cfg["path"]))
+        )
+        date_column = str(asset_returns_cfg.get("date_column", "date"))
+        if date_column in asset_returns:
+            asset_returns = asset_returns.drop(columns=date_column)
+        covariance = shrink_covariance(
+            asset_returns.reindex(columns=weights.index),
+            shrinkage=float(asset_returns_cfg.get("shrinkage", 0.2)),
+            annualization=int(asset_returns_cfg.get("annualization", 252)),
+        )
+        contribution = risk_contributions(weights, covariance)
+        metrics["risk_contributions"] = contribution.reset_index(
+            names="symbol"
+        ).to_dict(orient="records")
+
+    factor_cfg = advanced.get("factor_exposures") or {}
+    if factor_cfg.get("path") and not weights.empty:
+        factor_frame = pd.read_csv(
+            _resolve_config_path(config_path, str(factor_cfg["path"]))
+        )
+        symbol_column = str(factor_cfg.get("symbol_column", "symbol"))
+        factor_frame = factor_frame.set_index(symbol_column)
+        metrics["factor_exposures"] = {
+            str(name): float(value)
+            for name, value in factor_exposures(weights, factor_frame).items()
+        }
+    return CheckResult(alerts=alerts, metrics=metrics)
 
 
 def _resolve_config_path(config_path: Path, raw: str) -> Path:
@@ -62,7 +198,8 @@ def run_check(config_path: Path) -> CheckResult:
         alerts = check_single_name_weight(weights, max_weight)
         results.append(CheckResult(alerts=alerts))
 
-    return _merge_results(*results) if results else CheckResult()
+    results.append(_run_advanced_checks(config_path, cfg))
+    return _merge_results(*results)
 
 
 def main(argv: list[str] | None = None) -> None:
