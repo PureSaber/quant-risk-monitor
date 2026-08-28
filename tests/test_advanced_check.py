@@ -49,3 +49,26 @@ def test_advanced_check_outputs_risk_and_factor_contributions(tmp_path) -> None:
         < 1e-8
     )
     assert result.metrics["factor_exposures"]["value"] == pytest.approx(0.4)
+
+
+def test_advanced_check_reports_parametric_tail_risk_and_limit(tmp_path) -> None:
+    returns = tmp_path / "portfolio_returns.csv"
+    pd.DataFrame({"net_return": [-0.10, -0.04, 0.01, 0.02, 0.03]}).to_csv(returns, index=False)
+    config = tmp_path / "risk.yaml"
+    config.write_text(
+        yaml.safe_dump(
+            {
+                "advanced": {"returns": {"path": str(returns), "confidence": 0.95}},
+                "rules": {"parametric_var_limit": 0.0, "parametric_cvar_limit": 0.0},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_check(config)
+
+    assert result.metrics["tail_risk"]["parametric"]["var"] > 0
+    assert {alert.rule_id for alert in result.alerts} == {
+        "tail_parametric_var",
+        "tail_parametric_cvar",
+    }

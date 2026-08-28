@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quant-risk-monitor"
-version = "0.2.0"
-description = "Portfolio risk rule checker for equity and futures backtest outputs"
+version = "0.3.0"
+description = "PIT cross-asset risk policy and portfolio analytics for PureSaber research"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.10"
@@ -13,10 +13,12 @@ dependencies = [
     "pandas>=2.0",
     "numpy>=1.24",
     "pyyaml>=6.0",
+    "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@v0.6.0",
+    "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@v0.4.0",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=7.4", "ruff>=0.9.0"]
+dev = ["pytest>=7.4", "pytest-cov>=5.0", "ruff==0.16.5"]
 
 [project.scripts]
 quant-risk = "quant_risk_monitor.cli:main"
@@ -31,3 +33,11 @@ pythonpath = ["src"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+
+[tool.coverage.run]
+branch = true
+source = ["quant_risk_monitor"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
