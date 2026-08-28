@@ -14,3 +14,14 @@ def test_factor_exposure_drift_alerts() -> None:
 def test_factor_exposure_no_alert_when_stable() -> None:
     s = pd.Series({"momentum_20d": 0.2, "reversal_5d": -0.1})
     assert check_factor_exposure_drift(s, s) == []
+
+
+def test_factor_exposure_preserves_legacy_no_overlap_behavior() -> None:
+    assert check_factor_exposure_drift(pd.Series(dtype=float), pd.Series({"value": 1.0})) == []
+    assert (
+        check_factor_exposure_drift(
+            pd.Series({"value": float("nan")}),
+            pd.Series({"value": 1.0}),
+        )
+        == []
+    )

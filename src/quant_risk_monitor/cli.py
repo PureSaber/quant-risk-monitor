@@ -11,6 +11,7 @@ from quant_risk_monitor.analytics import (
     factor_exposures,
     historical_var_cvar,
     liquidity_days_to_exit,
+    parametric_var_cvar,
     risk_contributions,
     shrink_covariance,
     stress_test,
@@ -43,21 +44,37 @@ def _run_advanced_checks(config_path: Path, cfg: dict) -> CheckResult:
 
     returns_cfg = advanced.get("returns") or {}
     if returns_cfg.get("path"):
-        returns = pd.read_csv(
-            _resolve_config_path(config_path, str(returns_cfg["path"]))
-        )
+        returns = pd.read_csv(_resolve_config_path(config_path, str(returns_cfg["path"])))
         column = str(returns_cfg.get("column", "net_return"))
-        tail = historical_var_cvar(
-            returns[column], float(returns_cfg.get("confidence", 0.95))
-        )
+        tail = historical_var_cvar(returns[column], float(returns_cfg.get("confidence", 0.95)))
+        parametric_tail = parametric_var_cvar(returns[column], tail.confidence)
         metrics["tail_risk"] = {
             "confidence": tail.confidence,
             "var": tail.var,
             "cvar": tail.cvar,
             "observations": tail.observations,
+            "parametric": {
+                "var": parametric_tail.var,
+                "cvar": parametric_tail.cvar,
+                "observations": parametric_tail.observations,
+            },
         }
         limits = cfg.get("rules") or {}
         for name, value in (("var", tail.var), ("cvar", tail.cvar)):
+            limit = limits.get(f"{name}_limit")
+            if limit is not None and value > float(limit):
+                alerts.append(
+                    Alert(
+                        rule_id=f"tail_{name}",
+                        severity=Severity.CRITICAL,
+                        message=f"{name.upper()} {value:.2%} exceeds {float(limit):.2%}",
+                        details={"value": value, "limit": float(limit)},
+                    )
+                )
+        for name, value in (
+            ("parametric_var", parametric_tail.var),
+            ("parametric_cvar", parametric_tail.cvar),
+        ):
             limit = limits.get(f"{name}_limit")
             if limit is not None and value > float(limit):
                 alerts.append(
@@ -73,9 +90,7 @@ def _run_advanced_checks(config_path: Path, cfg: dict) -> CheckResult:
     weights = pd.Series(dtype=float)
     positions = pd.DataFrame()
     if positions_cfg.get("path"):
-        positions = pd.read_csv(
-            _resolve_config_path(config_path, str(positions_cfg["path"]))
-        )
+        positions = pd.read_csv(_resolve_config_path(config_path, str(positions_cfg["path"])))
         if "date" in positions.columns:
             positions = positions[positions["date"] == positions["date"].max()]
         weights = positions.set_index("symbol")["weight"].astype(float)
@@ -141,15 +156,13 @@ def _run_advanced_checks(config_path: Path, cfg: dict) -> CheckResult:
             annualization=int(asset_returns_cfg.get("annualization", 252)),
         )
         contribution = risk_contributions(weights, covariance)
-        metrics["risk_contributions"] = contribution.reset_index(
-            names="symbol"
-        ).to_dict(orient="records")
+        metrics["risk_contributions"] = contribution.reset_index(names="symbol").to_dict(
+            orient="records"
+        )
 
     factor_cfg = advanced.get("factor_exposures") or {}
     if factor_cfg.get("path") and not weights.empty:
-        factor_frame = pd.read_csv(
-            _resolve_config_path(config_path, str(factor_cfg["path"]))
-        )
+        factor_frame = pd.read_csv(_resolve_config_path(config_path, str(factor_cfg["path"])))
         symbol_column = str(factor_cfg.get("symbol_column", "symbol"))
         factor_frame = factor_frame.set_index(symbol_column)
         metrics["factor_exposures"] = {

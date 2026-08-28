@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v4
@@ -27,5 +27,17 @@ jobs:
       - name: Ruff check
         run: ruff check src tests
 
+      - name: Ruff format
+        run: ruff format --check src tests
+
       - name: Pytest
-        run: pytest -q
+        run: pytest -q --cov=quant_risk_monitor --cov-branch --cov-report=term-missing --cov-report=json:coverage.json --cov-fail-under=80
+
+      - name: Core policy branch coverage
+        run: >-
+          python -c "import json; data=json.load(open('coverage.json', encoding='utf-8'));
+          summary=next(value['summary'] for key,value in data['files'].items()
+          if key.replace('\\','/').endswith('src/quant_risk_monitor/cross_asset.py'));
+          covered=summary['covered_branches']; total=summary['num_branches'];
+          percent=100*covered/total; print(f'cross_asset branch coverage: {percent:.2f}%');
+          assert percent >= 90, f'core branch coverage {percent:.2f}% is below 90%'"

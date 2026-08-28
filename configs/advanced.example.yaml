@@ -23,5 +23,7 @@ advanced:
 rules:
   var_limit: 0.04
   cvar_limit: 0.06
+  parametric_var_limit: 0.04
+  parametric_cvar_limit: 0.06
   stress_loss_limit: 0.15
   max_days_to_exit: 5

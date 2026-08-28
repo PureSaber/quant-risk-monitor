@@ -17,7 +17,10 @@ def check_drawdown(nav: pd.Series, max_drawdown: float) -> list[Alert]:
                 rule_id="max_drawdown",
                 severity=Severity.CRITICAL,
                 message=f"drawdown {worst:.2%} exceeds limit {-max_drawdown:.2%}",
-                details={"worst_drawdown": round(worst, 6), "as_of": nav.index[-1].strftime("%Y-%m-%d")},
+                details={
+                    "worst_drawdown": round(worst, 6),
+                    "as_of": nav.index[-1].strftime("%Y-%m-%d"),
+                },
             )
         ]
     return []
