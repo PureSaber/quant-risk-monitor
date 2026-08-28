@@ -28,5 +28,7 @@ def test_concentration_alert():
 
 
 def test_no_drawdown_when_within_limit():
-    nav = pd.Series([100, 101, 102, 101, 103], index=pd.date_range("2025-01-01", periods=5, freq="B"))
+    nav = pd.Series(
+        [100, 101, 102, 101, 103], index=pd.date_range("2025-01-01", periods=5, freq="B")
+    )
     assert check_drawdown(nav, max_drawdown=0.10) == []

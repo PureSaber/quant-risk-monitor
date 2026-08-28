@@ -1,7 +1,11 @@
 __pycache__/
 *.egg-info/
 .venv/
+.venv-*/
 venv/
 .pytest_cache/
 .ruff_cache/
 state/
+.coverage
+coverage.json
+validation-logs/
