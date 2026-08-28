@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from quant_risk_monitor.analytics import factor_exposure_drift
 from quant_risk_monitor.models import Alert, Severity
 
 
@@ -14,12 +15,12 @@ def check_factor_exposure_drift(
     """Alert when factor exposure drifts too far from baseline (z-score)."""
     if current.empty or baseline.empty:
         return []
-    aligned = pd.concat([current.rename("cur"), baseline.rename("base")], axis=1).dropna()
-    if aligned.empty:
+    try:
+        report = factor_exposure_drift(current, baseline)
+    except ValueError:
+        # Preserve the legacy alert API: missing usable overlap produces no alert.
         return []
-    diff = aligned["cur"] - aligned["base"]
-    std = float(diff.std(ddof=0)) or 1.0
-    z = diff / std
+    z = report["z_score"]
     worst = z.abs().idxmax()
     worst_z = float(z.loc[worst])
     if abs(worst_z) <= z_threshold:

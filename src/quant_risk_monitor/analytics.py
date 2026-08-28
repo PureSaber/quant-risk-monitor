@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import exp, pi, sqrt
+from statistics import NormalDist
 
 import numpy as np
 import pandas as pd
@@ -28,6 +30,25 @@ def historical_var_cvar(returns: pd.Series, confidence: float = 0.95) -> TailRis
         confidence=confidence,
         var=max(-cutoff, 0.0),
         cvar=max(-float(tail.mean()), 0.0),
+        observations=len(clean),
+    )
+
+
+def parametric_var_cvar(returns: pd.Series, confidence: float = 0.95) -> TailRisk:
+    """Normal-distribution VaR/CVaR using the observed sample mean and volatility."""
+    clean = pd.to_numeric(returns, errors="coerce").dropna()
+    if len(clean) < 2:
+        raise ValueError("at least two return observations are required")
+    if not 0 < confidence < 1:
+        raise ValueError("confidence must be in (0, 1)")
+    mean = float(clean.mean())
+    volatility = float(clean.std(ddof=1))
+    z_score = NormalDist().inv_cdf(confidence)
+    density = exp(-(z_score**2) / 2) / sqrt(2 * pi)
+    return TailRisk(
+        confidence=confidence,
+        var=max(-(mean - z_score * volatility), 0.0),
+        cvar=max(-(mean - volatility * density / (1 - confidence)), 0.0),
         observations=len(clean),
     )
 
@@ -106,3 +127,23 @@ def factor_exposures(weights: pd.Series, exposures: pd.DataFrame) -> pd.Series:
     if aligned.isna().all(axis=None):
         raise ValueError("factor exposures do not overlap portfolio assets")
     return aligned.fillna(0.0).mul(weights, axis=0).sum(axis=0)
+
+
+def factor_exposure_drift(
+    current: pd.Series,
+    baseline: pd.Series,
+    baseline_scale: pd.Series | None = None,
+) -> pd.DataFrame:
+    """Return aligned factor deltas and z-scores without silently filling missing factors."""
+    aligned = pd.concat([current.rename("current"), baseline.rename("baseline")], axis=1).dropna()
+    if aligned.empty:
+        raise ValueError("factor exposures do not overlap")
+    delta = aligned["current"] - aligned["baseline"]
+    if baseline_scale is None:
+        scale_value = float(delta.std(ddof=0)) or 1.0
+        scale = pd.Series(scale_value, index=aligned.index)
+    else:
+        scale = pd.to_numeric(baseline_scale.reindex(aligned.index), errors="coerce")
+        if scale.isna().any() or (scale <= 0).any():
+            raise ValueError("baseline factor scale must be positive for every factor")
+    return aligned.assign(delta=delta, z_score=delta / scale)
