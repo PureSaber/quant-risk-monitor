@@ -37,7 +37,7 @@ jobs:
         run: >-
           python -c "import json; data=json.load(open('coverage.json', encoding='utf-8'));
           summary=next(value['summary'] for key,value in data['files'].items()
-          if key.replace('\\','/').endswith('src/quant_risk_monitor/cross_asset.py'));
+          if key.replace(chr(92),'/').endswith('src/quant_risk_monitor/cross_asset.py'));
           covered=summary['covered_branches']; total=summary['num_branches'];
           percent=100*covered/total; print(f'cross_asset branch coverage: {percent:.2f}%');
           assert percent >= 90, f'core branch coverage {percent:.2f}% is below 90%'"
