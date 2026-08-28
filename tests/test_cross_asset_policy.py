@@ -456,6 +456,31 @@ def test_future_margin_limits_accept_boundary_and_reject_excess(
     assert decision.code == code
 
 
+def test_derivative_crossing_position_uses_current_margin_rates() -> None:
+    spec = future_spec(metadata={"initial_margin_rate": "0.20", "maintenance_margin_rate": "0.15"})
+    policy = CrossAssetRiskPolicy(
+        instruments={FUTURE: spec},
+        limits=CrossAssetRiskLimits(max_initial_margin_base="150000"),
+        inputs=PITRiskInputs(prices=(price(FUTURE, "4000"),)),
+    )
+    context = single_position_context(
+        spec,
+        quantity=fp("-1", 0),
+        mark_price=fp("4000", 0),
+        base_notional=fp("-1200000"),
+        nav=fp("1000000"),
+        initial_margin=fp("120000"),
+        maintenance_margin=fp("96000"),
+        order_spec=spec,
+        reference_price=fp("4000", 0),
+        projected_notional_base=fp("2400000"),
+    )
+
+    decision = policy.check_order(asset_intent(FUTURE, "2", "4000"), context)
+
+    assert decision.code == "INITIAL_MARGIN_LIMIT"
+
+
 @pytest.mark.parametrize(
     ("limits", "code"),
     [
@@ -883,6 +908,32 @@ def test_classification_and_margin_configuration_fail_closed_with_stable_codes()
         future_policy.check_order(order, future_context).code == "PIT_CLASSIFICATION_NOT_AVAILABLE"
     )
 
+    for unavailable_spec in (
+        replace(spec, effective_from=T0 + timedelta(seconds=1)),
+        replace(spec, effective_to=T0),
+    ):
+        unavailable_policy = CrossAssetRiskPolicy(
+            instruments={FUTURE: unavailable_spec},
+            limits=CrossAssetRiskLimits(max_gross_leverage="2"),
+            inputs=PITRiskInputs(prices=(price(FUTURE, "4000"),)),
+        )
+        unavailable_context = replace(context, instrument_spec=unavailable_spec)
+        assert (
+            unavailable_policy.check_order(order, unavailable_context).code
+            == "INSTRUMENT_NOT_EFFECTIVE"
+        )
+
+    inverse_spec = replace(spec, inverse=True)
+    inverse_policy = CrossAssetRiskPolicy(
+        instruments={FUTURE: inverse_spec},
+        limits=CrossAssetRiskLimits(max_gross_leverage="2"),
+        inputs=PITRiskInputs(prices=(price(FUTURE, "4000"),)),
+    )
+    assert (
+        inverse_policy.check_order(order, replace(context, instrument_spec=inverse_spec)).code
+        == "UNSUPPORTED_INVERSE_CONTRACT"
+    )
+
     mismatch_policy = CrossAssetRiskPolicy(
         instruments={FUTURE: spec},
         limits=CrossAssetRiskLimits(max_gross_leverage="2"),
@@ -895,6 +946,10 @@ def test_classification_and_margin_configuration_fail_closed_with_stable_codes()
         ({"initial_margin_rate": "0.1"}, "MISSING_MARGIN_RATE"),
         (
             {"initial_margin_rate": "invalid", "maintenance_margin_rate": "0.08"},
+            "INVALID_MARGIN_RATE",
+        ),
+        (
+            {"initial_margin_rate": "0.10", "maintenance_margin_rate": "0.20"},
             "INVALID_MARGIN_RATE",
         ),
     ):
@@ -963,6 +1018,12 @@ def test_immutable_input_contract_validation() -> None:
     assert isinstance(limits.max_currency_concentration, MappingProxyType)
     with pytest.raises(TypeError):
         limits.max_currency_concentration["USD"] = Decimal(1)
+    with pytest.raises(ValidationError, match="duplicate normalized keys"):
+        CrossAssetRiskLimits(max_currency_concentration={"CNY": "1", " CNY": "0"})
+
+    observation = price(STOCK, "10")
+    with pytest.raises(ValidationError, match="duplicate PIT observations"):
+        PITRiskInputs(prices=(observation, observation))
 
     with pytest.raises(ValidationError, match="available_at"):
         PriceObservation(
