@@ -62,6 +62,8 @@ def _fixed_map(
     frozen: dict[str, FixedPoint] = {}
     for key, value in values.items():
         clean_key = _required_text(key, f"{name} key")
+        if clean_key in frozen:
+            raise ValidationError(f"{name} contains duplicate normalized keys")
         if not isinstance(value, FixedPoint):
             raise ValidationError(f"{name}[{clean_key!r}] must be a FixedPoint")
         frozen[clean_key] = value
@@ -82,7 +84,11 @@ def _decimal_map(
             raise ValidationError(f"{name} keys must be {key_type.__name__} values")
         if key_type is str:
             key = _required_text(key, f"{name} key")
-        frozen[key] = _positive_ratio(value, f"{name}[{key!r}]")
+        if key in frozen:
+            raise ValidationError(f"{name} contains duplicate normalized keys")
+        parsed = _optional_non_negative(value, f"{name}[{key!r}]")
+        assert parsed is not None
+        frozen[key] = parsed
     return MappingProxyType(frozen)
 
 
@@ -219,16 +225,38 @@ class PITRiskInputs:
     analytics: tuple[AnalyticsRiskSnapshot, ...] = ()
 
     def __post_init__(self) -> None:
-        for name, expected in (
-            ("prices", PriceObservation),
-            ("fx_rates", FxRateObservation),
-            ("liquidity", LiquidityObservation),
-            ("strategy_exposures", StrategyExposureSnapshot),
-            ("analytics", AnalyticsRiskSnapshot),
+        for name, expected, identity_fields in (
+            (
+                "prices",
+                PriceObservation,
+                ("instrument_id", "observed_at", "available_at"),
+            ),
+            (
+                "fx_rates",
+                FxRateObservation,
+                ("currency", "base_currency", "observed_at", "available_at"),
+            ),
+            (
+                "liquidity",
+                LiquidityObservation,
+                ("instrument_id", "observed_at", "available_at"),
+            ),
+            (
+                "strategy_exposures",
+                StrategyExposureSnapshot,
+                ("strategy_id", "observed_at", "available_at"),
+            ),
+            ("analytics", AnalyticsRiskSnapshot, ("observed_at", "available_at")),
         ):
             values = tuple(getattr(self, name))
             if any(not isinstance(value, expected) for value in values):
                 raise ValidationError(f"{name} contains an invalid observation")
+            identities = [
+                tuple(getattr(value, field_name) for field_name in identity_fields)
+                for value in values
+            ]
+            if len(identities) != len(set(identities)):
+                raise ValidationError(f"{name} contains duplicate PIT observations")
             object.__setattr__(self, name, values)
 
 
@@ -287,6 +315,8 @@ def _shock_map(
             raise ValidationError(f"{name} contains an invalid key")
         if key_type is str:
             key = _required_text(key, f"{name} key")
+        if key in frozen:
+            raise ValidationError(f"{name} contains duplicate normalized keys")
         frozen[key] = _decimal(value, f"{name}[{key!r}]")
     return MappingProxyType(frozen)
 
@@ -553,6 +583,18 @@ class CrossAssetRiskPolicy:
                 "PIT_CLASSIFICATION_NOT_AVAILABLE",
                 f"classification is not available for {instrument_id}",
             )
+        if spec.effective_from > as_of or (
+            spec.effective_to is not None and spec.effective_to <= as_of
+        ):
+            return _reject(
+                "INSTRUMENT_NOT_EFFECTIVE",
+                f"instrument is not effective for {instrument_id}",
+            )
+        if spec.inverse:
+            return _reject(
+                "UNSUPPORTED_INVERSE_CONTRACT",
+                f"inverse contract is outside the v2.0 linear risk contract: {instrument_id}",
+            )
         return spec
 
     def _order_spec(
@@ -684,7 +726,8 @@ class CrossAssetRiskPolicy:
     ) -> tuple[Decimal, Decimal] | RiskDecision:
         if not _is_derivative(spec):
             return Decimal(0), Decimal(0)
-        if reduce_only or (current and abs(projected) <= abs(current)):
+        same_direction = not projected or current * projected > 0
+        if reduce_only or (current and same_direction and abs(projected) <= abs(current)):
             ratio = abs(projected) / abs(current) if current else Decimal(0)
             return current_initial * ratio, current_maintenance * ratio
         missing = [
@@ -706,6 +749,11 @@ class CrossAssetRiskPolicy:
             )
         except ValidationError as exc:
             return _reject("INVALID_MARGIN_RATE", str(exc))
+        if maintenance_rate > initial_rate:
+            return _reject(
+                "INVALID_MARGIN_RATE",
+                "maintenance_margin_rate cannot exceed initial_margin_rate",
+            )
         return abs(projected) * initial_rate, abs(projected) * maintenance_rate
 
     def _check_liquidity(
