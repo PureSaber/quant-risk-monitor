@@ -1,6 +1,6 @@
 """Portfolio risk monitoring for quant research outputs."""
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 from quant_risk_monitor.analytics import (
     factor_exposure_drift,
     factor_exposures,
