@@ -4,11 +4,11 @@ Point-in-time cross-asset risk policy and portfolio analytics for PureSaber rese
 backtesting, and paper trading. The package cannot send live orders:
 `CrossAssetRiskPolicy.sends_live_orders` is always `False`.
 
-Version `0.3.0` implements the `quant_execution.PortfolioRiskPolicy` protocol frozen in the
+Version `0.3.1` implements the `quant_execution.PortfolioRiskPolicy` protocol frozen in the
 Cross-Asset & Multi-Frequency v2 RFC. Internal runtime dependencies are pinned to released tags:
 
-- `quant-data-kit v0.6.0` (`960db6d7f30eae942efd46a0dab7596585277823`)
-- `quant-execution v0.4.0` (`9d8b3b8a9dfd04873af5ae8c16338f1eac5b492a`)
+- `quant-data-kit v0.6.1` (`edf1351690dc60691cc6330390adcdbf8bc79c5f`)
+- `quant-execution v0.4.1` (`29eccc0e392968b5f7c31976a329605aacce369a`)
 
 ## Cross-asset policy
 
@@ -76,7 +76,10 @@ before the decision time. Missing strategy attribution is rejected instead of tr
 The original CSV-based CLI remains compatible:
 
 ```bash
-pip install -e ".[dev]"
+python -m pip install --no-deps -r requirements.lock
+python -m pip check
+python -m pip install --no-deps --no-build-isolation -e .
+python -m pip check
 quant-risk check --config configs/default.yaml --out state/alerts.json
 ```
 
@@ -98,3 +101,24 @@ CI runs Python 3.10, 3.11, and 3.12. Full-project coverage must be at least 80%,
 `cross_asset.py` branch coverage must be at least 90%. Integration tests use the real
 `RuleBookRiskGate` and `DeterministicRunEngine` to verify rejected order events, runtime risk
 events after Funding/Settlement/mark changes, boundary acceptance, and three-run determinism.
+
+## M6 governance and rollback
+
+`[tool.quant-workspace]` declares the real QDK `puresaber.instrument-spec` and QExec
+`puresaber.execution.account-snapshot`/`puresaber.execution.order-intent` contracts consumed by
+the policy. The risk monitor is strictly a QExec gate plugin: it can reject an intent but cannot
+amend the ledger, position, mark, FX, margin, Funding, Settlement, or NAV source of truth.
+
+`requirements.lock` is the only audited Python3.10-3.12 lock for runtime, development, and
+editable-build dependencies. Rebuild it from Python3.10 only:
+
+```bash
+python -m piptools compile --extra dev --build-deps-for editable --allow-unsafe --strip-extras \
+  --resolver backtracking --index-url https://pypi.org/simple \
+  --constraint requirements-constraints.txt --output-file requirements.lock pyproject.toml
+```
+
+After a rebuild, run the locked install commands above, both Ruff commands, the full test suite,
+and the QExec integration/determinism tests on Python3.10,3.11,and3.12. Roll back this governance
+change with `git revert` so `pyproject.toml`, constraints, and the lock return together. Existing
+tags and immutable run artifacts must never be moved, deleted, or recreated.
