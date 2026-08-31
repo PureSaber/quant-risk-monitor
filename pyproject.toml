@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quant-risk-monitor"
-version = "0.3.1"
+version = "0.3.2"
 description = "PIT cross-asset risk policy and portfolio analytics for PureSaber research"
 readme = "README.md"
 license = { text = "MIT" }
@@ -13,8 +13,8 @@ dependencies = [
     "pandas>=2.0",
     "numpy>=1.24",
     "pyyaml>=6.0",
-    "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@v0.6.1",
-    "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@v0.4.1",
+    "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@v0.8.1",
+    "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@v0.5.1",
 ]
 
 [project.optional-dependencies]

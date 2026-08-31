@@ -4,11 +4,11 @@ Point-in-time cross-asset risk policy and portfolio analytics for PureSaber rese
 backtesting, and paper trading. The package cannot send live orders:
 `CrossAssetRiskPolicy.sends_live_orders` is always `False`.
 
-Version `0.3.1` implements the `quant_execution.PortfolioRiskPolicy` protocol frozen in the
+Version `0.3.2` implements the `quant_execution.PortfolioRiskPolicy` protocol frozen in the
 Cross-Asset & Multi-Frequency v2 RFC. Internal runtime dependencies are pinned to released tags:
 
-- `quant-data-kit v0.6.1` (`edf1351690dc60691cc6330390adcdbf8bc79c5f`)
-- `quant-execution v0.4.1` (`29eccc0e392968b5f7c31976a329605aacce369a`)
+- `quant-data-kit v0.8.1` (`8f258f11be8e4d8edddcd41b79b817bd6c925970`)
+- `quant-execution v0.5.1` (`15e4e5c9dbaf2fe9b438732b2e94db295d5ea58c`)
 
 ## Cross-asset policy
 
