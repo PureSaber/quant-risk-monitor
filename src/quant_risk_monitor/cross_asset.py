@@ -1,4 +1,4 @@
-"""Pure, point-in-time cross-asset policy for quant-execution v0.4."""
+"""Pure, point-in-time cross-asset policy for quant-execution v0.5.1."""
 
 from __future__ import annotations
 
