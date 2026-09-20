@@ -15,7 +15,7 @@ def test_workspace_declaration_and_internal_release_tags_are_locked() -> None:
     project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     workspace = project["tool"]["quant-workspace"]
 
-    assert project["project"]["version"] == "0.3.2"
+    assert project["project"]["version"] == "0.4.0"
     assert workspace["layer"] == "portfolio-risk"
     assert workspace["schemas"] == [
         {"id": "puresaber.instrument-spec", "version": "2.0.0"},
