@@ -4,7 +4,7 @@ Point-in-time cross-asset risk policy and portfolio analytics for PureSaber rese
 backtesting, and paper trading. The package cannot send live orders:
 `CrossAssetRiskPolicy.sends_live_orders` is always `False`.
 
-Version `0.3.2` implements the `quant_execution.PortfolioRiskPolicy` protocol frozen in the
+Version `0.4.0` implements the `quant_execution.PortfolioRiskPolicy` protocol frozen in the
 Cross-Asset & Multi-Frequency v2 RFC. Internal runtime dependencies are pinned to released tags:
 
 - `quant-data-kit v0.8.1` (`8f258f11be8e4d8edddcd41b79b817bd6c925970`)
@@ -53,6 +53,14 @@ Supported controls:
 
 All money, quantity, price, margin, ADV, FX, and analytics inputs crossing the QExec boundary use
 `FixedPoint`. Limits and stress shocks are normalized to exact `Decimal` values.
+
+## Target-portfolio decision gate
+
+`DecisionPortfolioLimits` and `check_decision_portfolio` validate a long-only target before a
+strategy emits order intents. The pure check covers single-name and total invested weight, minimum
+cash, number of positions, traded-value turnover, industry concentration, and estimated cost/NAV.
+When industry risk is enabled, every target must have an explicit classification. Results include
+machine-readable metrics and stable critical alert codes for dashboards and unattended workflows.
 
 ## PIT input contract
 

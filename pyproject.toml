@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "quant-risk-monitor"
-version = "0.3.2"
+version = "0.4.0"
 description = "PIT cross-asset risk policy and portfolio analytics for PureSaber research"
 readme = "README.md"
 license = { text = "MIT" }

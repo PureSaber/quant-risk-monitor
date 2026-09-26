@@ -37,5 +37,6 @@ class CheckResult:
         return {
             "alerts": [a.to_dict() for a in self.alerts],
             "count": len(self.alerts),
+            "has_critical": self.has_critical,
             "metrics": self.metrics,
         }

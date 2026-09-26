@@ -1,6 +1,6 @@
 """Portfolio risk monitoring for quant research outputs."""
 
-__version__ = "0.3.2"
+__version__ = "0.4.0"
 from quant_risk_monitor.analytics import (
     factor_exposure_drift,
     factor_exposures,
@@ -22,17 +22,20 @@ from quant_risk_monitor.cross_asset import (
     StrategyExposureSnapshot,
     StressScenario,
 )
+from quant_risk_monitor.decision import DecisionPortfolioLimits, check_decision_portfolio
 
 __all__ = [
     "AnalyticsRiskSnapshot",
     "CrossAssetRiskLimits",
     "CrossAssetRiskPolicy",
+    "DecisionPortfolioLimits",
     "FxRateObservation",
     "LiquidityObservation",
     "PITRiskInputs",
     "PriceObservation",
     "StrategyExposureSnapshot",
     "StressScenario",
+    "check_decision_portfolio",
     "factor_exposure_drift",
     "factor_exposures",
     "historical_var_cvar",
