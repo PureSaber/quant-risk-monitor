@@ -40,7 +40,10 @@ gate = RuleBookRiskGate(instruments=instrument_registry, ledger=ledger, policies
 Order checks combine QExec's signed `projected_notional_base` with the current
 `PortfolioRiskSnapshot`, so every decision is based on the proposed post-order portfolio.
 `reduce_only` projections can only reduce the current absolute position and cannot be counted as
-new exposure.
+new exposure. Existing position-derived limit breaches may decline monotonically during an unwind.
+Portfolio-level analytics snapshots are not recomputed from an individual proposed order, so an
+active analytics breach continues to block `reduce_only` orders until the caller supplies a fresh,
+compliant snapshot or applies an explicit recovery policy outside this library.
 
 Supported controls:
 
@@ -67,11 +70,16 @@ machine-readable metrics and stable critical alert codes for dashboards and unat
 `PriceObservation`, `FxRateObservation`, `LiquidityObservation`,
 `StrategyExposureSnapshot`, and `AnalyticsRiskSnapshot` carry both `observed_at` and
 `available_at`. The policy selects the latest causally available value and never reads the network
-or substitutes a future/latest value.
+or substitutes a future/latest value. Recency is determined first by `observed_at`; `available_at`
+selects the latest revision of the same observation. A late-arriving older observation cannot mask
+a fresher value.
 
 Enabled rules fail closed with stable codes. Examples include `MISSING_PIT_PRICE`,
 `PIT_PRICE_NOT_AVAILABLE`, `MISSING_PIT_FX`, `PIT_FX_MISMATCH`, `MISSING_PIT_ADV`,
-`PIT_ADV_NOT_AVAILABLE`, `MISSING_CLASSIFICATION`, and `MISSING_STRATEGY_EXPOSURE`.
+`PIT_ADV_NOT_AVAILABLE`, `MISSING_CLASSIFICATION`, `MISSING_STRATEGY_EXPOSURE`, and
+`MISSING_FACTOR_DRIFT`. When a factor-drift threshold is enabled, an empty drift map is rejected.
+`required_factor_drift_factors` can declare the required factor universe; every declared factor
+must be present, while every supplied factor is checked against the threshold.
 QExec remains the source of truth for positions, marks, FX conversion, margin, Funding,
 Settlement, and NAV; the policy verifies supplied PIT values against the QExec snapshot.
 
@@ -100,7 +108,9 @@ documented in `configs/advanced.example.yaml`. The CLI exits with code 1 for any
 Incomplete non-zero holdings now fail closed in both covariance and factor-exposure analytics.
 Successful advanced checks include explicit input coverage; missing or non-finite exposure/return
 history produces a critical `*_not_evaluable` alert rather than a zero-risk estimate. A configured
-decision cost limit likewise requires a finite cost estimate.
+decision cost limit likewise requires a finite cost estimate. Stress scenarios reject missing or
+non-finite returns for every non-zero holding, tail-risk estimators reject infinite or non-numeric
+observations, and risk attribution rejects non-PSD covariance matrices.
 
 ## Barra-style statistical risk model
 
@@ -110,6 +120,10 @@ a shrunk PSD factor covariance `F`, shrunk specific variance `D`, and asset cova
 tracking error, and factor/specific variance attribution. Inputs carry separate effective,
 observation, and availability times; incomplete coverage, immature returns, rank deficiency, and
 ill-conditioned exposures stop estimation.
+
+Model matrices are stored privately and public accessors return defensive copies. Before analysis
+or serialization, the model verifies label alignment, finiteness, PSD covariance, and the exact
+`Σ=XFXᵀ+D` identity; inconsistent state is rejected rather than repaired silently.
 
 This is an independently implemented Barra-style linear risk model, not an MSCI Barra model.
 Return-derived or statistical exposures must use `model_kind="statistical_proxy"`; this label is

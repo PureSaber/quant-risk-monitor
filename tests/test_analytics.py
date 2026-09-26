@@ -65,6 +65,13 @@ def test_tail_risk_rejects_insufficient_data_and_invalid_confidence(function) ->
         function(pd.Series([0.1, -0.1]), confidence=1.0)
 
 
+@pytest.mark.parametrize("function", [historical_var_cvar, parametric_var_cvar])
+@pytest.mark.parametrize("invalid", [np.inf, -np.inf, "not-a-return"])
+def test_tail_risk_rejects_nonfinite_or_nonnumeric_observations(function, invalid) -> None:
+    with pytest.raises(ValueError, match="finite numeric"):
+        function(pd.Series([0.1, invalid, -0.1]))
+
+
 def test_analytics_fail_closed_on_incomplete_inputs() -> None:
     with pytest.raises(ValueError, match="shrinkage"):
         shrink_covariance(pd.DataFrame({"A": [0.1, -0.1]}), shrinkage=1.1)
@@ -88,8 +95,15 @@ def test_analytics_fail_closed_on_incomplete_inputs() -> None:
             pd.Series({"A": 0.5, "B": 0.5}),
             pd.DataFrame([[1.0, 0.2], [0.1, 1.0]], index=["A", "B"], columns=["A", "B"]),
         )
+    with pytest.raises(ValueError, match="positive semidefinite"):
+        risk_contributions(
+            pd.Series({"A": 1.0, "B": 0.0}),
+            pd.DataFrame([[1.0, 2.0], [2.0, 1.0]], index=["A", "B"], columns=["A", "B"]),
+        )
     with pytest.raises(ValueError, match="missing assets"):
         stress_test(pd.Series({"A": 1.0}), pd.DataFrame({"B": [-0.1]}))
+    with pytest.raises(ValueError, match="finite for every non-zero holding"):
+        stress_test(pd.Series({"A": 1.0}), pd.DataFrame({"A": [np.nan]}))
     with pytest.raises(ValueError, match="max_participation"):
         liquidity_days_to_exit(pd.Series({"A": 1.0}), pd.Series({"A": 10.0}), max_participation=0)
     with pytest.raises(ValueError, match="ADV"):

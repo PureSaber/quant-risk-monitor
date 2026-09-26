@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from copy import deepcopy
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
 import numpy as np
@@ -276,37 +277,208 @@ def _portfolio_weights(values: pd.Series | Mapping[str, object], name: str) -> p
     return weights
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class BarraStyleRiskModel:
     """Estimated linear factor model; never represents proprietary MSCI output."""
 
     model_kind: ModelKind
     as_of: pd.Timestamp
     annualization: int
-    exposures: pd.DataFrame
-    factor_returns: pd.DataFrame
-    factor_covariance: pd.DataFrame
-    specific_variances: pd.Series
-    asset_covariance: pd.DataFrame
-    diagnostics: FactorModelDiagnostics
+    _exposures: pd.DataFrame = field(repr=False)
+    _factor_returns: pd.DataFrame = field(repr=False)
+    _factor_covariance: pd.DataFrame = field(repr=False)
+    _specific_variances: pd.Series = field(repr=False)
+    _asset_covariance: pd.DataFrame = field(repr=False)
+    _diagnostics: FactorModelDiagnostics = field(repr=False)
+
+    def __init__(
+        self,
+        model_kind: ModelKind,
+        as_of: pd.Timestamp | str,
+        annualization: int,
+        exposures: pd.DataFrame,
+        factor_returns: pd.DataFrame,
+        factor_covariance: pd.DataFrame,
+        specific_variances: pd.Series,
+        asset_covariance: pd.DataFrame,
+        diagnostics: FactorModelDiagnostics,
+    ) -> None:
+        if model_kind not in ("fundamental_style", "statistical_proxy"):
+            raise ValueError("model_kind must be 'fundamental_style' or 'statistical_proxy'")
+        if isinstance(annualization, bool) or not isinstance(annualization, int):
+            raise TypeError("annualization must be a positive integer")
+        if annualization <= 0:
+            raise ValueError("annualization must be a positive integer")
+        if not isinstance(diagnostics, FactorModelDiagnostics):
+            raise TypeError("diagnostics must be FactorModelDiagnostics")
+
+        object.__setattr__(self, "model_kind", model_kind)
+        object.__setattr__(self, "as_of", _timestamp(as_of, "as_of"))
+        object.__setattr__(self, "annualization", annualization)
+        object.__setattr__(
+            self, "_exposures", _normalize_frame(exposures, "model exposures").copy(deep=True)
+        )
+        object.__setattr__(
+            self,
+            "_factor_returns",
+            self._finite_frame_copy(factor_returns, "factor returns"),
+        )
+        object.__setattr__(
+            self,
+            "_factor_covariance",
+            self._finite_frame_copy(factor_covariance, "factor covariance"),
+        )
+        object.__setattr__(
+            self,
+            "_specific_variances",
+            self._finite_series_copy(specific_variances, "specific variances"),
+        )
+        object.__setattr__(
+            self,
+            "_asset_covariance",
+            self._finite_frame_copy(asset_covariance, "asset covariance"),
+        )
+        object.__setattr__(self, "_diagnostics", deepcopy(diagnostics))
+        self._validate_consistency()
+
+    @staticmethod
+    def _finite_frame_copy(values: pd.DataFrame, name: str) -> pd.DataFrame:
+        if not isinstance(values, pd.DataFrame) or values.empty or values.shape[1] == 0:
+            raise ValueError(f"{name} must be a non-empty DataFrame")
+        if values.index.has_duplicates or values.columns.has_duplicates:
+            raise ValueError(f"{name} contains duplicate labels")
+        numeric = values.apply(pd.to_numeric, errors="coerce").astype(float)
+        if not np.isfinite(numeric.to_numpy()).all():
+            raise ValueError(f"{name} must be finite")
+        return numeric.copy(deep=True)
+
+    @staticmethod
+    def _finite_series_copy(values: pd.Series, name: str) -> pd.Series:
+        if not isinstance(values, pd.Series) or values.empty:
+            raise ValueError(f"{name} must be a non-empty Series")
+        if values.index.has_duplicates:
+            raise ValueError(f"{name} contains duplicate labels")
+        numeric = pd.to_numeric(values, errors="coerce").astype(float)
+        if not np.isfinite(numeric.to_numpy()).all():
+            raise ValueError(f"{name} must be finite")
+        return numeric.copy(deep=True)
+
+    @property
+    def exposures(self) -> pd.DataFrame:
+        return self._exposures.copy(deep=True)
+
+    @property
+    def factor_returns(self) -> pd.DataFrame:
+        return self._factor_returns.copy(deep=True)
+
+    @property
+    def factor_covariance(self) -> pd.DataFrame:
+        return self._factor_covariance.copy(deep=True)
+
+    @property
+    def specific_variances(self) -> pd.Series:
+        return self._specific_variances.copy(deep=True)
+
+    @property
+    def asset_covariance(self) -> pd.DataFrame:
+        return self._asset_covariance.copy(deep=True)
+
+    @property
+    def diagnostics(self) -> FactorModelDiagnostics:
+        return deepcopy(self._diagnostics)
+
+    def _validate_consistency(self) -> None:
+        exposures = self._exposures
+        factor_returns = self._factor_returns
+        factor_covariance = self._factor_covariance
+        specific_variances = self._specific_variances
+        asset_covariance = self._asset_covariance
+        factors = list(exposures.columns)
+        assets = list(exposures.index)
+
+        for name, values in (
+            ("model exposures", exposures),
+            ("factor returns", factor_returns),
+            ("factor covariance", factor_covariance),
+            ("asset covariance", asset_covariance),
+        ):
+            if not isinstance(values, pd.DataFrame) or values.empty:
+                raise ValueError(f"{name} must remain a non-empty DataFrame")
+            if values.index.has_duplicates or values.columns.has_duplicates:
+                raise ValueError(f"{name} contains duplicate labels")
+            if not np.isfinite(values.to_numpy(dtype=float)).all():
+                raise ValueError(f"{name} must remain finite")
+        if not isinstance(specific_variances, pd.Series) or specific_variances.empty:
+            raise ValueError("specific variances must remain a non-empty Series")
+        if (
+            specific_variances.index.has_duplicates
+            or not np.isfinite(specific_variances.to_numpy(dtype=float)).all()
+        ):
+            raise ValueError("specific variances must remain finite with unique labels")
+
+        if list(factor_returns.columns) != factors:
+            raise ValueError("factor return columns must exactly match model factors")
+        if list(factor_covariance.index) != factors or list(factor_covariance.columns) != factors:
+            raise ValueError("factor covariance labels must exactly match model factors")
+        if list(specific_variances.index) != assets:
+            raise ValueError("specific variance labels must exactly match model assets")
+        if list(asset_covariance.index) != assets or list(asset_covariance.columns) != assets:
+            raise ValueError("asset covariance labels must exactly match model assets")
+        if (specific_variances < 0).any():
+            raise ValueError("specific variances must be non-negative")
+
+        factor_matrix = factor_covariance.to_numpy(dtype=float)
+        asset_matrix = asset_covariance.to_numpy(dtype=float)
+        for name, matrix in (
+            ("factor covariance", factor_matrix),
+            ("asset covariance", asset_matrix),
+        ):
+            if not np.allclose(matrix, matrix.T, rtol=1e-10, atol=1e-12):
+                raise ValueError(f"{name} must be symmetric")
+        factor_eigenvalues = np.linalg.eigvalsh(factor_matrix)
+        factor_tolerance = max(float(np.abs(factor_eigenvalues).max()) * 1e-12, 1e-15)
+        if float(factor_eigenvalues.min()) < -factor_tolerance:
+            raise ValueError("factor covariance must be positive semidefinite")
+
+        exposure_matrix = exposures.to_numpy(dtype=float)
+        reconstructed = exposure_matrix @ factor_matrix @ exposure_matrix.T + np.diag(
+            specific_variances.to_numpy(dtype=float)
+        )
+        scale = max(
+            float(np.abs(reconstructed).max()),
+            float(np.abs(asset_matrix).max()),
+            1.0,
+        )
+        if not np.allclose(asset_matrix, reconstructed, rtol=1e-10, atol=scale * 1e-12):
+            raise ValueError("asset covariance is inconsistent with X F X.T + D")
+
+        diagnostics = self._diagnostics
+        if (
+            diagnostics.model_kind != self.model_kind
+            or diagnostics.as_of != self.as_of
+            or diagnostics.annualization != self.annualization
+            or diagnostics.factors != tuple(factors)
+            or diagnostics.assets != tuple(assets)
+        ):
+            raise ValueError("factor model diagnostics are inconsistent with the model state")
 
     def _align_weights(self, values: pd.Series | Mapping[str, object], name: str) -> pd.Series:
         weights = _portfolio_weights(values, name)
         nonzero = weights[weights != 0]
-        missing = sorted(set(nonzero.index).difference(self.exposures.index))
+        missing = sorted(set(nonzero.index).difference(self._exposures.index))
         if missing:
             raise ValueError(f"{name} has non-zero assets missing from the risk model: {missing}")
-        return weights.reindex(self.exposures.index, fill_value=0.0)
+        return weights.reindex(self._exposures.index, fill_value=0.0)
 
     def _decompose(self, weights: pd.Series) -> RiskDecomposition:
         vector = weights.to_numpy(dtype=float)
-        exposure = self.exposures.T @ weights
-        factor_marginal = self.factor_covariance @ exposure
+        exposure = self._exposures.T @ weights
+        factor_marginal = self._factor_covariance @ exposure
         factor_contributions = exposure * factor_marginal
-        specific_contributions = weights.pow(2) * self.specific_variances
+        specific_contributions = weights.pow(2) * self._specific_variances
         factor_variance = float(factor_contributions.sum())
         specific_variance = float(specific_contributions.sum())
-        total_variance = float(vector @ self.asset_covariance.to_numpy() @ vector)
+        total_variance = float(vector @ self._asset_covariance.to_numpy() @ vector)
         scale = max(abs(factor_variance) + abs(specific_variance), 1.0)
         if total_variance < -scale * 1e-12:
             raise ValueError("portfolio variance is negative beyond numerical tolerance")
@@ -326,8 +498,9 @@ class BarraStyleRiskModel:
         benchmark_weights: pd.Series | Mapping[str, object] | None = None,
     ) -> PortfolioFactorRisk:
         """Return absolute risk and, when supplied, benchmark-relative tracking risk."""
+        self._validate_consistency()
         portfolio = self._align_weights(weights, "weights")
-        portfolio_exposures = self.exposures.T @ portfolio
+        portfolio_exposures = self._exposures.T @ portfolio
         portfolio_risk = self._decompose(portfolio)
         if benchmark_weights is None:
             return PortfolioFactorRisk(
@@ -338,7 +511,7 @@ class BarraStyleRiskModel:
                 portfolio_risk=portfolio_risk,
             )
         benchmark = self._align_weights(benchmark_weights, "benchmark_weights")
-        benchmark_exposures = self.exposures.T @ benchmark
+        benchmark_exposures = self._exposures.T @ benchmark
         active = portfolio - benchmark
         return PortfolioFactorRisk(
             model_kind=self.model_kind,
@@ -352,6 +525,7 @@ class BarraStyleRiskModel:
         )
 
     def to_dict(self) -> dict[str, Any]:
+        self._validate_consistency()
         return {
             "name": "barra_style_factor_risk_model",
             "vendor_model": False,
@@ -364,12 +538,12 @@ class BarraStyleRiskModel:
                 "specific_variances": "annualized_asset_return_variance",
                 "asset_covariance": "annualized_asset_return_covariance",
             },
-            "exposures": _frame_payload(self.exposures),
-            "factor_returns": _frame_payload(self.factor_returns),
-            "factor_covariance": _frame_payload(self.factor_covariance),
-            "specific_variances": _series_payload(self.specific_variances),
-            "asset_covariance": _frame_payload(self.asset_covariance),
-            "diagnostics": self.diagnostics.to_dict(),
+            "exposures": _frame_payload(self._exposures),
+            "factor_returns": _frame_payload(self._factor_returns),
+            "factor_covariance": _frame_payload(self._factor_covariance),
+            "specific_variances": _series_payload(self._specific_variances),
+            "asset_covariance": _frame_payload(self._asset_covariance),
+            "diagnostics": self._diagnostics.to_dict(),
         }
 
 

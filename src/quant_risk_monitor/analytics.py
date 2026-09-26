@@ -92,8 +92,18 @@ class ReturnHistoryCoverage:
         }
 
 
+def _clean_return_series(returns: pd.Series) -> pd.Series:
+    if not isinstance(returns, pd.Series):
+        raise TypeError("returns must be a pandas Series")
+    numeric = pd.to_numeric(returns, errors="coerce")
+    invalid = numeric.isna() & ~returns.isna()
+    if invalid.any() or np.isinf(numeric.to_numpy(dtype=float, na_value=np.nan)).any():
+        raise ValueError("returns must contain only finite numeric values or missing observations")
+    return numeric.dropna()
+
+
 def historical_var_cvar(returns: pd.Series, confidence: float = 0.95) -> TailRisk:
-    clean = pd.to_numeric(returns, errors="coerce").dropna()
+    clean = _clean_return_series(returns)
     if len(clean) < 2:
         raise ValueError("at least two return observations are required")
     if not 0 < confidence < 1:
@@ -110,7 +120,7 @@ def historical_var_cvar(returns: pd.Series, confidence: float = 0.95) -> TailRis
 
 def parametric_var_cvar(returns: pd.Series, confidence: float = 0.95) -> TailRisk:
     """Normal-distribution VaR/CVaR using the observed sample mean and volatility."""
-    clean = pd.to_numeric(returns, errors="coerce").dropna()
+    clean = _clean_return_series(returns)
     if len(clean) < 2:
         raise ValueError("at least two return observations are required")
     if not 0 < confidence < 1:
@@ -191,17 +201,27 @@ def return_history_coverage(
 
 
 def risk_contributions(weights: pd.Series, covariance: pd.DataFrame) -> pd.DataFrame:
+    if not isinstance(weights, pd.Series):
+        raise TypeError("weights must be a pandas Series")
     if weights.index.has_duplicates:
         raise ValueError("weights contain duplicate assets")
     numeric_weights = pd.to_numeric(weights, errors="coerce").replace([np.inf, -np.inf], np.nan)
     if numeric_weights.isna().any():
         raise ValueError("weights must be finite")
+    if not isinstance(covariance, pd.DataFrame):
+        raise TypeError("covariance must be a pandas DataFrame")
+    if covariance.index.has_duplicates or covariance.columns.has_duplicates:
+        raise ValueError("covariance contains duplicate asset labels")
     assets = list(weights.index)
     cov = _numeric_frame(covariance.reindex(index=assets, columns=assets))
     if cov.isna().any().any():
         raise ValueError("covariance is missing portfolio assets")
     if not np.allclose(cov.to_numpy(), cov.to_numpy().T, rtol=1e-10, atol=1e-12):
         raise ValueError("covariance must be symmetric")
+    eigenvalues = np.linalg.eigvalsh(cov.to_numpy(dtype=float))
+    tolerance = max(float(np.abs(eigenvalues).max()) * 1e-12, 1e-15)
+    if float(eigenvalues.min()) < -tolerance:
+        raise ValueError("covariance must be positive semidefinite")
     vector = numeric_weights.to_numpy(dtype=float)
     marginal_variance = cov.to_numpy() @ vector
     variance = float(vector @ marginal_variance)
@@ -210,7 +230,7 @@ def risk_contributions(weights: pd.Series, covariance: pd.DataFrame) -> pd.DataF
     component_variance = vector * marginal_variance
     return pd.DataFrame(
         {
-            "weight": weights,
+            "weight": numeric_weights,
             "marginal_variance": marginal_variance,
             "component_variance": component_variance,
             "risk_contribution": component_variance / variance,
@@ -221,10 +241,23 @@ def risk_contributions(weights: pd.Series, covariance: pd.DataFrame) -> pd.DataF
 
 def stress_test(weights: pd.Series, scenarios: pd.DataFrame) -> pd.DataFrame:
     """Apply asset-return scenarios and report portfolio loss."""
-    missing = sorted(set(weights.index).difference(scenarios.columns))
+    active = _active_weights(weights)
+    if not isinstance(scenarios, pd.DataFrame):
+        raise TypeError("stress scenarios must be a pandas DataFrame")
+    if scenarios.columns.has_duplicates:
+        raise ValueError("stress scenarios contain duplicate asset columns")
+    missing = sorted(set(active.index).difference(scenarios.columns))
     if missing:
         raise ValueError(f"stress scenarios missing assets: {missing}")
-    scenario_return = scenarios[weights.index].astype(float).mul(weights, axis=1).sum(axis=1)
+    required = _numeric_frame(scenarios.reindex(columns=active.index))
+    if required.isna().any().any():
+        invalid = {
+            str(index): sorted(str(asset) for asset in required.columns[row.isna()])
+            for index, row in required.iterrows()
+            if row.isna().any()
+        }
+        raise ValueError(f"stress scenarios must be finite for every non-zero holding: {invalid}")
+    scenario_return = required.mul(active, axis=1).sum(axis=1, skipna=False)
     return pd.DataFrame(
         {"portfolio_return": scenario_return, "loss": (-scenario_return).clip(lower=0.0)},
         index=scenarios.index,

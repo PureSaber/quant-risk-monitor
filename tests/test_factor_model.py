@@ -86,6 +86,24 @@ def test_barra_style_proxy_closes_x_f_d_covariance_loop() -> None:
     json.dumps(model.to_dict(), allow_nan=False)
 
 
+def test_factor_model_returns_defensive_copies_and_rejects_inconsistent_internal_state() -> None:
+    model = _fit_model()
+    original = model.factor_covariance
+    caller_copy = model.factor_covariance
+    caller_copy.iloc[0, 0] *= 100
+
+    pd.testing.assert_frame_equal(model.factor_covariance, original)
+    report = model.analyze({"A": 0.5, "B": 0.5})
+    assert report.portfolio_risk.total_variance == pytest.approx(
+        report.portfolio_risk.factor_variance + report.portfolio_risk.specific_variance
+    )
+
+    internal = object.__getattribute__(model, "_factor_covariance")
+    internal.iloc[0, 0] *= 100
+    with pytest.raises(ValueError, match="inconsistent with X F X.T \\+ D"):
+        model.analyze({"A": 0.5, "B": 0.5})
+
+
 def test_portfolio_and_benchmark_risk_exposures_te_and_attribution() -> None:
     model = _fit_model()
     report = model.analyze(

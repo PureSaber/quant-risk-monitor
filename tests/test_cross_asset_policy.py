@@ -990,6 +990,89 @@ def test_factor_drift_limit_accepts_boundary_and_rejects_excess() -> None:
     assert rejected.runtime_check(empty_runtime_context()).code == "FACTOR_DRIFT_LIMIT"
 
 
+def test_factor_drift_limit_fails_closed_on_empty_or_incomplete_factor_universe() -> None:
+    empty = AnalyticsRiskSnapshot(
+        historical_var=fp("0"),
+        historical_cvar=fp("0"),
+        parametric_var=fp("0"),
+        parametric_cvar=fp("0"),
+        factor_drift_z={},
+        observed_at=T0,
+        available_at=T0,
+    )
+    empty_policy = CrossAssetRiskPolicy(
+        instruments={},
+        limits=CrossAssetRiskLimits(max_factor_drift_z="2"),
+        inputs=PITRiskInputs(analytics=(empty,)),
+    )
+    assert empty_policy.runtime_check(empty_runtime_context()).code == "MISSING_FACTOR_DRIFT"
+
+    incomplete = replace(empty, factor_drift_z={"momentum": fp("1")})
+    required_policy = CrossAssetRiskPolicy(
+        instruments={},
+        limits=CrossAssetRiskLimits(
+            max_factor_drift_z="2",
+            required_factor_drift_factors=("momentum", "value"),
+        ),
+        inputs=PITRiskInputs(analytics=(incomplete,)),
+    )
+    assert required_policy.runtime_check(empty_runtime_context()).code == "MISSING_FACTOR_DRIFT"
+
+    complete = replace(incomplete, factor_drift_z={"momentum": fp("1"), "value": fp("2")})
+    complete_policy = CrossAssetRiskPolicy(
+        instruments={},
+        limits=required_policy.limits,
+        inputs=PITRiskInputs(analytics=(complete,)),
+    )
+    assert complete_policy.runtime_check(empty_runtime_context()).accepted
+
+
+def test_pit_selection_prefers_newer_observation_over_late_stale_data() -> None:
+    recent_breach = AnalyticsRiskSnapshot(
+        historical_var=fp("0.06"),
+        historical_cvar=fp("0"),
+        parametric_var=fp("0"),
+        parametric_cvar=fp("0"),
+        observed_at=T0 - timedelta(minutes=1),
+        available_at=T0 - timedelta(minutes=1),
+    )
+    late_stale = replace(
+        recent_breach,
+        historical_var=fp("0.01"),
+        observed_at=T0 - timedelta(days=1),
+        available_at=T0,
+    )
+    analytics_policy = CrossAssetRiskPolicy(
+        instruments={},
+        limits=CrossAssetRiskLimits(max_historical_var="0.05"),
+        inputs=PITRiskInputs(analytics=(recent_breach, late_stale)),
+    )
+    assert analytics_policy.runtime_check(empty_runtime_context()).code == "HISTORICAL_VAR_LIMIT"
+
+    recent_strategy_breach = StrategyExposureSnapshot(
+        strategy_id="strategy",
+        gross_exposure_base=fp("20000", 0),
+        observed_at=T0 - timedelta(minutes=1),
+        available_at=T0 - timedelta(minutes=1),
+    )
+    late_stale_strategy = replace(
+        recent_strategy_breach,
+        gross_exposure_base=fp("0"),
+        observed_at=T0 - timedelta(days=1),
+        available_at=T0,
+    )
+    strategy_policy = CrossAssetRiskPolicy(
+        instruments={},
+        limits=CrossAssetRiskLimits(max_strategy_concentration="0.10"),
+        inputs=PITRiskInputs(
+            strategy_exposures=(recent_strategy_breach, late_stale_strategy),
+        ),
+    )
+    assert strategy_policy.runtime_check(empty_runtime_context()).code == (
+        "STRATEGY_CONCENTRATION_LIMIT"
+    )
+
+
 @pytest.mark.parametrize(
     ("inputs", "expected"),
     [
@@ -1328,6 +1411,13 @@ def test_invalid_policy_configuration_is_rejected_at_construction() -> None:
         CrossAssetRiskLimits(max_gross_leverage="-1")
     with pytest.raises(ValidationError, match="positive"):
         CrossAssetRiskLimits(liquidation_participation_rate="0")
+    with pytest.raises(ValidationError, match="requires max_factor_drift_z"):
+        CrossAssetRiskLimits(required_factor_drift_factors=("momentum",))
+    with pytest.raises(ValidationError, match="duplicate normalized"):
+        CrossAssetRiskLimits(
+            max_factor_drift_z="2",
+            required_factor_drift_factors=("momentum", " momentum "),
+        )
     with pytest.raises(ValidationError, match="must be a mapping"):
         StrategyExposureSnapshot(
             strategy_id="strategy",

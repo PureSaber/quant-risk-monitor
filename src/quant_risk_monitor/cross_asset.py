@@ -24,6 +24,15 @@ def _required_text(value: str, name: str) -> str:
     return value.strip()
 
 
+def _required_text_tuple(values: Sequence[str], name: str) -> tuple[str, ...]:
+    if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
+        raise ValidationError(f"{name} must be a sequence of factor names")
+    normalized = tuple(_required_text(value, f"{name} item") for value in values)
+    if len(set(normalized)) != len(normalized):
+        raise ValidationError(f"{name} contains duplicate normalized factor names")
+    return normalized
+
+
 def _decimal(value: Decimal | str | float, name: str) -> Decimal:
     try:
         result = value if isinstance(value, Decimal) else Decimal(str(value))
@@ -344,6 +353,7 @@ class CrossAssetRiskLimits:
     max_parametric_var: Decimal | str | float | None = None
     max_parametric_cvar: Decimal | str | float | None = None
     max_factor_drift_z: Decimal | str | float | None = None
+    required_factor_drift_factors: Sequence[str] = ()
 
     def __post_init__(self) -> None:
         optional_fields = (
@@ -365,6 +375,14 @@ class CrossAssetRiskLimits:
         )
         for name in optional_fields:
             object.__setattr__(self, name, _optional_non_negative(getattr(self, name), name))
+        required_factors = _required_text_tuple(
+            self.required_factor_drift_factors, "required_factor_drift_factors"
+        )
+        if required_factors and self.max_factor_drift_z is None:
+            raise ValidationError(
+                "required_factor_drift_factors requires max_factor_drift_z to be enabled"
+            )
+        object.__setattr__(self, "required_factor_drift_factors", required_factors)
         participation = _positive_ratio(
             self.liquidation_participation_rate, "liquidation_participation_rate"
         )
@@ -959,9 +977,9 @@ class CrossAssetRiskPolicy:
         for item in self.inputs.strategy_exposures:
             if item.available_at <= state.as_of:
                 prior = latest_by_strategy.get(item.strategy_id)
-                if prior is None or (item.available_at, item.observed_at) > (
-                    prior.available_at,
+                if prior is None or (item.observed_at, item.available_at) > (
                     prior.observed_at,
+                    prior.available_at,
                 ):
                     latest_by_strategy[item.strategy_id] = item
         if order_intent is not None:
@@ -1058,6 +1076,19 @@ class CrossAssetRiskPolicy:
             if limit is not None and getattr(snapshot, field_name).to_decimal() > limit:
                 return _reject(code, f"{field_name} exceeds limit")
         if limits.max_factor_drift_z is not None:
+            if not snapshot.factor_drift_z:
+                return _reject(
+                    "MISSING_FACTOR_DRIFT",
+                    "factor drift is missing while the factor drift limit is enabled",
+                )
+            missing_factors = sorted(
+                set(limits.required_factor_drift_factors).difference(snapshot.factor_drift_z)
+            )
+            if missing_factors:
+                return _reject(
+                    "MISSING_FACTOR_DRIFT",
+                    f"factor drift is missing required factors: {missing_factors}",
+                )
             for factor in sorted(snapshot.factor_drift_z):
                 if abs(snapshot.factor_drift_z[factor].to_decimal()) > limits.max_factor_drift_z:
                     return _reject("FACTOR_DRIFT_LIMIT", f"factor drift exceeds limit for {factor}")
@@ -1075,7 +1106,7 @@ def _latest(
     causal = [value for value in matches if value.available_at <= as_of]
     if not causal:
         return None, "future"
-    return max(causal, key=lambda value: (value.available_at, value.observed_at)), "ok"
+    return max(causal, key=lambda value: (value.observed_at, value.available_at)), "ok"
 
 
 def _project_position(current: Decimal, delta: Decimal, reduce_only: bool) -> Decimal:
