@@ -26,16 +26,22 @@ def test_workspace_declaration_and_internal_release_tags_are_locked() -> None:
 
     dependencies = project["project"]["dependencies"]
     assert (
-        "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@v0.8.1"
+        "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@fbbad913c9e592fdcbf8b473c4230e2da8594cef"
         in dependencies
     )
     assert (
-        "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@v0.5.1"
+        "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@459f5cc6b2c45db9ca4421cbf6de5f1b5cfc9022"
         in dependencies
     )
 
     lock = (ROOT / "requirements.lock").read_text(encoding="utf-8")
-    assert "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@v0.8.1" in lock
-    assert "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@v0.5.1" in lock
+    assert (
+        "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@fbbad913c9e592fdcbf8b473c4230e2da8594cef"
+        in lock
+    )
+    assert (
+        "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@459f5cc6b2c45db9ca4421cbf6de5f1b5cfc9022"
+        in lock
+    )
     assert 'tomli==2.4.1 ; python_version < "3.11"' in lock
     assert "exceptiongroup==1.3.1" in lock
