@@ -16,12 +16,18 @@ def test_factor_exposure_no_alert_when_stable() -> None:
     assert check_factor_exposure_drift(s, s) == []
 
 
-def test_factor_exposure_preserves_legacy_no_overlap_behavior() -> None:
-    assert check_factor_exposure_drift(pd.Series(dtype=float), pd.Series({"value": 1.0})) == []
-    assert (
-        check_factor_exposure_drift(
-            pd.Series({"value": float("nan")}),
-            pd.Series({"value": 1.0}),
-        )
-        == []
+def test_factor_exposure_missing_inputs_raise_critical_not_evaluable_alert() -> None:
+    for current in (pd.Series(dtype=float), pd.Series({"value": float("nan")})):
+        alerts = check_factor_exposure_drift(current, pd.Series({"value": 1.0}))
+        assert len(alerts) == 1
+        assert alerts[0].rule_id == "factor_exposure_drift_not_evaluable"
+        assert alerts[0].severity.value == "critical"
+
+
+def test_factor_exposure_changed_factor_set_raises_critical_alert() -> None:
+    alerts = check_factor_exposure_drift(
+        pd.Series({"value": 0.1, "momentum": 0.2}),
+        pd.Series({"value": 0.1, "size": 0.2}),
     )
+    assert alerts[0].rule_id == "factor_exposure_drift_not_evaluable"
+    assert "factor sets differ" in alerts[0].details["reason"]

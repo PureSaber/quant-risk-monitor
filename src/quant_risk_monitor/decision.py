@@ -194,7 +194,13 @@ def check_decision_portfolio(
                     limit=float(limits.max_industry_weight),
                 )
     cost = None
-    if estimated_cost_rate is not None:
+    if limits.max_estimated_cost_rate is not None and estimated_cost_rate is None:
+        breach(
+            "portfolio.missing_estimated_cost_rate",
+            "estimated trading cost is required when the cost limit is enabled",
+            limit=float(limits.max_estimated_cost_rate),
+        )
+    elif estimated_cost_rate is not None:
         cost = _decimal(estimated_cost_rate, "estimated_cost_rate")
         if cost < 0:
             raise ValidationError("estimated_cost_rate must be non-negative")

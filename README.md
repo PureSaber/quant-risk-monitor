@@ -97,6 +97,27 @@ optional `parametric_var_limit` and `parametric_cvar_limit` rules add critical a
 changing the historical `var_limit` and `cvar_limit` semantics. Advanced CSV inputs remain
 documented in `configs/advanced.example.yaml`. The CLI exits with code 1 for any critical alert.
 
+Incomplete non-zero holdings now fail closed in both covariance and factor-exposure analytics.
+Successful advanced checks include explicit input coverage; missing or non-finite exposure/return
+history produces a critical `*_not_evaluable` alert rather than a zero-risk estimate. A configured
+decision cost limit likewise requires a finite cost estimate.
+
+## Barra-style statistical risk model
+
+The public `fit_barra_style_risk_model` API estimates point-in-time cross-sectional factor returns,
+a shrunk PSD factor covariance `F`, shrunk specific variance `D`, and asset covariance
+`Σ=XFXᵀ+D`. It reports absolute and benchmark-relative factor exposures, annualized portfolio risk,
+tracking error, and factor/specific variance attribution. Inputs carry separate effective,
+observation, and availability times; incomplete coverage, immature returns, rank deficiency, and
+ill-conditioned exposures stop estimation.
+
+This is an independently implemented Barra-style linear risk model, not an MSCI Barra model.
+Return-derived or statistical exposures must use `model_kind="statistical_proxy"`; this label is
+preserved in model snapshots, diagnostics, and portfolio reports. The library never invents a
+market factor or other missing descriptor. See
+[`docs/BARRA_STYLE_FACTOR_MODEL.md`](docs/BARRA_STYLE_FACTOR_MODEL.md) and run
+`python examples/barra_style_proxy.py` for the complete contract and example.
+
 ## Quality gates
 
 ```bash

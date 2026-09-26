@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 import pytest
 import yaml
@@ -72,3 +73,72 @@ def test_advanced_check_reports_parametric_tail_risk_and_limit(tmp_path) -> None
         "tail_parametric_var",
         "tail_parametric_cvar",
     }
+
+
+def test_advanced_check_reports_missing_risk_inputs_as_critical(tmp_path) -> None:
+    positions = tmp_path / "positions.csv"
+    returns = tmp_path / "asset_returns.csv"
+    factors = tmp_path / "factors.csv"
+    pd.DataFrame(
+        {
+            "date": ["2025-01-01", "2025-01-01", "2025-01-01"],
+            "symbol": ["A", "B", "UNHELD"],
+            "weight": [0.5, 0.5, 0.0],
+            "market_value": [500_000, 500_000, 0],
+        }
+    ).to_csv(positions, index=False)
+    pd.DataFrame(
+        {
+            "date": ["2025-01-01", "2025-01-02", "2025-01-03"],
+            "A": [0.01, -0.01, 0.02],
+            "B": [None, None, None],
+        }
+    ).to_csv(returns, index=False)
+    pd.DataFrame({"symbol": ["A", "B"], "beta": [1.0, None]}).to_csv(factors, index=False)
+    config = tmp_path / "risk.yaml"
+    config.write_text(
+        yaml.safe_dump(
+            {
+                "advanced": {
+                    "positions": {"path": str(positions)},
+                    "asset_returns": {"path": str(returns)},
+                    "factor_exposures": {"path": str(factors)},
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_check(config)
+
+    assert result.has_critical
+    assert {alert.rule_id for alert in result.alerts} == {
+        "risk_contributions_not_evaluable",
+        "factor_exposures_not_evaluable",
+    }
+    assert result.metrics["risk_contributions"] == {"status": "not_evaluable"}
+    assert result.metrics["factor_exposures"] == {"status": "not_evaluable"}
+    assert result.metrics["factor_exposure_coverage"]["missing_assets"] == ["B"]
+    assert result.metrics["risk_contribution_coverage"]["insufficient_assets"] == ["B"]
+
+
+def test_advanced_check_rejects_nonfinite_position_weight(tmp_path) -> None:
+    positions = tmp_path / "positions.csv"
+    pd.DataFrame(
+        {
+            "symbol": ["A", "B"],
+            "weight": [0.5, np.inf],
+            "market_value": [500_000, 500_000],
+        }
+    ).to_csv(positions, index=False)
+    config = tmp_path / "risk.yaml"
+    config.write_text(
+        yaml.safe_dump({"advanced": {"positions": {"path": str(positions)}}}),
+        encoding="utf-8",
+    )
+
+    result = run_check(config)
+
+    assert result.has_critical
+    assert result.alerts[0].rule_id == "positions_input_not_evaluable"
+    assert result.metrics["positions_input"]["status"] == "not_evaluable"
