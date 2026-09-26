@@ -13,8 +13,8 @@ dependencies = [
     "pandas>=2.0",
     "numpy>=1.24",
     "pyyaml>=6.0",
-    "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@4248bfdf4dcf525962e3c19f5f2c5b5fa5222534",
-    "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@e0813f65d4d9d4396de58dc50e2e5149b16f117c",
+    "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@104f1ef8a3b1278c0ea5420fadaa9d1d863ce726",
+    "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@db69483ed4e122a316b0bfb4afcdb99afb1770c4",
 ]
 
 [project.optional-dependencies]
