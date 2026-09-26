@@ -26,21 +26,21 @@ def test_workspace_declaration_and_internal_release_tags_are_locked() -> None:
 
     dependencies = project["project"]["dependencies"]
     assert (
-        "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@fbbad913c9e592fdcbf8b473c4230e2da8594cef"
+        "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@4248bfdf4dcf525962e3c19f5f2c5b5fa5222534"
         in dependencies
     )
     assert (
-        "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@e9bf4ca2db6e7fb632cf3b091227b4e61ff84bda"
+        "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@e0813f65d4d9d4396de58dc50e2e5149b16f117c"
         in dependencies
     )
 
     lock = (ROOT / "requirements.lock").read_text(encoding="utf-8")
     assert (
-        "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@fbbad913c9e592fdcbf8b473c4230e2da8594cef"
+        "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@4248bfdf4dcf525962e3c19f5f2c5b5fa5222534"
         in lock
     )
     assert (
-        "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@e9bf4ca2db6e7fb632cf3b091227b4e61ff84bda"
+        "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@e0813f65d4d9d4396de58dc50e2e5149b16f117c"
         in lock
     )
     assert 'tomli==2.4.1 ; python_version < "3.11"' in lock
