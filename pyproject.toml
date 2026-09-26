@@ -14,7 +14,7 @@ dependencies = [
     "numpy>=1.24",
     "pyyaml>=6.0",
     "quant-data-kit @ git+https://github.com/PureSaber/quant-data-kit.git@fbbad913c9e592fdcbf8b473c4230e2da8594cef",
-    "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@459f5cc6b2c45db9ca4421cbf6de5f1b5cfc9022",
+    "quant-execution @ git+https://github.com/PureSaber/quant-execution.git@e9bf4ca2db6e7fb632cf3b091227b4e61ff84bda",
 ]
 
 [project.optional-dependencies]
