@@ -24,6 +24,15 @@ def _required_text(value: str, name: str) -> str:
     return value.strip()
 
 
+def _required_text_tuple(values: Sequence[str], name: str) -> tuple[str, ...]:
+    if isinstance(values, (str, bytes)) or not isinstance(values, Sequence):
+        raise ValidationError(f"{name} must be a sequence of factor names")
+    normalized = tuple(_required_text(value, f"{name} item") for value in values)
+    if len(set(normalized)) != len(normalized):
+        raise ValidationError(f"{name} contains duplicate normalized factor names")
+    return normalized
+
+
 def _decimal(value: Decimal | str | float, name: str) -> Decimal:
     try:
         result = value if isinstance(value, Decimal) else Decimal(str(value))
@@ -344,6 +353,7 @@ class CrossAssetRiskLimits:
     max_parametric_var: Decimal | str | float | None = None
     max_parametric_cvar: Decimal | str | float | None = None
     max_factor_drift_z: Decimal | str | float | None = None
+    required_factor_drift_factors: Sequence[str] = ()
 
     def __post_init__(self) -> None:
         optional_fields = (
@@ -365,6 +375,14 @@ class CrossAssetRiskLimits:
         )
         for name in optional_fields:
             object.__setattr__(self, name, _optional_non_negative(getattr(self, name), name))
+        required_factors = _required_text_tuple(
+            self.required_factor_drift_factors, "required_factor_drift_factors"
+        )
+        if required_factors and self.max_factor_drift_z is None:
+            raise ValidationError(
+                "required_factor_drift_factors requires max_factor_drift_z to be enabled"
+            )
+        object.__setattr__(self, "required_factor_drift_factors", required_factors)
         participation = _positive_ratio(
             self.liquidation_participation_rate, "liquidation_participation_rate"
         )
@@ -419,6 +437,19 @@ class _ExposureState:
     @property
     def net(self) -> Decimal:
         return sum(self.notionals.values(), Decimal(0))
+
+    def copy(self) -> _ExposureState:
+        return _ExposureState(
+            as_of=self.as_of,
+            base_currency=self.base_currency,
+            nav=self.nav,
+            notionals=dict(self.notionals),
+            specs=dict(self.specs),
+            initial_margin_by_instrument=dict(self.initial_margin_by_instrument),
+            maintenance_margin_by_instrument=dict(self.maintenance_margin_by_instrument),
+            initial_margin=self.initial_margin,
+            maintenance_margin=self.maintenance_margin,
+        )
 
 
 @dataclass(frozen=True, slots=True, init=False)
@@ -480,6 +511,12 @@ class CrossAssetRiskPolicy:
         delta = context.projected_notional_base.to_decimal()
         current = state.notionals.get(order_intent.instrument_id, Decimal(0))
         projected = _project_position(current, delta, reduce_only=order_intent.reduce_only)
+        prior_state = state.copy() if order_intent.reduce_only else None
+        if order_intent.reduce_only and (not current or abs(projected) >= abs(current)):
+            return _reject(
+                "REDUCE_ONLY_NOT_REDUCING",
+                f"reduce-only order does not reduce {order_intent.instrument_id}",
+            )
         margin_decision = self._replace_position(
             state, spec, current, projected, order_intent.reduce_only
         )
@@ -490,10 +527,16 @@ class CrossAssetRiskPolicy:
             state,
             instrument_id=order_intent.instrument_id,
             order_notional=abs(delta),
+            prior_state=prior_state,
         )
         if liquidity is not None:
             return liquidity
-        return self._evaluate(state, order_intent=order_intent, order_delta=delta)
+        return self._evaluate(
+            state,
+            order_intent=order_intent,
+            order_delta=delta,
+            prior_state=prior_state,
+        )
 
     def runtime_check(self, context: RiskCheckContext) -> RiskDecision:
         state_or_decision = self._state(context)
@@ -762,6 +805,7 @@ class CrossAssetRiskPolicy:
         *,
         instrument_id: str | None = None,
         order_notional: Decimal | None = None,
+        prior_state: _ExposureState | None = None,
     ) -> RiskDecision | None:
         limits = self.limits
         enabled = (
@@ -798,7 +842,12 @@ class CrossAssetRiskPolicy:
                 days = abs(state.notionals.get(target, Decimal(0))) / (
                     adv * limits.liquidation_participation_rate
                 )
-                if days > limits.max_days_to_liquidate:
+                prior_days = None
+                if prior_state is not None:
+                    prior_days = abs(prior_state.notionals.get(target, Decimal(0))) / (
+                        adv * limits.liquidation_participation_rate
+                    )
+                if _risk_increased_or_breached(days, limits.max_days_to_liquidate, prior_days):
                     return _reject(
                         "DAYS_TO_LIQUIDATE_LIMIT",
                         f"days-to-liquidate exceeds limit for {target}",
@@ -811,25 +860,35 @@ class CrossAssetRiskPolicy:
         *,
         order_intent: OrderIntent | None = None,
         order_delta: Decimal = Decimal(0),
+        prior_state: _ExposureState | None = None,
     ) -> RiskDecision:
         if state.nav <= 0:
             return _reject("NAV_NOT_POSITIVE", "portfolio NAV must be positive")
         limits = self.limits
-        if (
-            limits.max_gross_leverage is not None
-            and state.gross / state.nav > limits.max_gross_leverage
+        if limits.max_gross_leverage is not None and _risk_increased_or_breached(
+            state.gross / state.nav,
+            limits.max_gross_leverage,
+            None if prior_state is None else prior_state.gross / prior_state.nav,
         ):
             return _reject("GROSS_LEVERAGE_LIMIT", "gross leverage exceeds limit")
-        if (
-            limits.max_abs_net_leverage is not None
-            and abs(state.net) / state.nav > limits.max_abs_net_leverage
+        if limits.max_abs_net_leverage is not None and _risk_increased_or_breached(
+            abs(state.net) / state.nav,
+            limits.max_abs_net_leverage,
+            None if prior_state is None else abs(prior_state.net) / prior_state.nav,
         ):
             return _reject("NET_LEVERAGE_LIMIT", "absolute net leverage exceeds limit")
         if limits.max_instrument_concentration is not None:
             for instrument_id in sorted(state.notionals):
-                if (
-                    abs(state.notionals[instrument_id]) / state.nav
-                    > limits.max_instrument_concentration
+                concentration = abs(state.notionals[instrument_id]) / state.nav
+                prior_concentration = None
+                if prior_state is not None:
+                    prior_concentration = (
+                        abs(prior_state.notionals.get(instrument_id, Decimal(0))) / prior_state.nav
+                    )
+                if _risk_increased_or_breached(
+                    concentration,
+                    limits.max_instrument_concentration,
+                    prior_concentration,
                 ):
                     return _reject(
                         "INSTRUMENT_CONCENTRATION_LIMIT",
@@ -857,32 +916,45 @@ class CrossAssetRiskPolicy:
             for instrument_id, notional in state.notionals.items():
                 key = classifier(state.specs[instrument_id])
                 exposures[key] = exposures.get(key, Decimal(0)) + abs(notional)
+            prior_exposures: dict[object, Decimal] = {}
+            if prior_state is not None:
+                for instrument_id, notional in prior_state.notionals.items():
+                    key = classifier(prior_state.specs[instrument_id])
+                    prior_exposures[key] = prior_exposures.get(key, Decimal(0)) + abs(notional)
             for key in sorted(configured, key=str):
-                if exposures.get(key, Decimal(0)) / state.nav > configured[key]:
+                concentration = exposures.get(key, Decimal(0)) / state.nav
+                prior_concentration = None
+                if prior_state is not None:
+                    prior_concentration = prior_exposures.get(key, Decimal(0)) / prior_state.nav
+                if _risk_increased_or_breached(concentration, configured[key], prior_concentration):
                     return _reject(code, f"{key} concentration exceeds limit")
         strategy_decision = self._check_strategy(
             state,
             order_intent=order_intent,
             order_delta=order_delta,
+            prior_state=prior_state,
         )
         if strategy_decision is not None:
             return strategy_decision
-        if (
-            limits.max_initial_margin_base is not None
-            and state.initial_margin > limits.max_initial_margin_base
+        if limits.max_initial_margin_base is not None and _risk_increased_or_breached(
+            state.initial_margin,
+            limits.max_initial_margin_base,
+            None if prior_state is None else prior_state.initial_margin,
         ):
             return _reject("INITIAL_MARGIN_LIMIT", "initial margin exceeds limit")
-        if (
-            limits.max_maintenance_margin_base is not None
-            and state.maintenance_margin > limits.max_maintenance_margin_base
+        if limits.max_maintenance_margin_base is not None and _risk_increased_or_breached(
+            state.maintenance_margin,
+            limits.max_maintenance_margin_base,
+            None if prior_state is None else prior_state.maintenance_margin,
         ):
             return _reject("MAINTENANCE_MARGIN_LIMIT", "maintenance margin exceeds limit")
-        if (
-            limits.max_margin_utilization is not None
-            and state.initial_margin / state.nav > limits.max_margin_utilization
+        if limits.max_margin_utilization is not None and _risk_increased_or_breached(
+            state.initial_margin / state.nav,
+            limits.max_margin_utilization,
+            None if prior_state is None else prior_state.initial_margin / prior_state.nav,
         ):
             return _reject("MARGIN_UTILIZATION_LIMIT", "margin utilization exceeds limit")
-        stress = self._check_stress(state)
+        stress = self._check_stress(state, prior_state=prior_state)
         if stress is not None:
             return stress
         analytics = self._check_analytics(state.as_of)
@@ -896,6 +968,7 @@ class CrossAssetRiskPolicy:
         *,
         order_intent: OrderIntent | None,
         order_delta: Decimal,
+        prior_state: _ExposureState | None,
     ) -> RiskDecision | None:
         limit = self.limits.max_strategy_concentration
         if limit is None:
@@ -904,9 +977,9 @@ class CrossAssetRiskPolicy:
         for item in self.inputs.strategy_exposures:
             if item.available_at <= state.as_of:
                 prior = latest_by_strategy.get(item.strategy_id)
-                if prior is None or (item.available_at, item.observed_at) > (
-                    prior.available_at,
+                if prior is None or (item.observed_at, item.available_at) > (
                     prior.observed_at,
+                    prior.available_at,
                 ):
                     latest_by_strategy[item.strategy_id] = item
         if order_intent is not None:
@@ -921,7 +994,10 @@ class CrossAssetRiskPolicy:
             ).to_decimal()
             projected = _project_position(current, order_delta, order_intent.reduce_only)
             gross = item.gross_exposure_base.to_decimal() - abs(current) + abs(projected)
-            if gross / state.nav > limit:
+            prior_gross = None
+            if prior_state is not None:
+                prior_gross = item.gross_exposure_base.to_decimal() / prior_state.nav
+            if _risk_increased_or_breached(gross / state.nav, limit, prior_gross):
                 return _reject(
                     "STRATEGY_CONCENTRATION_LIMIT",
                     f"strategy concentration exceeds limit for {order_intent.strategy_id}",
@@ -937,7 +1013,12 @@ class CrossAssetRiskPolicy:
                 )
         return None
 
-    def _check_stress(self, state: _ExposureState) -> RiskDecision | None:
+    def _check_stress(
+        self,
+        state: _ExposureState,
+        *,
+        prior_state: _ExposureState | None = None,
+    ) -> RiskDecision | None:
         limit = self.limits.max_stress_loss_ratio
         if limit is None:
             return None
@@ -953,7 +1034,20 @@ class CrossAssetRiskPolicy:
                 )
                 pnl += notional * shock
             loss = max(-pnl, Decimal(0))
-            if loss / state.nav > limit:
+            prior_loss_ratio = None
+            if prior_state is not None:
+                prior_pnl = Decimal(0)
+                for instrument_id, notional in prior_state.notionals.items():
+                    spec = prior_state.specs[instrument_id]
+                    shock = (
+                        scenario.instrument_shocks.get(instrument_id, Decimal(0))
+                        + scenario.asset_class_shocks.get(spec.asset_class, Decimal(0))
+                        + scenario.currency_shocks.get(spec.settlement_currency, Decimal(0))
+                        + scenario.venue_shocks.get(spec.venue, Decimal(0))
+                    )
+                    prior_pnl += notional * shock
+                prior_loss_ratio = max(-prior_pnl, Decimal(0)) / prior_state.nav
+            if _risk_increased_or_breached(loss / state.nav, limit, prior_loss_ratio):
                 return _reject(
                     "STRESS_LOSS_LIMIT", f"stress loss exceeds limit for {scenario.name}"
                 )
@@ -982,6 +1076,19 @@ class CrossAssetRiskPolicy:
             if limit is not None and getattr(snapshot, field_name).to_decimal() > limit:
                 return _reject(code, f"{field_name} exceeds limit")
         if limits.max_factor_drift_z is not None:
+            if not snapshot.factor_drift_z:
+                return _reject(
+                    "MISSING_FACTOR_DRIFT",
+                    "factor drift is missing while the factor drift limit is enabled",
+                )
+            missing_factors = sorted(
+                set(limits.required_factor_drift_factors).difference(snapshot.factor_drift_z)
+            )
+            if missing_factors:
+                return _reject(
+                    "MISSING_FACTOR_DRIFT",
+                    f"factor drift is missing required factors: {missing_factors}",
+                )
             for factor in sorted(snapshot.factor_drift_z):
                 if abs(snapshot.factor_drift_z[factor].to_decimal()) > limits.max_factor_drift_z:
                     return _reject("FACTOR_DRIFT_LIMIT", f"factor drift exceeds limit for {factor}")
@@ -999,7 +1106,7 @@ def _latest(
     causal = [value for value in matches if value.available_at <= as_of]
     if not causal:
         return None, "future"
-    return max(causal, key=lambda value: (value.available_at, value.observed_at)), "ok"
+    return max(causal, key=lambda value: (value.observed_at, value.available_at)), "ok"
 
 
 def _project_position(current: Decimal, delta: Decimal, reduce_only: bool) -> Decimal:
@@ -1009,6 +1116,16 @@ def _project_position(current: Decimal, delta: Decimal, reduce_only: bool) -> De
         return current
     remaining = max(abs(current) - abs(delta), Decimal(0))
     return remaining.copy_sign(current)
+
+
+def _risk_increased_or_breached(
+    value: Decimal,
+    limit: Decimal,
+    prior_value: Decimal | None,
+) -> bool:
+    if prior_value is not None:
+        return value > prior_value
+    return value > limit
 
 
 def _is_derivative(spec: InstrumentSpec) -> bool:

@@ -4,14 +4,17 @@ import argparse
 import json
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import yaml
 
 from quant_risk_monitor.analytics import (
+    factor_exposure_coverage,
     factor_exposures,
     historical_var_cvar,
     liquidity_days_to_exit,
     parametric_var_cvar,
+    return_history_coverage,
     risk_contributions,
     shrink_covariance,
     stress_test,
@@ -93,7 +96,36 @@ def _run_advanced_checks(config_path: Path, cfg: dict) -> CheckResult:
         positions = pd.read_csv(_resolve_config_path(config_path, str(positions_cfg["path"])))
         if "date" in positions.columns:
             positions = positions[positions["date"] == positions["date"].max()]
-        weights = positions.set_index("symbol")["weight"].astype(float)
+        required_columns = {"symbol", "weight"}
+        missing_columns = sorted(required_columns.difference(positions.columns))
+        invalid_reason = None
+        if missing_columns:
+            invalid_reason = f"positions are missing columns: {missing_columns}"
+        else:
+            symbols = positions["symbol"].astype(str).str.strip()
+            parsed_weights = pd.to_numeric(positions["weight"], errors="coerce").replace(
+                [np.inf, -np.inf], np.nan
+            )
+            if symbols.eq("").any() or symbols.duplicated().any():
+                invalid_reason = "position symbols must be unique and non-empty"
+            elif parsed_weights.isna().any():
+                invalid_reason = "position weights must be finite"
+            else:
+                weights = pd.Series(parsed_weights.to_numpy(), index=symbols, dtype=float)
+        if invalid_reason is not None:
+            metrics["positions_input"] = {
+                "status": "not_evaluable",
+                "reason": invalid_reason,
+            }
+            alerts.append(
+                Alert(
+                    rule_id="positions_input_not_evaluable",
+                    severity=Severity.CRITICAL,
+                    message="portfolio positions cannot be evaluated",
+                    details={"reason": invalid_reason},
+                )
+            )
+            return CheckResult(alerts=alerts, metrics=metrics)
 
     scenarios_cfg = advanced.get("scenarios") or {}
     if scenarios_cfg.get("path") and not weights.empty:
@@ -150,25 +182,71 @@ def _run_advanced_checks(config_path: Path, cfg: dict) -> CheckResult:
         date_column = str(asset_returns_cfg.get("date_column", "date"))
         if date_column in asset_returns:
             asset_returns = asset_returns.drop(columns=date_column)
-        covariance = shrink_covariance(
-            asset_returns.reindex(columns=weights.index),
-            shrinkage=float(asset_returns_cfg.get("shrinkage", 0.2)),
-            annualization=int(asset_returns_cfg.get("annualization", 252)),
-        )
-        contribution = risk_contributions(weights, covariance)
-        metrics["risk_contributions"] = contribution.reset_index(names="symbol").to_dict(
-            orient="records"
-        )
+        active_weights = weights[weights != 0]
+        aligned_returns = asset_returns.reindex(columns=active_weights.index)
+        min_observations = int(asset_returns_cfg.get("min_observations", 2))
+        try:
+            coverage = return_history_coverage(aligned_returns, min_observations=min_observations)
+        except (TypeError, ValueError) as exc:
+            coverage_details = {"complete": False, "reason": str(exc)}
+        else:
+            coverage_details = coverage.to_dict()
+        metrics["risk_contribution_coverage"] = coverage_details
+        if not coverage_details["complete"]:
+            metrics["risk_contributions"] = {"status": "not_evaluable"}
+            alerts.append(
+                Alert(
+                    rule_id="risk_contributions_not_evaluable",
+                    severity=Severity.CRITICAL,
+                    message="asset covariance cannot be estimated from the supplied returns",
+                    details=coverage_details,
+                )
+            )
+        else:
+            covariance = shrink_covariance(
+                aligned_returns,
+                shrinkage=float(asset_returns_cfg.get("shrinkage", 0.2)),
+                annualization=int(asset_returns_cfg.get("annualization", 252)),
+                min_observations=min_observations,
+            )
+            contribution = risk_contributions(active_weights, covariance)
+            metrics["risk_contributions"] = contribution.reset_index(names="symbol").to_dict(
+                orient="records"
+            )
 
     factor_cfg = advanced.get("factor_exposures") or {}
     if factor_cfg.get("path") and not weights.empty:
         factor_frame = pd.read_csv(_resolve_config_path(config_path, str(factor_cfg["path"])))
         symbol_column = str(factor_cfg.get("symbol_column", "symbol"))
-        factor_frame = factor_frame.set_index(symbol_column)
-        metrics["factor_exposures"] = {
-            str(name): float(value)
-            for name, value in factor_exposures(weights, factor_frame).items()
-        }
+        if symbol_column not in factor_frame.columns:
+            coverage_details = {
+                "complete": False,
+                "reason": f"factor exposures are missing symbol column: {symbol_column}",
+            }
+        else:
+            factor_frame = factor_frame.set_index(symbol_column)
+            try:
+                coverage = factor_exposure_coverage(weights, factor_frame)
+            except (TypeError, ValueError) as exc:
+                coverage_details = {"complete": False, "reason": str(exc)}
+            else:
+                coverage_details = coverage.to_dict()
+        metrics["factor_exposure_coverage"] = coverage_details
+        if not coverage_details["complete"]:
+            metrics["factor_exposures"] = {"status": "not_evaluable"}
+            alerts.append(
+                Alert(
+                    rule_id="factor_exposures_not_evaluable",
+                    severity=Severity.CRITICAL,
+                    message="factor exposures are incomplete for non-zero holdings",
+                    details=coverage_details,
+                )
+            )
+        else:
+            metrics["factor_exposures"] = {
+                str(name): float(value)
+                for name, value in factor_exposures(weights, factor_frame).items()
+            }
     return CheckResult(alerts=alerts, metrics=metrics)
 
 

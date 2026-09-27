@@ -22,12 +22,14 @@ def _decimal(value: object, name: str) -> Decimal:
     return parsed
 
 
-def _optional_ratio(value: object | None, name: str) -> Decimal | None:
+def _optional_ratio(
+    value: object | None, name: str, *, maximum: Decimal = Decimal(1)
+) -> Decimal | None:
     if value is None:
         return None
     parsed = _decimal(value, name)
-    if not Decimal(0) <= parsed <= Decimal(1):
-        raise ValidationError(f"{name} must be between 0 and 1")
+    if not Decimal(0) <= parsed <= maximum:
+        raise ValidationError(f"{name} must be between 0 and {maximum}")
     return parsed
 
 
@@ -80,10 +82,15 @@ class DecisionPortfolioLimits:
             "max_gross_weight",
             "min_cash_weight",
             "max_industry_weight",
-            "max_turnover",
             "max_estimated_cost_rate",
         ):
             object.__setattr__(self, name, _optional_ratio(getattr(self, name), name))
+        # Turnover is sum(abs(target-current)), including both legs of a rotation.
+        object.__setattr__(
+            self,
+            "max_turnover",
+            _optional_ratio(self.max_turnover, "max_turnover", maximum=Decimal(2)),
+        )
         object.__setattr__(
             self, "max_positions", _optional_count(self.max_positions, "max_positions")
         )
@@ -194,7 +201,13 @@ def check_decision_portfolio(
                     limit=float(limits.max_industry_weight),
                 )
     cost = None
-    if estimated_cost_rate is not None:
+    if limits.max_estimated_cost_rate is not None and estimated_cost_rate is None:
+        breach(
+            "portfolio.missing_estimated_cost_rate",
+            "estimated trading cost is required when the cost limit is enabled",
+            limit=float(limits.max_estimated_cost_rate),
+        )
+    elif estimated_cost_rate is not None:
         cost = _decimal(estimated_cost_rate, "estimated_cost_rate")
         if cost < 0:
             raise ValidationError("estimated_cost_rate must be non-negative")

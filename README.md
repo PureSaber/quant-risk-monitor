@@ -7,8 +7,8 @@ backtesting, and paper trading. The package cannot send live orders:
 Version `0.4.0` implements the `quant_execution.PortfolioRiskPolicy` protocol frozen in the
 Cross-Asset & Multi-Frequency v2 RFC. Internal runtime dependencies are pinned to released tags:
 
-- `quant-data-kit v0.8.1` (`8f258f11be8e4d8edddcd41b79b817bd6c925970`)
-- `quant-execution v0.5.1` (`15e4e5c9dbaf2fe9b438732b2e94db295d5ea58c`)
+- `quant-data-kit v0.8.1` (`b5621379e1a15562371be31c03f354a6acf512e4`)
+- `quant-execution v0.5.1` (`99ab9b1445d72164fa4e8c6d1ebde859b80dba1f`)
 
 ## Cross-asset policy
 
@@ -40,7 +40,10 @@ gate = RuleBookRiskGate(instruments=instrument_registry, ledger=ledger, policies
 Order checks combine QExec's signed `projected_notional_base` with the current
 `PortfolioRiskSnapshot`, so every decision is based on the proposed post-order portfolio.
 `reduce_only` projections can only reduce the current absolute position and cannot be counted as
-new exposure.
+new exposure. Existing position-derived limit breaches may decline monotonically during an unwind.
+Portfolio-level analytics snapshots are not recomputed from an individual proposed order, so an
+active analytics breach continues to block `reduce_only` orders until the caller supplies a fresh,
+compliant snapshot or applies an explicit recovery policy outside this library.
 
 Supported controls:
 
@@ -67,11 +70,16 @@ machine-readable metrics and stable critical alert codes for dashboards and unat
 `PriceObservation`, `FxRateObservation`, `LiquidityObservation`,
 `StrategyExposureSnapshot`, and `AnalyticsRiskSnapshot` carry both `observed_at` and
 `available_at`. The policy selects the latest causally available value and never reads the network
-or substitutes a future/latest value.
+or substitutes a future/latest value. Recency is determined first by `observed_at`; `available_at`
+selects the latest revision of the same observation. A late-arriving older observation cannot mask
+a fresher value.
 
 Enabled rules fail closed with stable codes. Examples include `MISSING_PIT_PRICE`,
 `PIT_PRICE_NOT_AVAILABLE`, `MISSING_PIT_FX`, `PIT_FX_MISMATCH`, `MISSING_PIT_ADV`,
-`PIT_ADV_NOT_AVAILABLE`, `MISSING_CLASSIFICATION`, and `MISSING_STRATEGY_EXPOSURE`.
+`PIT_ADV_NOT_AVAILABLE`, `MISSING_CLASSIFICATION`, `MISSING_STRATEGY_EXPOSURE`, and
+`MISSING_FACTOR_DRIFT`. When a factor-drift threshold is enabled, an empty drift map is rejected.
+`required_factor_drift_factors` can declare the required factor universe; every declared factor
+must be present, while every supplied factor is checked against the threshold.
 QExec remains the source of truth for positions, marks, FX conversion, margin, Funding,
 Settlement, and NAV; the policy verifies supplied PIT values against the QExec snapshot.
 
@@ -96,6 +104,33 @@ factor-exposure outputs are preserved. Tail-risk output now also includes parame
 optional `parametric_var_limit` and `parametric_cvar_limit` rules add critical alerts without
 changing the historical `var_limit` and `cvar_limit` semantics. Advanced CSV inputs remain
 documented in `configs/advanced.example.yaml`. The CLI exits with code 1 for any critical alert.
+
+Incomplete non-zero holdings now fail closed in both covariance and factor-exposure analytics.
+Successful advanced checks include explicit input coverage; missing or non-finite exposure/return
+history produces a critical `*_not_evaluable` alert rather than a zero-risk estimate. A configured
+decision cost limit likewise requires a finite cost estimate. Stress scenarios reject missing or
+non-finite returns for every non-zero holding, tail-risk estimators reject infinite or non-numeric
+observations, and risk attribution rejects non-PSD covariance matrices.
+
+## Barra-style statistical risk model
+
+The public `fit_barra_style_risk_model` API estimates point-in-time cross-sectional factor returns,
+a shrunk PSD factor covariance `F`, shrunk specific variance `D`, and asset covariance
+`Σ=XFXᵀ+D`. It reports absolute and benchmark-relative factor exposures, annualized portfolio risk,
+tracking error, and factor/specific variance attribution. Inputs carry separate effective,
+observation, and availability times; incomplete coverage, immature returns, rank deficiency, and
+ill-conditioned exposures stop estimation.
+
+Model matrices are stored privately and public accessors return defensive copies. Before analysis
+or serialization, the model verifies label alignment, finiteness, PSD covariance, and the exact
+`Σ=XFXᵀ+D` identity; inconsistent state is rejected rather than repaired silently.
+
+This is an independently implemented Barra-style linear risk model, not an MSCI Barra model.
+Return-derived or statistical exposures must use `model_kind="statistical_proxy"`; this label is
+preserved in model snapshots, diagnostics, and portfolio reports. The library never invents a
+market factor or other missing descriptor. See
+[`docs/BARRA_STYLE_FACTOR_MODEL.md`](docs/BARRA_STYLE_FACTOR_MODEL.md) and run
+`python examples/barra_style_proxy.py` for the complete contract and example.
 
 ## Quality gates
 

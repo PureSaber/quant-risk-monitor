@@ -68,9 +68,34 @@ def test_all_enabled_portfolio_limits_fail_closed() -> None:
     [
         ({"max_positions": 0}, "positive integer"),
         ({"max_turnover": Decimal("NaN")}, "finite"),
+        ({"max_turnover": Decimal("2.01")}, "between 0 and 2"),
+        ({"max_turnover": Decimal("-0.01")}, "between 0 and 2"),
         ({"min_cash_weight": 1.1}, "between 0 and 1"),
     ],
 )
 def test_limits_reject_invalid_values(kwargs: dict, message: str) -> None:
     with pytest.raises(ValidationError, match=message):
         DecisionPortfolioLimits(**kwargs)
+
+
+def test_enabled_cost_limit_rejects_missing_estimate() -> None:
+    result = check_decision_portfolio(
+        target_weights={"A": "0.5"},
+        limits=DecisionPortfolioLimits(max_estimated_cost_rate="0.001"),
+    )
+
+    assert result.has_critical
+    assert [alert.rule_id for alert in result.alerts] == ["portfolio.missing_estimated_cost_rate"]
+    assert result.metrics["estimated_cost_rate"] is None
+
+
+def test_full_long_only_rotation_uses_two_sided_l1_turnover() -> None:
+    kwargs = {"target_weights": {"B": 1}, "current_weights": {"A": 1}}
+    allowed = check_decision_portfolio(**kwargs, limits=DecisionPortfolioLimits(max_turnover=2))
+    assert allowed.metrics["turnover"] == 2
+    assert not allowed.has_critical
+    blocked = check_decision_portfolio(
+        **kwargs, limits=DecisionPortfolioLimits(max_turnover="1.99")
+    )
+    assert blocked.has_critical
+    assert [alert.rule_id for alert in blocked.alerts] == ["portfolio.max_turnover"]

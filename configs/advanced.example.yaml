@@ -8,6 +8,7 @@ advanced:
   asset_returns:
     path: fixtures/asset_returns_wide.csv
     date_column: date
+    min_observations: 20
     shrinkage: 0.2
     annualization: 252
   scenarios:

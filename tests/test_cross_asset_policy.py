@@ -285,6 +285,63 @@ def single_position_context(
     )
 
 
+def two_stock_context(
+    first: InstrumentSpec,
+    second: InstrumentSpec,
+    *,
+    first_notional: str,
+    second_notional: str,
+    projected_notional_base: str,
+) -> RiskCheckContext:
+    notionals = {
+        first.instrument_id: Decimal(first_notional),
+        second.instrument_id: Decimal(second_notional),
+    }
+    specs = {first.instrument_id: first, second.instrument_id: second}
+    positions = tuple(
+        PositionRiskSnapshot(
+            instrument_id=instrument_id,
+            asset_class=specs[instrument_id].asset_class,
+            venue=specs[instrument_id].venue,
+            settlement_currency=specs[instrument_id].settlement_currency,
+            quantity=FixedPoint.from_decimal(notional / Decimal(10), 0),
+            mark_price=fp("10"),
+            base_notional=FixedPoint.from_decimal(notional, 0),
+            initial_margin=fp("0"),
+            maintenance_margin=fp("0"),
+        )
+        for instrument_id, notional in notionals.items()
+    )
+    account = AccountSnapshot(
+        account_id="account",
+        event_time=T0,
+        base_currency="CNY",
+        positions={position.instrument_id: position.quantity for position in positions},
+        nav=fp("100000"),
+        initial_margin=fp("0"),
+        maintenance_margin=fp("0"),
+    )
+    portfolio = PortfolioRiskSnapshot(
+        account_id="account",
+        event_time=T0,
+        base_currency="CNY",
+        nav=fp("100000"),
+        cash_value=fp("0"),
+        gross_exposure=FixedPoint.from_decimal(sum(abs(value) for value in notionals.values()), 0),
+        net_exposure=FixedPoint.from_decimal(sum(notionals.values()), 0),
+        initial_margin=fp("0"),
+        maintenance_margin=fp("0"),
+        positions=positions,
+    )
+    return RiskCheckContext(
+        account_snapshot=account,
+        portfolio_snapshot=portfolio,
+        instrument_spec=first,
+        reference_price=fp("10"),
+        projected_notional_base=fp(projected_notional_base, 0),
+    )
+
+
 def gate_for(
     spec: InstrumentSpec,
     policy: CrossAssetRiskPolicy,
@@ -573,6 +630,187 @@ def test_reduce_only_decreases_projected_risk_without_mutating_policy() -> None:
     assert policy.check_order(increasing, increasing_context).code == "GROSS_LEVERAGE_LIMIT"
 
 
+def test_reduce_only_allows_monotonic_reduction_of_existing_multi_limit_breaches() -> None:
+    first = stock_spec()
+    second = replace(
+        first,
+        instrument_id="equity:sse:600001",
+        native_symbol="600001",
+    )
+    policy = CrossAssetRiskPolicy(
+        instruments={first.instrument_id: first, second.instrument_id: second},
+        limits=CrossAssetRiskLimits(
+            max_gross_leverage="1.0",
+            max_abs_net_leverage="1.0",
+            max_instrument_concentration="0.5",
+            max_asset_class_concentration={AssetClass.EQUITY: "0.9"},
+            max_currency_concentration={"CNY": "0.9"},
+            max_venue_concentration={"SSE": "0.9"},
+            max_strategy_concentration="1.0",
+            max_adv_participation="0.2",
+            max_days_to_liquidate="2",
+            max_stress_loss_ratio="0.05",
+        ),
+        inputs=PITRiskInputs(
+            prices=(price(first.instrument_id, "10"), price(second.instrument_id, "10")),
+            liquidity=(
+                liquidity(first.instrument_id, "100000"),
+                liquidity(second.instrument_id, "100000"),
+            ),
+            strategy_exposures=(
+                StrategyExposureSnapshot(
+                    strategy_id="strategy",
+                    gross_exposure_base=fp("120000", 0),
+                    instrument_notionals_base={
+                        first.instrument_id: fp("60000", 0),
+                        second.instrument_id: fp("60000", 0),
+                    },
+                    observed_at=T0,
+                    available_at=T0,
+                ),
+            ),
+        ),
+        stress_scenarios=(
+            StressScenario(name="equity-down", asset_class_shocks={AssetClass.EQUITY: "-0.10"}),
+        ),
+    )
+    context = two_stock_context(
+        first,
+        second,
+        first_notional="60000",
+        second_notional="60000",
+        projected_notional_base="-10000",
+    )
+    reducing = asset_intent(
+        first.instrument_id,
+        "1000",
+        "10",
+        side=Side.SELL,
+        reduce_only=True,
+    )
+
+    decision = policy.check_order(reducing, context)
+
+    assert decision.accepted
+
+
+def test_reduce_only_still_requires_all_pit_inputs_and_analytics() -> None:
+    first = stock_spec()
+    second = replace(
+        first,
+        instrument_id="equity:sse:600001",
+        native_symbol="600001",
+    )
+    context = two_stock_context(
+        first,
+        second,
+        first_notional="60000",
+        second_notional="60000",
+        projected_notional_base="-10000",
+    )
+    reducing = asset_intent(
+        first.instrument_id,
+        "1000",
+        "10",
+        side=Side.SELL,
+        reduce_only=True,
+    )
+    missing_price = CrossAssetRiskPolicy(
+        instruments={first.instrument_id: first, second.instrument_id: second},
+        limits=CrossAssetRiskLimits(max_gross_leverage="1"),
+        inputs=PITRiskInputs(prices=(price(first.instrument_id, "10"),)),
+    )
+    assert missing_price.check_order(reducing, context).code == "MISSING_PIT_PRICE"
+
+    analytics_breach = CrossAssetRiskPolicy(
+        instruments={first.instrument_id: first, second.instrument_id: second},
+        limits=CrossAssetRiskLimits(
+            max_gross_leverage="1",
+            max_historical_var="0.05",
+        ),
+        inputs=PITRiskInputs(
+            prices=(price(first.instrument_id, "10"), price(second.instrument_id, "10")),
+            analytics=(
+                AnalyticsRiskSnapshot(
+                    historical_var=fp("0.06"),
+                    historical_cvar=fp("0.06"),
+                    parametric_var=fp("0.06"),
+                    parametric_cvar=fp("0.06"),
+                    observed_at=T0,
+                    available_at=T0,
+                ),
+            ),
+        ),
+    )
+    assert analytics_breach.check_order(reducing, context).code == "HISTORICAL_VAR_LIMIT"
+
+
+def test_reduce_only_rejects_noop_and_any_controlled_risk_increase() -> None:
+    first = stock_spec()
+    second = replace(
+        first,
+        instrument_id="equity:sse:600001",
+        native_symbol="600001",
+    )
+    inputs = PITRiskInputs(
+        prices=(price(first.instrument_id, "10"), price(second.instrument_id, "10"))
+    )
+    no_op_policy = CrossAssetRiskPolicy(
+        instruments={first.instrument_id: first, second.instrument_id: second},
+        limits=CrossAssetRiskLimits(max_gross_leverage="2"),
+        inputs=inputs,
+    )
+    long_context = two_stock_context(
+        first,
+        second,
+        first_notional="60000",
+        second_notional="60000",
+        projected_notional_base="10000",
+    )
+    no_op = asset_intent(first.instrument_id, "1000", "10", reduce_only=True)
+    assert no_op_policy.check_order(no_op, long_context).code == "REDUCE_ONLY_NOT_REDUCING"
+
+    hedged_context = two_stock_context(
+        first,
+        second,
+        first_notional="60000",
+        second_notional="-60000",
+        projected_notional_base="-10000",
+    )
+    net_policy = CrossAssetRiskPolicy(
+        instruments={first.instrument_id: first, second.instrument_id: second},
+        limits=CrossAssetRiskLimits(
+            max_gross_leverage="2",
+            max_abs_net_leverage="1",
+        ),
+        inputs=inputs,
+    )
+    reducing = asset_intent(
+        first.instrument_id,
+        "1000",
+        "10",
+        side=Side.SELL,
+        reduce_only=True,
+    )
+    assert net_policy.check_order(reducing, hedged_context).code == "NET_LEVERAGE_LIMIT"
+
+    stress_policy = CrossAssetRiskPolicy(
+        instruments={first.instrument_id: first, second.instrument_id: second},
+        limits=CrossAssetRiskLimits(max_stress_loss_ratio="1"),
+        inputs=inputs,
+        stress_scenarios=(
+            StressScenario(
+                name="same-direction-shock",
+                instrument_shocks={
+                    first.instrument_id: "0.10",
+                    second.instrument_id: "0.10",
+                },
+            ),
+        ),
+    )
+    assert stress_policy.check_order(reducing, hedged_context).code == "STRESS_LOSS_LIMIT"
+
+
 def test_runtime_accepts_a_share_future_crypto_multicurrency_portfolio() -> None:
     specs = {spec.instrument_id: spec for spec in (stock_spec(), future_spec(), perp_spec())}
     positions = (
@@ -750,6 +988,89 @@ def test_factor_drift_limit_accepts_boundary_and_rejects_excess() -> None:
         inputs=PITRiskInputs(analytics=(exceeded,)),
     )
     assert rejected.runtime_check(empty_runtime_context()).code == "FACTOR_DRIFT_LIMIT"
+
+
+def test_factor_drift_limit_fails_closed_on_empty_or_incomplete_factor_universe() -> None:
+    empty = AnalyticsRiskSnapshot(
+        historical_var=fp("0"),
+        historical_cvar=fp("0"),
+        parametric_var=fp("0"),
+        parametric_cvar=fp("0"),
+        factor_drift_z={},
+        observed_at=T0,
+        available_at=T0,
+    )
+    empty_policy = CrossAssetRiskPolicy(
+        instruments={},
+        limits=CrossAssetRiskLimits(max_factor_drift_z="2"),
+        inputs=PITRiskInputs(analytics=(empty,)),
+    )
+    assert empty_policy.runtime_check(empty_runtime_context()).code == "MISSING_FACTOR_DRIFT"
+
+    incomplete = replace(empty, factor_drift_z={"momentum": fp("1")})
+    required_policy = CrossAssetRiskPolicy(
+        instruments={},
+        limits=CrossAssetRiskLimits(
+            max_factor_drift_z="2",
+            required_factor_drift_factors=("momentum", "value"),
+        ),
+        inputs=PITRiskInputs(analytics=(incomplete,)),
+    )
+    assert required_policy.runtime_check(empty_runtime_context()).code == "MISSING_FACTOR_DRIFT"
+
+    complete = replace(incomplete, factor_drift_z={"momentum": fp("1"), "value": fp("2")})
+    complete_policy = CrossAssetRiskPolicy(
+        instruments={},
+        limits=required_policy.limits,
+        inputs=PITRiskInputs(analytics=(complete,)),
+    )
+    assert complete_policy.runtime_check(empty_runtime_context()).accepted
+
+
+def test_pit_selection_prefers_newer_observation_over_late_stale_data() -> None:
+    recent_breach = AnalyticsRiskSnapshot(
+        historical_var=fp("0.06"),
+        historical_cvar=fp("0"),
+        parametric_var=fp("0"),
+        parametric_cvar=fp("0"),
+        observed_at=T0 - timedelta(minutes=1),
+        available_at=T0 - timedelta(minutes=1),
+    )
+    late_stale = replace(
+        recent_breach,
+        historical_var=fp("0.01"),
+        observed_at=T0 - timedelta(days=1),
+        available_at=T0,
+    )
+    analytics_policy = CrossAssetRiskPolicy(
+        instruments={},
+        limits=CrossAssetRiskLimits(max_historical_var="0.05"),
+        inputs=PITRiskInputs(analytics=(recent_breach, late_stale)),
+    )
+    assert analytics_policy.runtime_check(empty_runtime_context()).code == "HISTORICAL_VAR_LIMIT"
+
+    recent_strategy_breach = StrategyExposureSnapshot(
+        strategy_id="strategy",
+        gross_exposure_base=fp("20000", 0),
+        observed_at=T0 - timedelta(minutes=1),
+        available_at=T0 - timedelta(minutes=1),
+    )
+    late_stale_strategy = replace(
+        recent_strategy_breach,
+        gross_exposure_base=fp("0"),
+        observed_at=T0 - timedelta(days=1),
+        available_at=T0,
+    )
+    strategy_policy = CrossAssetRiskPolicy(
+        instruments={},
+        limits=CrossAssetRiskLimits(max_strategy_concentration="0.10"),
+        inputs=PITRiskInputs(
+            strategy_exposures=(recent_strategy_breach, late_stale_strategy),
+        ),
+    )
+    assert strategy_policy.runtime_check(empty_runtime_context()).code == (
+        "STRATEGY_CONCENTRATION_LIMIT"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1090,6 +1411,13 @@ def test_invalid_policy_configuration_is_rejected_at_construction() -> None:
         CrossAssetRiskLimits(max_gross_leverage="-1")
     with pytest.raises(ValidationError, match="positive"):
         CrossAssetRiskLimits(liquidation_participation_rate="0")
+    with pytest.raises(ValidationError, match="requires max_factor_drift_z"):
+        CrossAssetRiskLimits(required_factor_drift_factors=("momentum",))
+    with pytest.raises(ValidationError, match="duplicate normalized"):
+        CrossAssetRiskLimits(
+            max_factor_drift_z="2",
+            required_factor_drift_factors=("momentum", " momentum "),
+        )
     with pytest.raises(ValidationError, match="must be a mapping"):
         StrategyExposureSnapshot(
             strategy_id="strategy",
