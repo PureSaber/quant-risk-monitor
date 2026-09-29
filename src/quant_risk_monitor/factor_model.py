@@ -182,6 +182,8 @@ class FactorModelDiagnostics:
     annualization: int
     covariance_shrinkage: float
     specific_variance_shrinkage: float
+    estimator: str = "equal_weight_ols"
+    estimation: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -202,6 +204,9 @@ class FactorModelDiagnostics:
             "annualization": self.annualization,
             "covariance_shrinkage": self.covariance_shrinkage,
             "specific_variance_shrinkage": self.specific_variance_shrinkage,
+            "estimator": self.estimator,
+            "estimation": deepcopy(self.estimation),
+            "parameters_are_vendor_calibration": False,
         }
 
 

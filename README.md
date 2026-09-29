@@ -127,10 +127,13 @@ or serialization, the model verifies label alignment, finiteness, PSD covariance
 
 This is an independently implemented Barra-style linear risk model, not an MSCI Barra model.
 Return-derived or statistical exposures must use `model_kind="statistical_proxy"`; this label is
-preserved in model snapshots, diagnostics, and portfolio reports. The library never invents a
-market factor or other missing descriptor. See
-[`docs/BARRA_STYLE_FACTOR_MODEL.md`](docs/BARRA_STYLE_FACTOR_MODEL.md) and run
-`python examples/barra_style_proxy.py` for the complete contract and example.
+preserved in model snapshots, diagnostics, and portfolio reports. The minimal estimator never
+invents a market factor. `fit_equity_style_risk_model` adds capitalization-weighted regression,
+a country factor, constrained industry factors, exponentially weighted covariance, a Bartlett
+autocorrelation correction, a volatility-regime scale, a simulated eigenfactor bias correction,
+and Bayesian specific risk. Those half-lives and shrinkage values are configuration, not a vendor calibration.
+See [`docs/BARRA_STYLE_FACTOR_MODEL.md`](docs/BARRA_STYLE_FACTOR_MODEL.md) and run
+`python examples/barra_style_proxy.py` or `python examples/equity_style_risk.py`.
 
 ## Quality gates
 
