@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import pandas as pd
 
+from quant_risk_monitor.input_validation import fraction_limit, holdings_weights
 from quant_risk_monitor.models import Alert, Severity
 
 
 def check_single_name_weight(weights: pd.Series, max_weight: float) -> list[Alert]:
-    if weights.empty:
-        return []
-    w = weights.astype(float)
+    w = holdings_weights(weights)
+    max_weight = fraction_limit(max_weight)
     total = float(w.sum())
     # Weights may already be portfolio fractions (sum < 1 when cash exists).
     if total > 1.01:
