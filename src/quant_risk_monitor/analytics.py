@@ -270,12 +270,27 @@ def liquidity_days_to_exit(
     *,
     max_participation: float = 0.1,
 ) -> pd.DataFrame:
-    if not 0 < max_participation <= 1:
+    if not np.isfinite(max_participation) or not 0 < max_participation <= 1:
         raise ValueError("max_participation must be in (0, 1]")
+    for name, values in (("market values", market_values), ("ADV", average_daily_value)):
+        if not isinstance(values, pd.Series) or values.empty:
+            raise ValueError(f"{name} must be a non-empty Series")
+        if not values.index.is_unique or any(
+            pd.isna(symbol) or not str(symbol).strip() for symbol in values.index
+        ):
+            raise ValueError(f"{name} symbols must be unique and non-empty")
+        numeric = pd.to_numeric(values, errors="coerce")
+        if numeric.isna().any() or not np.isfinite(numeric).all():
+            raise ValueError(f"{name} must be finite")
+    market_values = pd.to_numeric(market_values).astype(float)
+    average_daily_value = pd.to_numeric(average_daily_value).astype(float)
     adv = average_daily_value.reindex(market_values.index)
     if adv.isna().any() or (adv <= 0).any():
         raise ValueError("ADV must be positive for every position")
-    days = market_values.abs() / (adv * max_participation)
+    with np.errstate(over="ignore", divide="ignore", invalid="ignore", under="ignore"):
+        days = market_values.abs() / (adv * max_participation)
+    if not np.isfinite(days).all():
+        raise ValueError("liquidity days must be finite")
     return pd.DataFrame(
         {
             "market_value": market_values,

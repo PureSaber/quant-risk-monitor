@@ -93,7 +93,11 @@ def _run_advanced_checks(config_path: Path, cfg: dict) -> CheckResult:
     weights = pd.Series(dtype=float)
     positions = pd.DataFrame()
     if positions_cfg.get("path"):
-        positions = pd.read_csv(_resolve_config_path(config_path, str(positions_cfg["path"])))
+        positions = pd.read_csv(
+            _resolve_config_path(config_path, str(positions_cfg["path"])),
+            dtype={"symbol": "string"},
+            keep_default_na=False,
+        )
         if "date" in positions.columns:
             positions = positions[positions["date"] == positions["date"].max()]
         required_columns = {"symbol", "weight"}
@@ -111,8 +115,11 @@ def _run_advanced_checks(config_path: Path, cfg: dict) -> CheckResult:
             elif parsed_weights.isna().any():
                 invalid_reason = "position weights must be finite"
             else:
+                positions["symbol"] = symbols
                 weights = pd.Series(parsed_weights.to_numpy(), index=symbols, dtype=float)
         if invalid_reason is not None:
+            if (advanced.get("liquidity") or {}).get("path"):
+                raise ValueError(invalid_reason)
             metrics["positions_input"] = {
                 "status": "not_evaluable",
                 "reason": invalid_reason,
@@ -149,18 +156,29 @@ def _run_advanced_checks(config_path: Path, cfg: dict) -> CheckResult:
             )
 
     liquidity_cfg = advanced.get("liquidity") or {}
-    if liquidity_cfg.get("path") and not positions.empty:
+    if liquidity_cfg.get("path"):
+        if positions.empty or "market_value" not in positions.columns:
+            raise ValueError("liquidity requires non-empty positions with market_value")
         liquidity = pd.read_csv(
-            _resolve_config_path(config_path, str(liquidity_cfg["path"]))
-        ).set_index("symbol")
-        market_values = positions.set_index("symbol")["market_value"].astype(float)
+            _resolve_config_path(config_path, str(liquidity_cfg["path"])),
+            dtype={"symbol": "string"},
+            keep_default_na=False,
+        )
+        adv_column = str(liquidity_cfg.get("adv_column", "average_daily_value"))
+        if not {"symbol", adv_column}.issubset(liquidity.columns):
+            raise ValueError("liquidity requires symbol and ADV columns")
+        liquidity["symbol"] = liquidity["symbol"].str.strip()
+        liquidity = liquidity.set_index("symbol")
+        market_values = positions.set_index("symbol")["market_value"]
         report = liquidity_days_to_exit(
             market_values,
-            liquidity[str(liquidity_cfg.get("adv_column", "average_daily_value"))],
+            liquidity[adv_column],
             max_participation=float(liquidity_cfg.get("max_participation", 0.1)),
         )
         metrics["liquidity"] = report.reset_index().to_dict(orient="records")
         limit = (cfg.get("rules") or {}).get("max_days_to_exit")
+        if limit is not None and (not np.isfinite(float(limit)) or float(limit) < 0):
+            raise ValueError("max_days_to_exit must be finite and non-negative")
         if limit is not None and float(report["days_to_exit"].max()) > float(limit):
             alerts.append(
                 Alert(
@@ -216,8 +234,12 @@ def _run_advanced_checks(config_path: Path, cfg: dict) -> CheckResult:
 
     factor_cfg = advanced.get("factor_exposures") or {}
     if factor_cfg.get("path") and not weights.empty:
-        factor_frame = pd.read_csv(_resolve_config_path(config_path, str(factor_cfg["path"])))
         symbol_column = str(factor_cfg.get("symbol_column", "symbol"))
+        factor_frame = pd.read_csv(
+            _resolve_config_path(config_path, str(factor_cfg["path"])),
+            dtype={symbol_column: "string"},
+            keep_default_na=False,
+        )
         if symbol_column not in factor_frame.columns:
             coverage_details = {
                 "complete": False,
@@ -304,7 +326,8 @@ def main(argv: list[str] | None = None) -> None:
     invalid_input = False
     try:
         result = run_check(Path(args.config))
-    except (ValueError, OSError) as exc:
+        serialized = json.dumps(result.to_dict(), indent=2, allow_nan=False)
+    except (ValueError, TypeError, KeyError, OSError) as exc:
         invalid_input = True
         result = CheckResult(
             alerts=[
@@ -317,9 +340,10 @@ def main(argv: list[str] | None = None) -> None:
             ],
             metrics={"evaluation_status": "unavailable"},
         )
+        serialized = json.dumps(result.to_dict(), indent=2, allow_nan=False)
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(result.to_dict(), indent=2), encoding="utf-8")
+    out_path.write_text(serialized, encoding="utf-8")
     print(f"wrote {out_path} alerts={len(result.alerts)} critical={result.has_critical}")
     if invalid_input:
         raise SystemExit(2)
