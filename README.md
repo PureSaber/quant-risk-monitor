@@ -1,5 +1,11 @@
 # quant-risk-monitor
 
+Advanced liquidity checks require non-empty positions, finite market values and positive finite
+ADV for every position, with unique symbols. Participation must be in `(0, 1]`; the optional
+`max_days_to_exit` must be finite and non-negative. Invalid or incomplete liquidity inputs
+replace the report with `evaluation_status: unavailable` and exit code 2. A valid horizon
+breach exits 1; a valid passing check exits 0. JSON reports never emit NaN or Infinity.
+
 Point-in-time cross-asset risk policy and portfolio analytics for PureSaber research,
 backtesting, and paper trading. The package cannot send live orders:
 `CrossAssetRiskPolicy.sends_live_orders` is always `False`.
