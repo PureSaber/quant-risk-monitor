@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import pandas as pd
 
+from quant_risk_monitor.input_validation import fraction_limit, nav_observations
 from quant_risk_monitor.models import Alert, CheckResult, Severity
 
 
 def check_drawdown(nav: pd.Series, max_drawdown: float) -> list[Alert]:
-    if nav.empty:
-        return []
+    nav = nav_observations(nav)
+    max_drawdown = fraction_limit(max_drawdown)
     peak = nav.cummax()
     dd = (nav - peak) / peak
     worst = float(dd.min())
@@ -27,8 +28,10 @@ def check_drawdown(nav: pd.Series, max_drawdown: float) -> list[Alert]:
 
 
 def check_daily_loss(nav: pd.Series, daily_loss_limit: float) -> list[Alert]:
-    if len(nav) < 2:
-        return []
+    nav = nav_observations(nav)
+    daily_loss_limit = fraction_limit(daily_loss_limit)
+    if nav.iloc[-2] == 0:
+        raise ValueError("Daily loss is not evaluable with a zero previous NAV")
     daily_ret = nav.pct_change().iloc[-1]
     if float(daily_ret) < -daily_loss_limit:
         return [

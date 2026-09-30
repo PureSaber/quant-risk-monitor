@@ -103,7 +103,15 @@ Existing drawdown, daily-loss, single-name, stress, liquidity, covariance/risk-c
 factor-exposure outputs are preserved. Tail-risk output now also includes parametric VaR-CVaR;
 optional `parametric_var_limit` and `parametric_cvar_limit` rules add critical alerts without
 changing the historical `var_limit` and `cvar_limit` semantics. Advanced CSV inputs remain
-documented in `configs/advanced.example.yaml`. The CLI exits with code 1 for any critical alert.
+documented in `configs/advanced.example.yaml`. The CLI exits with code 1 for a critical risk alert.
+Invalid or unavailable input produces an `input_data_invalid` critical alert,
+`evaluation_status: unavailable`, and exit code 2, replacing any previous output report.
+NAV checks require at least two finite, non-negative observations with unique valid dates and
+a positive opening value. Invalid NAV rows are never dropped; invalid holdings weights are
+never filled with zero. The original holdings CSV contract is long-only: finite non-negative
+weights, nonempty symbols, and at least one row. Rows sharing a symbol are aggregated before
+concentration checks (leading zeroes are preserved). Existing fraction/relative-weight
+normalization is unchanged; explicit zero weights remain valid for a cash-only portfolio.
 
 Incomplete non-zero holdings now fail closed in both covariance and factor-exposure analytics.
 Successful advanced checks include explicit input coverage; missing or non-finite exposure/return

@@ -301,11 +301,28 @@ def main(argv: list[str] | None = None) -> None:
     check.add_argument("--out", required=True)
     args = parser.parse_args(argv)
 
-    result = run_check(Path(args.config))
+    invalid_input = False
+    try:
+        result = run_check(Path(args.config))
+    except (ValueError, OSError) as exc:
+        invalid_input = True
+        result = CheckResult(
+            alerts=[
+                Alert(
+                    rule_id="input_data_invalid",
+                    severity=Severity.CRITICAL,
+                    message=f"Risk is not evaluable: {exc}",
+                    details={"error_type": type(exc).__name__},
+                )
+            ],
+            metrics={"evaluation_status": "unavailable"},
+        )
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(result.to_dict(), indent=2), encoding="utf-8")
     print(f"wrote {out_path} alerts={len(result.alerts)} critical={result.has_critical}")
+    if invalid_input:
+        raise SystemExit(2)
     if result.has_critical:
         raise SystemExit(1)
 

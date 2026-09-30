@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from quant_risk_monitor.input_validation import holdings_weights, nav_observations
+
 
 def load_capital_curve(path: Path, strategy_col: str) -> pd.Series:
     df = pd.read_csv(path)
@@ -12,8 +14,7 @@ def load_capital_curve(path: Path, strategy_col: str) -> pd.Series:
     if strategy_col not in df.columns:
         raise ValueError(f"missing strategy column {strategy_col!r} in {path}")
     dates = pd.to_datetime(df["date"])
-    values = pd.to_numeric(df[strategy_col], errors="coerce")
-    return pd.Series(values.values, index=dates).sort_index().dropna()
+    return nav_observations(pd.Series(df[strategy_col].values, index=dates))
 
 
 def load_spread_nav(path: Path, nav_col: str = "nav") -> pd.Series:
@@ -24,14 +25,11 @@ def load_spread_nav(path: Path, nav_col: str = "nav") -> pd.Series:
     if nav_col not in df.columns:
         raise ValueError(f"missing nav column {nav_col!r} in {path}")
     dates = pd.to_datetime(df[date_col])
-    values = pd.to_numeric(df[nav_col], errors="coerce")
-    return pd.Series(values.values, index=dates).sort_index().dropna()
+    return nav_observations(pd.Series(df[nav_col].values, index=dates))
 
 
 def load_holdings_weights(path: Path, symbol_col: str, weight_col: str) -> pd.Series:
     df = pd.read_csv(path, dtype={symbol_col: str})
     if symbol_col not in df.columns or weight_col not in df.columns:
         raise ValueError(f"missing columns in {path}")
-    weights = pd.to_numeric(df[weight_col], errors="coerce").fillna(0.0)
-    symbols = df[symbol_col].astype(str)
-    return pd.Series(weights.values, index=symbols.values)
+    return holdings_weights(pd.Series(df[weight_col].values, index=df[symbol_col].values))
