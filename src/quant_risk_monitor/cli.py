@@ -321,7 +321,36 @@ def main(argv: list[str] | None = None) -> None:
     check = sub.add_parser("check", help="Run risk checks")
     check.add_argument("--config", required=True)
     check.add_argument("--out", required=True)
+    calibration = sub.add_parser("validate-forecasts", help="Evaluate causal factor-risk forecasts")
+    calibration.add_argument("--input", required=True)
+    calibration.add_argument("--out", required=True)
+    verify = sub.add_parser("verify-forecasts", help="Recompute a bound forecast evaluation")
+    verify.add_argument("--run", required=True)
     args = parser.parse_args(argv)
+
+    if args.command != "check":
+        from quant_risk_monitor.risk_validation import run_risk_validation, verify_risk_validation
+
+        try:
+            result = (
+                run_risk_validation(args.input, args.out)
+                if args.command == "validate-forecasts"
+                else verify_risk_validation(args.run)
+            )
+        except (ValueError, TypeError, KeyError, OSError, ArithmeticError) as exc:
+            print(json.dumps({"status": "unavailable", "reason": str(exc)}, ensure_ascii=False))
+            raise SystemExit(2) from exc
+        print(
+            json.dumps(
+                {
+                    "status": result["status"],
+                    "forecast_periods": result["forecast_periods"],
+                    "evidence_kind": result["evidence_kind"],
+                    "is_proxy": result["is_proxy"],
+                }
+            )
+        )
+        return
 
     invalid_input = False
     try:

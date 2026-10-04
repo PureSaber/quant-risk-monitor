@@ -37,6 +37,11 @@ from quant_risk_monitor.factor_model import (
     RiskDecomposition,
     fit_barra_style_risk_model,
 )
+from quant_risk_monitor.risk_validation import (
+    RiskForecastRequest,
+    evaluate_risk_forecasts,
+    forecast_factor_risk,
+)
 
 __all__ = [
     "AnalyticsRiskSnapshot",
@@ -56,13 +61,16 @@ __all__ = [
     "PriceObservation",
     "ReturnHistoryCoverage",
     "RiskDecomposition",
+    "RiskForecastRequest",
     "StrategyExposureSnapshot",
     "StressScenario",
     "check_decision_portfolio",
+    "evaluate_risk_forecasts",
     "factor_exposure_coverage",
     "factor_exposure_drift",
     "factor_exposures",
     "fit_barra_style_risk_model",
+    "forecast_factor_risk",
     "historical_var_cvar",
     "liquidity_days_to_exit",
     "parametric_var_cvar",
