@@ -1,5 +1,10 @@
 # quant-risk-monitor
 
+逐期风险预测校验已提供`quant-risk validate-forecasts`和`verify-forecasts`：
+按预测期初可得输入估计风险，再对精确匹配的成熟收益评价组合、主动和单资产总风险。
+可运行合成示例、公式与证据边界见[使用说明](docs/RISK_FORECAST_VALIDATION.md)。
+评分完成不代表校准通过，不改变风险限制或前向账户。
+
 Advanced liquidity checks require non-empty positions, finite market values and positive finite
 ADV for every position, with unique symbols. Participation must be in `(0, 1]`; the optional
 `max_days_to_exit` must be finite and non-negative. Invalid or incomplete liquidity inputs
@@ -11,10 +16,10 @@ backtesting, and paper trading. The package cannot send live orders:
 `CrossAssetRiskPolicy.sends_live_orders` is always `False`.
 
 Version `0.4.0` implements the `quant_execution.PortfolioRiskPolicy` protocol frozen in the
-Cross-Asset & Multi-Frequency v2 RFC. Internal runtime dependencies are pinned to released tags:
+Cross-Asset & Multi-Frequency v2 RFC. Current internal runtime dependencies use immutable commits:
 
-- `quant-data-kit v0.8.1` (`b5621379e1a15562371be31c03f354a6acf512e4`)
-- `quant-execution v0.5.1` (`99ab9b1445d72164fa4e8c6d1ebde859b80dba1f`)
+- `quant-data-kit` (`ba136c2fa2eea121bfb2ad7887b536c3952586f7`)
+- `quant-execution` (`21aace45d2dde6458db8fcda4829f252f8c640f1`)
 
 ## Cross-asset policy
 

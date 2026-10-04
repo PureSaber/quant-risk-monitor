@@ -1,0 +1,178 @@
+{
+  "schema": "quant-risk.forecast-study/v1",
+  "evidence_kind": "synthetic",
+  "frequency": "one daily observation",
+  "config": {
+    "model_kind": "statistical_proxy",
+    "min_periods": 4,
+    "min_assets_per_period": 3,
+    "min_asset_observations": 4,
+    "annualization": 252,
+    "covariance_shrinkage": 0.2,
+    "specific_variance_shrinkage": 0.2
+  },
+  "lookback": 4,
+  "exposures": [
+    {
+      "effective_at": "2025-01-01T00:00:00+00:00",
+      "available_at": "2025-01-01T00:00:00+00:00",
+      "values": {
+        "market": {
+          "A": 1.0,
+          "B": 1.0,
+          "C": 1.0
+        }
+      },
+      "source": "synthetic market proxy"
+    }
+  ],
+  "returns": [
+    {
+      "period_start": "2025-01-01T00:00:00+00:00",
+      "period_end": "2025-01-02T00:00:00+00:00",
+      "available_at": "2025-01-02T00:00:00+00:00",
+      "values": {
+        "A": 0.01,
+        "B": 0.008,
+        "C": -0.003
+      },
+      "source": "synthetic fixed returns"
+    },
+    {
+      "period_start": "2025-01-02T00:00:00+00:00",
+      "period_end": "2025-01-03T00:00:00+00:00",
+      "available_at": "2025-01-03T00:00:00+00:00",
+      "values": {
+        "A": -0.01,
+        "B": -0.008,
+        "C": 0.003
+      },
+      "source": "synthetic fixed returns"
+    },
+    {
+      "period_start": "2025-01-03T00:00:00+00:00",
+      "period_end": "2025-01-04T00:00:00+00:00",
+      "available_at": "2025-01-04T00:00:00+00:00",
+      "values": {
+        "A": 0.02,
+        "B": 0.016,
+        "C": -0.006
+      },
+      "source": "synthetic fixed returns"
+    },
+    {
+      "period_start": "2025-01-04T00:00:00+00:00",
+      "period_end": "2025-01-05T00:00:00+00:00",
+      "available_at": "2025-01-05T00:00:00+00:00",
+      "values": {
+        "A": -0.02,
+        "B": -0.016,
+        "C": 0.006
+      },
+      "source": "synthetic fixed returns"
+    },
+    {
+      "period_start": "2025-01-05T00:00:00+00:00",
+      "period_end": "2025-01-06T00:00:00+00:00",
+      "available_at": "2025-01-06T00:00:00+00:00",
+      "values": {
+        "A": 0.03,
+        "B": 0.024,
+        "C": -0.009
+      },
+      "source": "synthetic fixed returns"
+    },
+    {
+      "period_start": "2025-01-06T00:00:00+00:00",
+      "period_end": "2025-01-07T00:00:00+00:00",
+      "available_at": "2025-01-07T00:00:00+00:00",
+      "values": {
+        "A": -0.015,
+        "B": -0.012,
+        "C": 0.0045
+      },
+      "source": "synthetic fixed returns"
+    },
+    {
+      "period_start": "2025-01-07T00:00:00+00:00",
+      "period_end": "2025-01-08T00:00:00+00:00",
+      "available_at": "2025-01-08T00:00:00+00:00",
+      "values": {
+        "A": 0.005,
+        "B": 0.004,
+        "C": -0.0015
+      },
+      "source": "synthetic fixed returns"
+    },
+    {
+      "period_start": "2025-01-08T00:00:00+00:00",
+      "period_end": "2025-01-09T00:00:00+00:00",
+      "available_at": "2025-01-09T00:00:00+00:00",
+      "values": {
+        "A": -0.025,
+        "B": -0.020000000000000004,
+        "C": 0.0075
+      },
+      "source": "synthetic fixed returns"
+    }
+  ],
+  "requests": [
+    {
+      "period_start": "2025-01-05T00:00:00+00:00",
+      "period_end": "2025-01-06T00:00:00+00:00",
+      "weights_available_at": "2025-01-01T00:00:00+00:00",
+      "weights": {
+        "A": 0.5,
+        "B": 0.3
+      },
+      "benchmark_weights": {
+        "B": 0.5,
+        "C": 0.5
+      },
+      "source": "synthetic fixed opening weights"
+    },
+    {
+      "period_start": "2025-01-06T00:00:00+00:00",
+      "period_end": "2025-01-07T00:00:00+00:00",
+      "weights_available_at": "2025-01-01T00:00:00+00:00",
+      "weights": {
+        "A": 0.5,
+        "B": 0.3
+      },
+      "benchmark_weights": {
+        "B": 0.5,
+        "C": 0.5
+      },
+      "source": "synthetic fixed opening weights"
+    },
+    {
+      "period_start": "2025-01-07T00:00:00+00:00",
+      "period_end": "2025-01-08T00:00:00+00:00",
+      "weights_available_at": "2025-01-01T00:00:00+00:00",
+      "weights": {
+        "A": 0.5,
+        "B": 0.3
+      },
+      "benchmark_weights": {
+        "B": 0.5,
+        "C": 0.5
+      },
+      "source": "synthetic fixed opening weights"
+    },
+    {
+      "period_start": "2025-01-08T00:00:00+00:00",
+      "period_end": "2025-01-09T00:00:00+00:00",
+      "weights_available_at": "2025-01-01T00:00:00+00:00",
+      "weights": {
+        "A": 0.5,
+        "B": 0.3
+      },
+      "benchmark_weights": {
+        "B": 0.5,
+        "C": 0.5
+      },
+      "source": "synthetic fixed opening weights"
+    }
+  ],
+  "evaluation_as_of": "2025-01-09T00:00:00+00:00"
+}
