@@ -580,3 +580,53 @@ def verify_risk_validation(output):
     if _read_run_files(output) != contents:
         raise ValueError("risk validation evidence changed during verification")
     return result
+
+
+def readable_risk_forecast_summary(result, *, verification_status="evaluated_complete"):
+    """Select display fields from an already evaluated or recomputed forecast result.
+
+    This is a presentation adapter only: it neither rescales nor re-scores the
+    underlying causal forecast evaluation.
+    """
+    if (
+        not isinstance(result, dict)
+        or result.get("schema") != "quant-risk.forecast-evaluation/v1"
+        or result.get("status") != "complete"
+    ):
+        raise ValueError("complete risk forecast evaluation required")
+    selected = {}
+    for name in ("portfolio", "active"):
+        if name not in result["summary"]:
+            continue
+        source = result["summary"][name]
+        selected[name] = {
+            key: source[key]
+            for key in (
+                "periods",
+                "forecast_rms_volatility_annualized",
+                "realized_volatility_annualized",
+                "bias_statistic",
+                "mean_qlike",
+                "zero_variance_forecasts",
+                "normalized_metrics_status",
+            )
+        }
+    return {
+        "schema": "quant-risk.forecast-readable-summary/v1",
+        "verification_status": verification_status,
+        "evaluation_status": result["status"],
+        "calibration_status": "not_asserted",
+        "model_kind": result["model_kind"],
+        "is_proxy": result["is_proxy"],
+        "evidence_kind": result.get("evidence_kind"),
+        "frequency": result.get("frequency"),
+        "evaluation_as_of": result["evaluation_as_of"],
+        "forecast_periods": result["forecast_periods"],
+        "first_period_start": result["first_period_start"],
+        "last_period_end": result["last_period_end"],
+        "input_sha256": result.get("input_sha256"),
+        "forecast_sha256": result["forecast_sha256"],
+        "outcomes_sha256": result["outcomes_sha256"],
+        "series": selected,
+        "limitations": result["limitations"],
+    }
