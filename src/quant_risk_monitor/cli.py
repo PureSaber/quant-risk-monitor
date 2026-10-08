@@ -326,10 +326,47 @@ def main(argv: list[str] | None = None) -> None:
     calibration.add_argument("--out", required=True)
     verify = sub.add_parser("verify-forecasts", help="Recompute a bound forecast evaluation")
     verify.add_argument("--run", required=True)
+    overlap = sub.add_parser(
+        "portfolio-overlap", help="Build a PIT multi-strategy look-through overlap report"
+    )
+    overlap.add_argument("--input", required=True)
+    overlap.add_argument("--out", required=True)
+    overlap.add_argument(
+        "--risk-run", help="Verified forecast run to summarize without changing its scores"
+    )
     args = parser.parse_args(argv)
 
+    if args.command == "portfolio-overlap":
+        from quant_risk_monitor.lookthrough import run_portfolio_overlap
+
+        try:
+            result = run_portfolio_overlap(args.input, args.out, risk_run=args.risk_run)
+        except (ValueError, TypeError, KeyError, OSError, ArithmeticError) as exc:
+            print(json.dumps({"status": "unavailable", "reason": str(exc)}, ensure_ascii=False))
+            raise SystemExit(2) from exc
+        print(
+            json.dumps(
+                {
+                    "status": result["status"],
+                    "strategies": len(result["strategies"]),
+                    "pairwise_available": sum(
+                        item["status"] == "available" for item in result["pairwise"]
+                    ),
+                    "pairwise_unavailable": sum(
+                        item["status"] == "unavailable" for item in result["pairwise"]
+                    ),
+                    "risk_forecast_attached": result["risk_forecast"] is not None,
+                }
+            )
+        )
+        return
+
     if args.command != "check":
-        from quant_risk_monitor.risk_validation import run_risk_validation, verify_risk_validation
+        from quant_risk_monitor.risk_validation import (
+            readable_risk_forecast_summary,
+            run_risk_validation,
+            verify_risk_validation,
+        )
 
         try:
             result = (
@@ -340,16 +377,15 @@ def main(argv: list[str] | None = None) -> None:
         except (ValueError, TypeError, KeyError, OSError, ArithmeticError) as exc:
             print(json.dumps({"status": "unavailable", "reason": str(exc)}, ensure_ascii=False))
             raise SystemExit(2) from exc
-        print(
-            json.dumps(
-                {
-                    "status": result["status"],
-                    "forecast_periods": result["forecast_periods"],
-                    "evidence_kind": result["evidence_kind"],
-                    "is_proxy": result["is_proxy"],
-                }
-            )
+        summary = readable_risk_forecast_summary(
+            result,
+            verification_status=(
+                "verified_by_hash_and_full_recomputation"
+                if args.command == "verify-forecasts"
+                else "evaluated_complete"
+            ),
         )
+        print(json.dumps(summary, allow_nan=False))
         return
 
     invalid_input = False

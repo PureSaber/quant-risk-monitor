@@ -37,10 +37,12 @@ from quant_risk_monitor.factor_model import (
     RiskDecomposition,
     fit_barra_style_risk_model,
 )
+from quant_risk_monitor.lookthrough import evaluate_portfolio_overlap
 from quant_risk_monitor.risk_validation import (
     RiskForecastRequest,
     evaluate_risk_forecasts,
     forecast_factor_risk,
+    readable_risk_forecast_summary,
 )
 
 __all__ = [
@@ -65,6 +67,7 @@ __all__ = [
     "StrategyExposureSnapshot",
     "StressScenario",
     "check_decision_portfolio",
+    "evaluate_portfolio_overlap",
     "evaluate_risk_forecasts",
     "factor_exposure_coverage",
     "factor_exposure_drift",
@@ -74,6 +77,7 @@ __all__ = [
     "historical_var_cvar",
     "liquidity_days_to_exit",
     "parametric_var_cvar",
+    "readable_risk_forecast_summary",
     "return_history_coverage",
     "risk_contributions",
     "shrink_covariance",

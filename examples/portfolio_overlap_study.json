@@ -1,0 +1,108 @@
+{
+  "schema": "quant-risk.portfolio-exposure-study/v1",
+  "evidence_kind": "synthetic",
+  "business_at": "2025-02-01T00:00:00Z",
+  "knowledge_at": "2025-02-01T00:00:00Z",
+  "base_currency": "CNY",
+  "position_weight_basis": "fraction_of_strategy_nav_in_base_currency",
+  "max_depth": 8,
+  "max_age_days": 60,
+  "strategies": [
+    {
+      "strategy_id": "alpha",
+      "effective_at": "2025-02-01T00:00:00Z",
+      "available_at": "2025-02-01T00:00:00Z",
+      "source": "synthetic strategy snapshot",
+      "positions": [
+        {
+          "instrument_id": "A",
+          "asset_type": "security",
+          "currency": "CNY",
+          "weight": 0.2,
+          "source": "synthetic opening book"
+        },
+        {
+          "instrument_id": "ETF",
+          "asset_type": "fund",
+          "currency": "CNY",
+          "weight": 0.6,
+          "source": "synthetic opening book"
+        },
+        {
+          "instrument_id": "CASH:CNY",
+          "asset_type": "cash",
+          "currency": "CNY",
+          "weight": 0.2,
+          "source": "synthetic opening book"
+        }
+      ]
+    },
+    {
+      "strategy_id": "beta",
+      "effective_at": "2025-02-01T00:00:00Z",
+      "available_at": "2025-02-01T00:00:00Z",
+      "source": "synthetic strategy snapshot",
+      "positions": [
+        {
+          "instrument_id": "A",
+          "asset_type": "security",
+          "currency": "CNY",
+          "weight": 0.25,
+          "source": "synthetic opening book"
+        },
+        {
+          "instrument_id": "B",
+          "asset_type": "security",
+          "currency": "CNY",
+          "weight": 0.25,
+          "source": "synthetic opening book"
+        },
+        {
+          "instrument_id": "CASH:CNY",
+          "asset_type": "cash",
+          "currency": "CNY",
+          "weight": 0.5,
+          "source": "synthetic opening book"
+        }
+      ]
+    }
+  ],
+  "disclosures": [
+    {
+      "disclosure_id": "ETF-2025-01-01",
+      "fund_id": "ETF",
+      "holding_date": "2025-01-01",
+      "available_at": "2025-01-02T00:00:00Z",
+      "instrument_id": "A",
+      "asset_type": "security",
+      "currency": "CNY",
+      "weight": 0.5,
+      "source": "synthetic disclosure",
+      "evidence_id": "synthetic-ETF-2025-01-01"
+    },
+    {
+      "disclosure_id": "ETF-2025-01-01",
+      "fund_id": "ETF",
+      "holding_date": "2025-01-01",
+      "available_at": "2025-01-02T00:00:00Z",
+      "instrument_id": "B",
+      "asset_type": "security",
+      "currency": "CNY",
+      "weight": 0.4,
+      "source": "synthetic disclosure",
+      "evidence_id": "synthetic-ETF-2025-01-01"
+    },
+    {
+      "disclosure_id": "ETF-2025-01-01",
+      "fund_id": "ETF",
+      "holding_date": "2025-01-01",
+      "available_at": "2025-01-02T00:00:00Z",
+      "instrument_id": "CASH:CNY",
+      "asset_type": "cash",
+      "currency": "CNY",
+      "weight": 0.1,
+      "source": "synthetic disclosure",
+      "evidence_id": "synthetic-ETF-2025-01-01"
+    }
+  ]
+}

@@ -1,5 +1,10 @@
 # quant-risk-monitor
 
+多策略持仓重叠报告已提供`quant-risk portfolio-overlap`：复用 QDK 的 PIT ETF 穿透，显示
+直接持仓与 ETF 共同底层证券、净/总敞口、已覆盖/未知/过期/未来/循环/深度限制比例及来源
+哈希。只有完整资料才输出有效 overlap ratio；known-only 只作不可用诊断。输入 schema、
+合成手算例和风险预测核验摘要见[使用说明](docs/PORTFOLIO_EXPOSURE.md)。
+
 逐期风险预测校验已提供`quant-risk validate-forecasts`和`verify-forecasts`：
 按预测期初可得输入估计风险，再对精确匹配的成熟收益评价组合、主动和单资产总风险。
 可运行合成示例、公式与证据边界见[使用说明](docs/RISK_FORECAST_VALIDATION.md)。
