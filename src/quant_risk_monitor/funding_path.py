@@ -247,6 +247,8 @@ def evaluate_joint_funding(spec):
     """Aggregate segregated collateral pools without inventing transfers or netting."""
     if spec["schema"] != "quant-risk-monitor.joint-funding/v1":
         raise ValueError("unsupported joint funding schema")
+    if len({_time(path["as_of"]) for path in spec["pools"]}) > 1:
+        raise ValueError("joint funding pools must share the same as_of")
     pools = [evaluate_funding_path(path) for path in spec["pools"]]
     if not pools or len({p["collateral_pool"] for p in pools}) != len(pools):
         raise ValueError("joint funding needs uniquely identified collateral pools")

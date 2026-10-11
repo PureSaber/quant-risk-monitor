@@ -129,6 +129,9 @@ def test_joint_pools_do_not_net_unavailable_collateral():
     b["base_currency"] = "EUR"
     with pytest.raises(ValueError, match="currency"):
         evaluate_joint_funding(spec)
+    b["as_of"] = "2024-12-31T00:00:00Z"
+    with pytest.raises(ValueError, match="as_of"):
+        evaluate_joint_funding(spec)
 
 
 @pytest.mark.parametrize(
