@@ -228,6 +228,9 @@ def _estimate(rows, domain, plan, alpha):
         "unused_partial_rows": len(scores) - complete,
         "status": "insufficient_sample",
     }
+    if result["missing_rows"]:
+        result.update(status="partial_observation", mean=sum(blocks) / n if n else None)
+        return result
     if n < plan["min_blocks"]:
         return result
     mean = sum(blocks) / n

@@ -68,6 +68,7 @@ def test_selectively_removing_bad_outcomes_cannot_clear_alert():
     finding = diagnose_models(payload)["windows"][0]["findings"]["forecast_error"]
     assert finding["status"] == "partial_observation"
     assert finding["current"]["complete_blocks"] == 62
+    assert "interval" not in finding["current"]
 
 
 def test_structural_change_and_dependence_disable_inference():
