@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-from decimal import Decimal, InvalidOperation, localcontext
+from decimal import ROUND_CEILING, Decimal, InvalidOperation, localcontext
 from pathlib import Path
 
 import pandas as pd
@@ -98,6 +98,14 @@ def _state(cash, remaining, marks, reserve):
     }
 
 
+def _fraction_to_cover(gap, relief):
+    # Round required sale size upward by at most one arithmetic ULP. Rounding
+    # 1/3 down would falsely retain a 1e-40 funding deficit despite spare capacity.
+    with localcontext() as context:
+        context.rounding = ROUND_CEILING
+        return gap / relief
+
+
 def _evaluate(spec):
     if spec["schema"] != "quant-risk-monitor.funding-path/v1":
         raise ValueError("unsupported funding path schema")
@@ -153,12 +161,12 @@ def _evaluate(spec):
                 eventual_cash = mark["value"] - mark["fee"]
                 needs = []
                 if now["cash_gap"] > 0 and immediate_cash > 0:
-                    needs.append(now["cash_gap"] / immediate_cash)
+                    needs.append(_fraction_to_cover(now["cash_gap"], immediate_cash))
                 if now["initial_gap"] > 0 and collateral_relief > 0:
-                    needs.append(now["initial_gap"] / collateral_relief)
+                    needs.append(_fraction_to_cover(now["initial_gap"], collateral_relief))
                 # A delayed sale may queue future cash, but cannot cure today's gap.
                 if not needs and now["cash_gap"] > 0 and eventual_cash > 0:
-                    needs.append(now["cash_gap"] / eventual_cash)
+                    needs.append(_fraction_to_cover(now["cash_gap"], eventual_cash))
                 if not needs or available == 0:
                     continue
                 fraction = min(available, max(needs))

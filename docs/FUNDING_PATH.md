@@ -51,7 +51,9 @@ remaining fractions, settlement balances, insolvency, and the conservation ident
 
 `closing equity = previous equity + external flows + financing cash flow + settled native P&L + remaining mark changes - liquidation fees`.
 
-Decimal calculations use 40-digit precision. Only the conservation check allows numerical
+Decimal calculations use 40-digit precision. Required fractional sale sizes round upward
+by at most one arithmetic ULP before applying the actual liquidity capacity; this avoids
+a rounded-down 1/3 sale falsely leaving a numerical funding gap. Only the conservation check allows numerical
 residual `1e-28 * max(abs(expected equity), abs(actual equity), 1)`; reported funding gaps
 are not rounded away. The bundled two-step case independently yields equity 90 then 74:
 first-day cash 18 plus remaining securities 72, followed by VM -6, security loss -9 and

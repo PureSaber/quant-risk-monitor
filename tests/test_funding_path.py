@@ -112,6 +112,25 @@ def test_cost_fee_external_flows_pending_and_bankruptcy():
     assert result["unsettled"][0]["due"] == 5
 
 
+def test_fraction_rounding_funds_required_cash_without_erasing_real_capacity_gap():
+    spec = funding()
+    spec.update(
+        opening_cash="0",
+        cash_reserve="1",
+        positions=[{"id": "equity", "opening_mark_value": "3"}],
+        liquidation_order=["equity"],
+    )
+    spec["steps"] = spec["steps"][:1]
+    spec["steps"][0]["positions"] = [mark("equity", "3")]
+    row = evaluate_funding_path(spec)["steps"][0]
+    assert row["status"] == "funded" and D(row["after"]["cash"]) >= 1
+    assert D(row["equity"]) == 3
+    spec["steps"][0]["positions"][0]["max_liquidation_fraction"] = ".3333"
+    limited = evaluate_funding_path(spec)["steps"][0]
+    assert limited["status"] == "funding_gap"
+    assert D(limited["after"]["cash_gap"]) == D(".0001")
+
+
 def test_joint_pools_do_not_net_unavailable_collateral():
     a, b = funding(), funding()
     b.update(collateral_pool="broker-two", opening_cash="1000")
