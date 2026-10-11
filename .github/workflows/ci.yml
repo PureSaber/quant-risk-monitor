@@ -50,3 +50,9 @@ jobs:
           covered=summary['covered_branches']; total=summary['num_branches'];
           percent=100*covered/total; print(f'cross_asset branch coverage: {percent:.2f}%');
           assert percent >= 90, f'core branch coverage {percent:.2f}% is below 90%'"
+
+      - name: Chronological diagnostic CLI controls
+        run: |
+          python examples/model_diagnostics_demo.py state/diagnostic-inputs
+          quant-risk diagnose-model --input state/diagnostic-inputs/change.json --out state/diagnostic-change
+          quant-risk diagnose-model --input state/diagnostic-inputs/null.json --out state/diagnostic-null

@@ -193,3 +193,8 @@ After a rebuild, run the locked install commands above, both Ruff commands, the 
 and the QExec integration/determinism tests on Python3.10,3.11,and3.12. Roll back this governance
 change with `git revert` so `pyproject.toml`, constraints, and the lock return together. Existing
 tags and immutable run artifacts must never be moved, deleted, or recreated.
+# Model diagnostics
+
+`quant-risk diagnose-model` reports chronological signal, risk, cost, performance
+and operational diagnostics with explicit uncertainty and sample sufficiency.
+See [the diagnostic contract and example](docs/MODEL_DIAGNOSTICS.md).
