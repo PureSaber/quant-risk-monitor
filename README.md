@@ -1,5 +1,9 @@
 # quant-risk-monitor
 
+组合级连续情景资金压力见[资金路径接口](docs/FUNDING_PATH.md)：读取外部原生账户情景估值，
+计算保证金、抵押品、清算容量、结算延迟和资金缺口；多抵押池汇总不假设自动资金划转。
+这是一项离线压力研究，不修改执行账本。
+
 多策略持仓重叠报告已提供`quant-risk portfolio-overlap`：复用 QDK 的 PIT ETF 穿透，显示
 直接持仓与 ETF 共同底层证券、净/总敞口、已覆盖/未知/过期/未来/循环/深度限制比例及来源
 哈希。只有完整资料才输出有效 overlap ratio；known-only 只作不可用诊断。输入 schema、

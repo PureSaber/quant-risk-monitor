@@ -1,0 +1,88 @@
+{
+  "schema": "quant-risk-monitor.funding-path/v1",
+  "base_currency": "USD",
+  "collateral_pool": "broker-one",
+  "as_of": "2025-01-01T00:00:00Z",
+  "snapshot_known_at": "2025-01-01T00:00:00Z",
+  "source_ref": "synthetic:external-native-valuation",
+  "opening_cash": "30",
+  "cash_reserve": "5",
+  "liquidation_order": [
+    "future",
+    "equity"
+  ],
+  "positions": [
+    {
+      "id": "future",
+      "opening_mark_value": "0"
+    },
+    {
+      "id": "equity",
+      "opening_mark_value": "100"
+    }
+  ],
+  "steps": [
+    {
+      "time": "2025-01-02T00:00:00Z",
+      "external_cash_flow": "0",
+      "financing_cash_flow": "0",
+      "positions": [
+        {
+          "id": "future",
+          "mark_value": "0",
+          "eligible_collateral": "0",
+          "initial_margin": "40",
+          "maintenance_margin": "30",
+          "cash_pnl": "-20",
+          "liquidation_notional": "100",
+          "liquidation_cost_rate": "0",
+          "max_liquidation_fraction": ".25",
+          "settlement_lag_steps": 0
+        },
+        {
+          "id": "equity",
+          "mark_value": "80",
+          "eligible_collateral": "0",
+          "initial_margin": "0",
+          "maintenance_margin": "0",
+          "cash_pnl": "0",
+          "liquidation_notional": "100",
+          "liquidation_cost_rate": "0",
+          "max_liquidation_fraction": ".10",
+          "settlement_lag_steps": 0
+        }
+      ]
+    },
+    {
+      "time": "2025-01-03T00:00:00Z",
+      "external_cash_flow": "0",
+      "financing_cash_flow": "-1",
+      "positions": [
+        {
+          "id": "future",
+          "mark_value": "0",
+          "eligible_collateral": "0",
+          "initial_margin": "40",
+          "maintenance_margin": "30",
+          "cash_pnl": "-8",
+          "liquidation_notional": "100",
+          "liquidation_cost_rate": "0",
+          "max_liquidation_fraction": "1",
+          "settlement_lag_steps": 0
+        },
+        {
+          "id": "equity",
+          "mark_value": "70",
+          "eligible_collateral": "0",
+          "initial_margin": "0",
+          "maintenance_margin": "0",
+          "cash_pnl": "0",
+          "liquidation_notional": "100",
+          "liquidation_cost_rate": "0",
+          "max_liquidation_fraction": "1",
+          "settlement_lag_steps": 0
+        }
+      ]
+    }
+  ]
+}
