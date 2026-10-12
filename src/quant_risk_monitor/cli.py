@@ -318,6 +318,11 @@ def run_check(config_path: Path) -> CheckResult:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Check portfolio risk rules")
     sub = parser.add_subparsers(dest="command", required=True)
+    diagnostics = sub.add_parser(
+        "diagnose-model", help="Chronological signal, risk and cost diagnostics"
+    )
+    diagnostics.add_argument("--input", required=True)
+    diagnostics.add_argument("--out", required=True)
     check = sub.add_parser("check", help="Run risk checks")
     check.add_argument("--config", required=True)
     check.add_argument("--out", required=True)
@@ -335,6 +340,25 @@ def main(argv: list[str] | None = None) -> None:
         "--risk-run", help="Verified forecast run to summarize without changing its scores"
     )
     args = parser.parse_args(argv)
+
+    if args.command == "diagnose-model":
+        from quant_risk_monitor.model_diagnostics import run_model_diagnostics
+
+        try:
+            result = run_model_diagnostics(args.input, args.out)
+        except (ValueError, TypeError, KeyError, OSError, ArithmeticError) as exc:
+            print(json.dumps({"status": "unavailable", "reason": str(exc)}))
+            raise SystemExit(2) from exc
+        print(
+            json.dumps(
+                {
+                    "status": result["status"],
+                    "windows": len(result["windows"]),
+                    "execution_authorized": False,
+                }
+            )
+        )
+        return
 
     if args.command == "portfolio-overlap":
         from quant_risk_monitor.lookthrough import run_portfolio_overlap
