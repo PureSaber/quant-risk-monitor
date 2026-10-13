@@ -9,4 +9,5 @@ known-first-party = [
   "build_panel", "model_bootstrap", "original_financials", "prepare_pit",
   "public_sources", "run_study",
   "filings", "exposure_v2_study", "confirmation_context", "quant_risk_monitor",
+  "confirm_exposure_v2", "validate_pipeline",
 ]

@@ -111,6 +111,16 @@ def test_growth_uses_only_consecutive_known_years_and_preserves_negative_profits
     facts = pd.DataFrame(rows)
     dates = pd.DatetimeIndex(["2022-03-31", "2022-04-01", "2023-08-01"])
     values, quality = annual_growth_descriptors(facts, dates, ["a"])
+    future = facts.iloc[[0, 0]].copy()
+    future["available_at"] = "2030-01-01T00:00:00+08:00"
+    future["value"] = "not yet observable"
+    replayed, _ = annual_growth_descriptors(pd.concat([facts, future]), dates, ["a"])
+    for name in values:
+        pd.testing.assert_frame_equal(values[name], replayed[name])
+    with pytest.raises(ValueError, match="ambiguous"):
+        annual_growth_descriptors(
+            pd.concat([facts, future]), pd.DatetimeIndex(["2030-01-02"]), ["a"]
+        )
     assert np.isnan(values["revenue_growth_3y"].iloc[0, 0])
     assert values["revenue_growth_3y"].iloc[1, 0] == pytest.approx(30 / (380 / 3))
     assert values["profit_growth_3y"].iloc[1, 0] == pytest.approx(1.5)

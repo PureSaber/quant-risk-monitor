@@ -230,9 +230,18 @@ def main():
     parser.add_argument("--old-root", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--retry-failures", action="store_true")
     args = parser.parse_args()
     members = json.loads((args.old_root / "cohort.json").read_text(encoding="utf8"))["members"]
     members = members[: args.limit]
+    previous = {}
+    if args.retry_failures:
+        previous = {
+            r["code"]: r
+            for r in json.loads((args.out / "collection-status.json").read_text(encoding="utf8"))
+        }
+        save_json(args.out / "collection-status-before-retry.json", list(previous.values()))
+        members = [m for m in members if previous.get(m["code"], {}).get("errors")]
     # One connection for sequential market requests avoids competing server
     # sessions and repeated login overhead. Document work has a separate pool.
     import baostock as bs
@@ -278,7 +287,7 @@ def main():
                 print(json.dumps({"market_issuers": i, "errors": len(market_errors)}), flush=True)
     finally:
         bs.logout()
-    results = []
+    results = dict(previous)
     with ProcessPoolExecutor(max_workers=3) as pool:
         futures = [
             pool.submit(collect_one, (args.old_root, args.out, m["code"]))
@@ -288,8 +297,8 @@ def main():
             row = future.result()
             if row["code"] in market_errors:
                 row["errors"].append({"stage": "bao", "reason": market_errors[row["code"]]})
-            results.append(row)
-            save_json(args.out / "collection-status.json", results)
+            results[row["code"]] = row
+            save_json(args.out / "collection-status.json", list(results.values()))
             if i % 10 == 0 or row["errors"]:
                 print(json.dumps({"completed": i, **row}, ensure_ascii=False), flush=True)
 

@@ -106,8 +106,20 @@ def annual_growth_descriptors(facts, dates, assets, *, max_age_days=550):
     required = {"asset", "field", "report_period", "value", "available_at"}
     if required - set(facts):
         raise ValueError("financial facts lack required fields")
+    if (
+        isinstance(max_age_days, bool)
+        or not isinstance(max_age_days, (int, float))
+        or not math.isfinite(max_age_days)
+        or max_age_days < 0
+    ):
+        raise ValueError("max_age_days must be finite and nonnegative")
     dates = pd.DatetimeIndex(dates)
-    if dates.has_duplicates or not dates.is_monotonic_increasing or len(set(assets)) != len(assets):
+    if (
+        not len(dates)
+        or dates.has_duplicates
+        or not dates.is_monotonic_increasing
+        or len(set(assets)) != len(assets)
+    ):
         raise ValueError("growth requires unique ordered dates/assets")
     cutoffs = dates.tz_localize("Asia/Shanghai") if dates.tz is None else dates
     fields = {"revenue_ytd": "revenue_growth_3y", "profit_ytd": "profit_growth_3y"}
@@ -120,6 +132,9 @@ def annual_growth_descriptors(facts, dates, assets, *, max_age_days=550):
     selected["report_period"] = selected.report_period.astype(str)
     selected = selected[selected.report_period.str.endswith("1231")]
     selected["available_at"] = pd.to_datetime(selected.available_at, utc=True)
+    # Future revisions cannot invalidate an earlier requested build, including
+    # duplicates or values which are not yet interpretable at that cutoff.
+    selected = selected[selected.available_at <= cutoffs.max()]
     if selected.duplicated(["asset", "field", "report_period", "available_at"]).any():
         raise ValueError("ambiguous annual fact revisions")
     for asset in assets:

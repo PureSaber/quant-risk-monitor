@@ -271,6 +271,15 @@ def main():
     rows, missing = study.evaluate(panel, snapshots, histories, grid, estimators)
     rows.to_csv(out / "forecasts.csv", index=False)
     summary = study.summarize(rows, protocol)
+    legacy_comparison = (
+        rows[rows.variant.isin(["legacy", selection["selected"]])].copy()
+        if not rows.empty
+        else rows
+    )
+    if not legacy_comparison.empty:
+        legacy_comparison["variant"] = legacy_comparison.variant.map(
+            {"legacy": "repaired", selection["selected"]: "selected_candidate"}
+        )
     if study.digest(selection_path) != selection_hash:
         raise ValueError("selected model changed during confirmation")
     result = {
@@ -278,6 +287,7 @@ def main():
         "selection_sha256": selection_hash,
         "confirmation_period": ["2026-01-01", protocol["confirmation_end"]],
         "metrics": summary,
+        "selected_vs_legacy": study.summarize(legacy_comparison, protocol),
         "unavailable_dates": missing,
         "admission": admission,
         "minimum_confirmation_dates": protocol["minimum_confirmation_dates"],

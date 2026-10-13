@@ -140,6 +140,7 @@ python research/public_a_share/collect_confirmation_inputs.py --old-root OLD --o
 python research/public_a_share/confirmation_context.py --old-root OLD --out NEW/confirmation-inputs
 python research/public_a_share/confirm_exposure_v2.py --old-root OLD --study-root NEW
 python research/public_a_share/audit_exposure_v2.py --old-root OLD --out NEW
+python research/public_a_share/validate_exposure_v2.py --old-root OLD --out NEW
 python research/public_a_share/benchmark_exposure_v2.py --out NEW/capacity
 python -m pytest research/public_a_share -q
 ```
