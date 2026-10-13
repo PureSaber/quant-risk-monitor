@@ -9,11 +9,18 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
+
+from quant_risk_monitor.risk_estimators import (
+    estimate_covariance,
+    estimate_specific_risk,
+    regime_multiplier,
+    solve_factor_returns,
+)
 
 ModelKind = Literal["fundamental_style", "statistical_proxy"]
 
@@ -74,12 +81,37 @@ class ExposureSnapshot:
     available_at: pd.Timestamp | str
     values: pd.DataFrame
     source: str = ""
+    market_caps: pd.Series | None = None
+    industries: pd.Series | None = None
+    industry_factors: tuple[str, ...] = ()
+    provenance: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "effective_at", _timestamp(self.effective_at, "effective_at"))
         object.__setattr__(self, "available_at", _timestamp(self.available_at, "available_at"))
         object.__setattr__(self, "values", _normalize_frame(self.values, "exposure values"))
         object.__setattr__(self, "source", str(self.source))
+        if self.market_caps is not None:
+            caps = _normalize_series(pd.Series(self.market_caps), "market_caps")
+            if set(caps.index) != set(self.values.index) or (caps <= 0).any():
+                raise ValueError("market_caps require positive complete asset coverage")
+            object.__setattr__(self, "market_caps", caps.reindex(self.values.index))
+        if self.industries is not None:
+            groups = pd.Series(self.industries).copy()
+            groups.index = groups.index.map(str)
+            if (
+                groups.index.has_duplicates
+                or set(groups.index) != set(self.values.index)
+                or groups.isna().any()
+                or groups.astype(str).str.strip().eq("").any()
+            ):
+                raise ValueError("industries require complete nonempty asset classifications")
+            object.__setattr__(self, "industries", groups.astype(str).reindex(self.values.index))
+        names = tuple(self.industry_factors)
+        if len(set(names)) != len(names) or set(names) - set(self.values.columns):
+            raise ValueError("industry_factors must name distinct exposure columns")
+        object.__setattr__(self, "industry_factors", names)
+        object.__setattr__(self, "provenance", deepcopy(self.provenance))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -119,6 +151,23 @@ class FactorModelConfig:
     specific_variance_shrinkage: float = 0.2
     annualization: int = 252
     max_condition_number: float = 1e8
+    regression_weighting: str = "equal"
+    industry_constraint: bool = False
+    factor_half_life: float | None = None
+    specific_half_life: float | None = None
+    newey_west_lags: int = 0
+    specific_newey_west_lags: int = 0
+    risk_horizon: int = 1
+    regime_window: int = 0
+    regime_min_periods: int = 20
+    regime_half_life: float | None = None
+    regime_scale_min: float = 0.25
+    regime_scale_max: float = 4.0
+    specific_target: str = "global"
+    specific_shrinkage_method: str = "fixed"
+    specific_prior_dof: float = 20.0
+    specific_min_group_assets: int = 3
+    specific_group_fallback: str = "error"
 
     def __post_init__(self) -> None:
         if self.model_kind not in ("fundamental_style", "statistical_proxy"):
@@ -142,6 +191,52 @@ class FactorModelConfig:
         if not math.isfinite(condition) or condition <= 1:
             raise ValueError("max_condition_number must be finite and greater than one")
         object.__setattr__(self, "max_condition_number", condition)
+        if self.regression_weighting not in {"equal", "market_cap", "sqrt_market_cap"}:
+            raise ValueError("unknown regression_weighting")
+        if type(self.industry_constraint) is not bool:
+            raise ValueError("industry_constraint must be boolean")
+        for name in ("factor_half_life", "specific_half_life", "regime_half_life"):
+            value = getattr(self, name)
+            if value is not None and (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(value)
+                or value <= 0
+            ):
+                raise ValueError(f"{name} must be positive finite or null")
+        for name, minimum in (
+            ("newey_west_lags", 0),
+            ("specific_newey_west_lags", 0),
+            ("risk_horizon", 1),
+            ("regime_window", 0),
+            ("regime_min_periods", 2),
+            ("specific_min_group_assets", 2),
+        ):
+            value = getattr(self, name)
+            if type(value) is not int or value < minimum:
+                raise ValueError(f"invalid {name}")
+        for name in ("newey_west_lags", "specific_newey_west_lags"):
+            if getattr(self, name) not in {0, self.risk_horizon - 1}:
+                raise ValueError("Newey-West lags must be zero or risk_horizon minus one")
+        if self.regime_window == 1:
+            raise ValueError("regime_window must be zero or at least two")
+        for name in ("regime_scale_min", "regime_scale_max", "specific_prior_dof"):
+            value = getattr(self, name)
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, (int, float))
+                or not math.isfinite(value)
+                or value <= 0
+            ):
+                raise ValueError(f"{name} must be finite and positive")
+        if self.regime_scale_min > 1 or self.regime_scale_max < 1:
+            raise ValueError("regime bounds must contain the neutral variance multiplier one")
+        if self.specific_target not in {"global", "industry"}:
+            raise ValueError("unknown specific_target")
+        if self.specific_shrinkage_method not in {"fixed", "bayesian"}:
+            raise ValueError("unknown specific_shrinkage_method")
+        if self.specific_group_fallback not in {"error", "global"}:
+            raise ValueError("unknown specific_group_fallback")
 
 
 def _series_payload(values: pd.Series) -> dict[str, Any]:
@@ -182,9 +277,10 @@ class FactorModelDiagnostics:
     annualization: int
     covariance_shrinkage: float
     specific_variance_shrinkage: float
+    estimation: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload = {
             "model_kind": self.model_kind,
             "is_proxy": self.model_kind == "statistical_proxy",
             "as_of": self.as_of.isoformat(),
@@ -203,6 +299,9 @@ class FactorModelDiagnostics:
             "covariance_shrinkage": self.covariance_shrinkage,
             "specific_variance_shrinkage": self.specific_variance_shrinkage,
         }
+        if self.estimation:
+            payload["estimation"] = deepcopy(self.estimation)
+        return payload
 
 
 @dataclass(frozen=True)
@@ -235,6 +334,7 @@ class PortfolioFactorRisk:
     benchmark_exposures: pd.Series | None = None
     active_exposures: pd.Series | None = None
     tracking_risk: RiskDecomposition | None = None
+    risk_horizon: int = 1
 
     def to_dict(self) -> dict[str, Any]:
         payload: dict[str, Any] = {
@@ -251,6 +351,10 @@ class PortfolioFactorRisk:
             "portfolio_exposures": _series_payload(self.portfolio_exposures),
             "portfolio_risk": self.portfolio_risk.to_dict(),
         }
+        payload["risk_horizon"] = self.risk_horizon
+        payload["horizon_variance"] = (
+            self.portfolio_risk.total_variance / self.annualization * self.risk_horizon
+        )
         if self.benchmark_exposures is not None:
             payload["benchmark_exposures"] = _series_payload(self.benchmark_exposures)
             payload["active_exposures"] = _series_payload(self.active_exposures)  # type: ignore[arg-type]
@@ -509,6 +613,7 @@ class BarraStyleRiskModel:
                 annualization=self.annualization,
                 portfolio_exposures=portfolio_exposures,
                 portfolio_risk=portfolio_risk,
+                risk_horizon=self._diagnostics.estimation.get("risk_horizon", 1),
             )
         benchmark = self._align_weights(benchmark_weights, "benchmark_weights")
         benchmark_exposures = self._exposures.T @ benchmark
@@ -522,6 +627,7 @@ class BarraStyleRiskModel:
             benchmark_exposures=benchmark_exposures,
             active_exposures=portfolio_exposures - benchmark_exposures,
             tracking_risk=self._decompose(active),
+            risk_horizon=self._diagnostics.estimation.get("risk_horizon", 1),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -598,6 +704,19 @@ def fit_barra_style_risk_model(
         raise ValueError("exposure_snapshots must contain ExposureSnapshot values")
     if any(not isinstance(item, AssetReturnObservation) for item in observations):
         raise ValueError("return_observations must contain AssetReturnObservation values")
+    # Frozen dataclasses may still contain caller-mutated frames/series.
+    snapshots = [
+        ExposureSnapshot(
+            **{name: getattr(item, name) for name in ExposureSnapshot.__dataclass_fields__}
+        )
+        for item in snapshots
+    ]
+    observations = [
+        AssetReturnObservation(
+            **{name: getattr(item, name) for name in AssetReturnObservation.__dataclass_fields__}
+        )
+        for item in observations
+    ]
 
     snapshot_keys = [(item.effective_at, item.available_at) for item in snapshots]
     if len(set(snapshot_keys)) != len(snapshot_keys):
@@ -630,6 +749,7 @@ def fit_barra_style_risk_model(
     cross_section_sizes: list[int] = []
     ranks: list[int] = []
     conditions: list[float] = []
+    regression_diagnostics = []
     for observation in observations:
         snapshot = _latest_snapshot(snapshots, observation.period_start)
         exposure = snapshot.values.reindex(columns=factor_order)
@@ -648,27 +768,27 @@ def fit_barra_style_risk_model(
                 f"return period ending {observation.period_end.isoformat()} has {asset_count} assets; "
                 f"at least {config.min_assets_per_period} are required"
             )
-        if asset_count <= factor_count:
+        if asset_count <= factor_count and not config.industry_constraint:
             raise ValueError("each cross-sectional regression requires more assets than factors")
-        matrix = exposure.to_numpy(dtype=float)
-        rank = int(np.linalg.matrix_rank(matrix))
-        condition = float(np.linalg.cond(matrix))
-        if rank != factor_count:
-            raise ValueError(
-                f"exposure matrix is rank deficient for period ending "
-                f"{observation.period_end.isoformat()}: rank={rank}, factors={factor_count}"
-            )
-        if not math.isfinite(condition) or condition > config.max_condition_number:
-            raise ValueError(
-                f"exposure matrix is ill-conditioned for period ending "
-                f"{observation.period_end.isoformat()}: condition_number={condition}"
-            )
-        coefficients, _, solved_rank, _ = np.linalg.lstsq(
-            matrix, observation.values.to_numpy(dtype=float), rcond=None
+        ordered = ExposureSnapshot(
+            effective_at=snapshot.effective_at,
+            available_at=snapshot.available_at,
+            values=exposure,
+            source=snapshot.source,
+            market_caps=snapshot.market_caps,
+            industries=snapshot.industries,
+            industry_factors=snapshot.industry_factors,
+            provenance=snapshot.provenance,
         )
-        if int(solved_rank) != factor_count:
-            raise ValueError("cross-sectional factor-return regression did not have full rank")
-        residual = observation.values.to_numpy(dtype=float) - matrix @ coefficients
+        try:
+            coefficients, residual, rank, condition, regression = solve_factor_returns(
+                ordered, observation.values, config
+            )
+        except ValueError as exc:
+            raise ValueError(
+                f"{exc} for period ending {observation.period_end.isoformat()}"
+            ) from exc
+        regression_diagnostics.append(regression)
         factor_rows.append(coefficients)
         for asset, value in zip(observation.values.index, residual, strict=True):
             residuals.setdefault(str(asset), []).append(float(value))
@@ -681,8 +801,17 @@ def fit_barra_style_risk_model(
         index=pd.DatetimeIndex([item.period_end for item in observations], name="period_end"),
         columns=factor_order,
     )
-    factor_covariance = _psd_shrink_covariance(
-        factor_returns, config.covariance_shrinkage, config.annualization
+    covariance, covariance_diagnostic = estimate_covariance(
+        factor_returns.to_numpy(),
+        half_life=config.factor_half_life,
+        lags=config.newey_west_lags,
+        shrinkage=config.covariance_shrinkage,
+    )
+    scale, regime_diagnostic = regime_multiplier(
+        factor_returns.to_numpy(), config, half_life=config.factor_half_life
+    )
+    factor_covariance = pd.DataFrame(
+        covariance * scale * config.annualization, index=factor_order, columns=factor_order
     )
 
     current_snapshot = _latest_snapshot(snapshots, cutoff)
@@ -698,20 +827,9 @@ def fit_barra_style_risk_model(
             "insufficient specific-return history for current exposure assets: "
             f"{sorted(str(asset) for asset in insufficient_assets)}"
         )
-    raw_specific = pd.Series(
-        {
-            str(asset): float(np.var(residuals[str(asset)], ddof=1)) * config.annualization
-            for asset in current_exposures.index
-        },
-        dtype=float,
+    specific_variances, specific_diagnostic = estimate_specific_risk(
+        residuals, current_snapshot, config, len(observations)
     )
-    if not np.isfinite(raw_specific.to_numpy()).all() or (raw_specific < 0).any():
-        raise ValueError("specific variances could not be estimated")
-    specific_target = float(raw_specific.mean())
-    specific_variances = (
-        (1 - config.specific_variance_shrinkage) * raw_specific
-        + config.specific_variance_shrinkage * specific_target
-    ).reindex(current_exposures.index)
 
     exposure_matrix = current_exposures.to_numpy(dtype=float)
     asset_matrix = exposure_matrix @ factor_covariance.to_numpy(
@@ -744,6 +862,16 @@ def fit_barra_style_risk_model(
         annualization=config.annualization,
         covariance_shrinkage=config.covariance_shrinkage,
         specific_variance_shrinkage=config.specific_variance_shrinkage,
+        estimation={
+            "configuration": asdict(config),
+            "risk_horizon": config.risk_horizon,
+            "covariance_units": "annualized horizon variance rate",
+            "regressions": regression_diagnostics,
+            "factor_covariance": covariance_diagnostic,
+            "factor_regime": regime_diagnostic,
+            "specific_risk": specific_diagnostic,
+            "exposure_provenance": current_snapshot.provenance,
+        },
     )
     return BarraStyleRiskModel(
         model_kind=config.model_kind,

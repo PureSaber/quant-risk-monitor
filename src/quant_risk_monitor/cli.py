@@ -318,6 +318,14 @@ def run_check(config_path: Path) -> CheckResult:
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Check portfolio risk rules")
     sub = parser.add_subparsers(dest="command", required=True)
+    for command in ("build-exposures", "calibrate-risk"):
+        research = sub.add_parser(command, help="Build auditable risk-model research artifacts")
+        research.add_argument("--input", required=True)
+        research.add_argument("--out", required=True)
+    research_verify = sub.add_parser(
+        "verify-research", help="Recompute exposure/calibration evidence"
+    )
+    research_verify.add_argument("--run", required=True)
     diagnostics = sub.add_parser(
         "diagnose-model", help="Chronological signal, risk and cost diagnostics"
     )
@@ -340,6 +348,34 @@ def main(argv: list[str] | None = None) -> None:
         "--risk-run", help="Verified forecast run to summarize without changing its scores"
     )
     args = parser.parse_args(argv)
+
+    if args.command in {"build-exposures", "calibrate-risk", "verify-research"}:
+        from quant_risk_monitor.risk_research import run_risk_research, verify_risk_research
+
+        try:
+            result = (
+                verify_risk_research(args.run)
+                if args.command == "verify-research"
+                else run_risk_research(
+                    "exposures" if args.command == "build-exposures" else "calibration",
+                    args.input,
+                    args.out,
+                )
+            )
+        except (ValueError, TypeError, KeyError, OSError, ArithmeticError) as exc:
+            print(json.dumps({"status": "unavailable", "reason": str(exc)}))
+            raise SystemExit(2) from exc
+        print(
+            json.dumps(
+                {
+                    "status": result["status"],
+                    "schema": result["schema"],
+                    "evidence_kind": result["evidence_kind"],
+                    "verified": args.command == "verify-research",
+                }
+            )
+        )
+        return
 
     if args.command == "diagnose-model":
         from quant_risk_monitor.model_diagnostics import run_model_diagnostics
