@@ -27,6 +27,11 @@ from quant_risk_monitor.cross_asset import (
     StressScenario,
 )
 from quant_risk_monitor.decision import DecisionPortfolioLimits, check_decision_portfolio
+from quant_risk_monitor.exposure_builder import (
+    ExposureBuildConfig,
+    build_exposure_snapshot,
+    public_equity_style_config,
+)
 from quant_risk_monitor.factor_model import (
     AssetReturnObservation,
     BarraStyleRiskModel,
@@ -52,6 +57,7 @@ __all__ = [
     "CrossAssetRiskLimits",
     "CrossAssetRiskPolicy",
     "DecisionPortfolioLimits",
+    "ExposureBuildConfig",
     "ExposureSnapshot",
     "FactorExposureCoverage",
     "FactorModelConfig",
@@ -66,6 +72,7 @@ __all__ = [
     "RiskForecastRequest",
     "StrategyExposureSnapshot",
     "StressScenario",
+    "build_exposure_snapshot",
     "check_decision_portfolio",
     "evaluate_portfolio_overlap",
     "evaluate_risk_forecasts",
@@ -77,6 +84,7 @@ __all__ = [
     "historical_var_cvar",
     "liquidity_days_to_exit",
     "parametric_var_cvar",
+    "public_equity_style_config",
     "readable_risk_forecast_summary",
     "return_history_coverage",
     "risk_contributions",

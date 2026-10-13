@@ -57,6 +57,7 @@ class RiskForecastRequest:
     weights: Mapping[str, float]
     source: str
     benchmark_weights: Mapping[str, float] | None = None
+    horizon_periods: int = 1
 
     def __post_init__(self):
         start = _timestamp(self.period_start, "period_start")
@@ -64,6 +65,8 @@ class RiskForecastRequest:
         available = _timestamp(self.weights_available_at, "weights_available_at")
         if start >= end or available > start:
             raise ValueError("forecast horizon must be positive and weights available at its start")
+        if type(self.horizon_periods) is not int or self.horizon_periods < 1:
+            raise ValueError("horizon_periods must be a positive integer")
         if not isinstance(self.source, str) or not self.source.strip():
             raise ValueError("forecast weights require an explicit source")
         object.__setattr__(self, "period_start", start)
@@ -85,6 +88,7 @@ class RiskForecastRequest:
             if self.benchmark_weights is None
             else dict(self.benchmark_weights),
             "source": self.source,
+            "horizon_periods": self.horizon_periods,
         }
 
 
@@ -106,6 +110,10 @@ def _exposure_payload(item):
             str(k): {str(a): float(v) for a, v in col.items()} for k, col in item.values.items()
         },
         "source": item.source,
+        "market_caps": None if item.market_caps is None else item.market_caps.to_dict(),
+        "industries": None if item.industries is None else item.industries.to_dict(),
+        "industry_factors": list(item.industry_factors),
+        "provenance": item.provenance,
     }
 
 
@@ -142,6 +150,8 @@ def forecast_factor_risk(
         raise TypeError("request/config must be RiskForecastRequest/FactorModelConfig")
     if isinstance(lookback, bool) or not isinstance(lookback, int) or lookback < config.min_periods:
         raise ValueError("lookback must be an integer at least min_periods")
+    if request.horizon_periods != config.risk_horizon:
+        raise ValueError("request horizon_periods must equal the model risk_horizon")
     observations = _validated_returns(return_observations)
     known = [
         item
@@ -157,6 +167,10 @@ def forecast_factor_risk(
             available_at=item.available_at,
             values=item.values,
             source=item.source,
+            market_caps=item.market_caps,
+            industries=item.industries,
+            industry_factors=item.industry_factors,
+            provenance=item.provenance,
         )
         if copy.effective_at <= request.period_start and copy.available_at <= request.period_start:
             snapshots.append(copy)
@@ -171,12 +185,16 @@ def forecast_factor_risk(
     report = model.analyze(request.weights, request.benchmark_weights)
     model_payload = model.to_dict()
     prediction = {
-        "portfolio": report.portfolio_risk.total_variance / config.annualization,
+        "portfolio": report.portfolio_risk.total_variance
+        / config.annualization
+        * config.risk_horizon,
         "active": None
         if report.tracking_risk is None
-        else report.tracking_risk.total_variance / config.annualization,
+        else report.tracking_risk.total_variance / config.annualization * config.risk_horizon,
         "assets": {
-            str(asset): float(model.asset_covariance.loc[asset, asset]) / config.annualization
+            str(asset): float(model.asset_covariance.loc[asset, asset])
+            / config.annualization
+            * config.risk_horizon
             for asset in model.exposures.index
         },
     }
@@ -203,7 +221,7 @@ def forecast_factor_risk(
         "model": model_payload,
         "period_variance": prediction,
         "assumptions": {
-            "horizon": "one model observation period",
+            "horizon": f"{config.risk_horizon} model observation period(s); linear return aggregation",
             "conditional_mean": 0.0,
             "portfolio": "fixed opening NAV fractions; unallocated cash earns zero; no fees or financing",
             "weights_timing": "portfolio and benchmark weights both known by period_start",
@@ -260,6 +278,8 @@ def _validate_forecast(forecast):
         raise ValueError("risk forecast content changed")
     request = RiskForecastRequest(**forecast["request"])
     config = FactorModelConfig(**forecast["config"])
+    if request.horizon_periods != config.risk_horizon:
+        raise ValueError("forecast and model horizons differ")
     lookback = forecast["lookback"]
     if isinstance(lookback, bool) or not isinstance(lookback, int) or lookback < config.min_periods:
         raise ValueError("invalid forecast lookback")
@@ -292,17 +312,21 @@ def _validate_forecast(forecast):
         or diagnostics.specific_variance_shrinkage != config.specific_variance_shrinkage
     ):
         raise ValueError("forecast training diagnostics are inconsistent")
-    covariance = model.asset_covariance / config.annualization
+    if diagnostics.estimation and diagnostics.estimation.get("configuration") != asdict(config):
+        raise ValueError("forecast estimation configuration differs from model diagnostics")
+    covariance = model.asset_covariance / config.annualization * config.risk_horizon
     expected_assets = {str(a): float(covariance.loc[a, a]) for a in covariance.index}
     if forecast["period_variance"]["assets"] != expected_assets:
         raise ValueError("asset forecast differs from covariance")
 
     report = model.analyze(request.weights, request.benchmark_weights)
     expected = {
-        "portfolio": report.portfolio_risk.total_variance / config.annualization,
+        "portfolio": report.portfolio_risk.total_variance
+        / config.annualization
+        * config.risk_horizon,
         "active": None
         if report.tracking_risk is None
-        else report.tracking_risk.total_variance / config.annualization,
+        else report.tracking_risk.total_variance / config.annualization * config.risk_horizon,
     }
     for name, value in expected.items():
         actual = forecast["period_variance"][name]
@@ -424,7 +448,10 @@ def evaluate_risk_forecasts(*, forecasts, return_observations, evaluation_as_of)
                 }
             )
     summary = {
-        series: _summary([r for r in rows if r["series"] == series], configuration["annualization"])
+        series: _summary(
+            [r for r in rows if r["series"] == series],
+            configuration["annualization"] / configuration["risk_horizon"],
+        )
         for series in sorted({r["series"] for r in rows})
     }
     result = {
@@ -446,7 +473,7 @@ def evaluate_risk_forecasts(*, forecasts, return_observations, evaluation_as_of)
             "variance_proxy": "squared period return, conditional mean assumed zero",
             "qlike": "log(predicted_variance) + squared_return / predicted_variance",
             "bias_statistic": "sample standard deviation of return / predicted_volatility (ddof=1)",
-            "horizon": "one input observation period",
+            "horizon": f"{configuration['risk_horizon']} input observation period(s); linear return aggregation",
             "portfolio": "fixed opening NAV fractions, zero-return residual cash, no trading or financing costs",
         },
         "limitations": [
@@ -475,7 +502,7 @@ def evaluate_risk_spec(spec):
         "requests",
         "evaluation_as_of",
     }
-    if set(spec) != required or spec["schema"] != "quant-risk.forecast-study/v1":
+    if set(spec) - {"outcomes"} != required or spec["schema"] != "quant-risk.forecast-study/v1":
         raise ValueError("complete risk forecast study schema required; unknown fields rejected")
     if spec["evidence_kind"] not in {"synthetic", "retrospective", "historical_pit"}:
         raise ValueError("explicit evidence_kind required")
@@ -500,8 +527,18 @@ def evaluate_risk_spec(spec):
         )
         for item in spec["requests"]
     ]
+    if config.risk_horizon > 1 and "outcomes" not in spec:
+        raise ValueError("multi-period validation requires separate exact-horizon outcomes")
+    outcomes = (
+        returns
+        if "outcomes" not in spec
+        else [
+            AssetReturnObservation(**{**item, "values": pd.Series(item["values"])})
+            for item in spec["outcomes"]
+        ]
+    )
     result = evaluate_risk_forecasts(
-        forecasts=forecasts, return_observations=returns, evaluation_as_of=spec["evaluation_as_of"]
+        forecasts=forecasts, return_observations=outcomes, evaluation_as_of=spec["evaluation_as_of"]
     )
     result.update(
         evidence_kind=spec["evidence_kind"], frequency=spec["frequency"], input_sha256=_digest(spec)

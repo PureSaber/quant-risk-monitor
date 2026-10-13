@@ -56,3 +56,11 @@ jobs:
           python examples/model_diagnostics_demo.py state/diagnostic-inputs
           quant-risk diagnose-model --input state/diagnostic-inputs/change.json --out state/diagnostic-change
           quant-risk diagnose-model --input state/diagnostic-inputs/null.json --out state/diagnostic-null
+
+      - name: Advanced factor-risk research and independent recomputation
+        run: |
+          python examples/advanced_barra_research.py state/advanced-inputs
+          quant-risk build-exposures --input state/advanced-inputs/exposures.json --out state/exposure-build
+          quant-risk verify-research --run state/exposure-build
+          quant-risk calibrate-risk --input state/advanced-inputs/calibration.json --out state/risk-calibration
+          quant-risk verify-research --run state/risk-calibration
