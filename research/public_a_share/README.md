@@ -164,3 +164,17 @@ The first v2 run's producer code, selection and diagnostics were retained before
 adding manifest checks; independently rescoring its forecast CSVs produced
 identical metrics and selection. This is recorded explicitly in its result JSON.
 Do not overwrite the original archive or describe seen diagnostics as a new holdout.
+
+The completed 2026 confirmation retained the development-selected residual-volatility
+candidate. Of 36 scheduled five-session forecasts, 26 have complete common outcomes;
+ten are excluded for missing held-stock endpoint prices without renormalizing weights.
+Neither fixed estimator establishes an advantage against the original definitions,
+and the frozen 80-forecast promotion minimum is unmet. v1 remains the default.
+See `docs/EXPOSURE_V2.md` for scores, intervals, source limitations and capacity results.
+
+The new archive contains `confirmation/result.json`, `forecasts.csv`, source and
+selection bindings, producer-code snapshots, and an independent forecast audit in
+`confirmation/independent-forecast-validation.json`. Its arithmetic/pairing/source
+validator is retained as `verify_confirmation.py` in the same archive. The original
+study's producer hashes remain intact: later parser-validation hardening did not
+change its actual descriptor values, as recorded in `independent-model-validation.json`.
