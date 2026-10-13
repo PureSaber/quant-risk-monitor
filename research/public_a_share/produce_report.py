@@ -120,7 +120,7 @@ def main():
         ylabel="Lower favors enhanced",
     )
     axes[0].legend(fontsize=8)
-    locator = mdates.AutoDateLocator(minticks=3, maxticks=5)
+    locator = mdates.MonthLocator(bymonth=[1, 7])
     axes[0].xaxis.set_major_locator(locator)
     axes[0].xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
     families = ["equal", "capitalization", "industry"]
@@ -288,7 +288,7 @@ def main():
             "delta=(scores.enhanced-scores.baseline).to_numpy()\nn=len(delta);block=10\nrng=np.random.default_rng(20261013)\nstarts=rng.integers(0,n-block+1,size=(2000,int(np.ceil(n/block))))\nix=(starts[:,:,None]+np.arange(block)).reshape(2000,-1)[:,:n]\n{'mean_difference':float(delta.mean()),'ci95':np.quantile(delta[ix].mean(axis=1),[.025,.975]).tolist(),'dates':n}"
         ),
         nbformat.v4.new_code_cell(
-            "import matplotlib.pyplot as plt\nimport matplotlib.dates as mdates\nfig,ax=plt.subplots(figsize=(10,4))\nfor control,label in [('baseline','Common-basis OLS'),('legacy_ols','Original OLS')]:\n    ax.plot(pd.to_datetime(scores.index),(scores.enhanced-scores[control]).expanding().mean(),label=label)\nax.axhline(0,color='gray',linewidth=.8)\nax.set(title='Enhanced minus OLS: cumulative average QLIKE',ylabel='Lower favors enhanced')\nlocator=mdates.AutoDateLocator(minticks=3,maxticks=5)\nax.xaxis.set_major_locator(locator)\nax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))\nax.legend()\nfig.tight_layout()\nplt.show()\npd.read_csv('holdout-by-year-and-family.csv')"
+            "import matplotlib.pyplot as plt\nimport matplotlib.dates as mdates\nfig,ax=plt.subplots(figsize=(10,4))\nfor control,label in [('baseline','Common-basis OLS'),('legacy_ols','Original OLS')]:\n    ax.plot(pd.to_datetime(scores.index),(scores.enhanced-scores[control]).expanding().mean(),label=label)\nax.axhline(0,color='gray',linewidth=.8)\nax.set(title='Enhanced minus OLS: cumulative average QLIKE',ylabel='Lower favors enhanced')\nlocator=mdates.MonthLocator(bymonth=[1,7])\nax.xaxis.set_major_locator(locator)\nax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))\nax.legend()\nfig.tight_layout()\nplt.show()\npd.read_csv('holdout-by-year-and-family.csv')"
         ),
         nbformat.v4.new_markdown_cell(
             "局限：固定的 200 家历史主板样本、公开公告的 PIT 重建；不是全市场或实盘延迟重放。缺失终点不重分配持仓；另外保留沿用最近报价的敏感性比较。"
