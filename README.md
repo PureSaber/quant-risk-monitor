@@ -3,6 +3,11 @@
 `DecisionPortfolioLimits.from_mapping` rejects unknown field names. A misspelled limit now
 fails input validation instead of silently reverting to the default threshold.
 
+Barra风格风险研究现支持统一PIT风格暴露、加权与行业约束回归、EWMA/Newey–West、
+波动状态调整、行业贝叶斯特异风险和独立留出期校准。新增`build-exposures`、
+`calibrate-risk`、`verify-research`命令，完整合成示例、公式与证据边界见
+[深化模型说明](docs/ADVANCED_FACTOR_RISK.md)。原有默认配置保留。
+
 组合级连续情景资金压力见[资金路径接口](docs/FUNDING_PATH.md)：读取外部原生账户情景估值，
 计算保证金、抵押品、清算容量、结算延迟和资金缺口；多抵押池汇总不假设自动资金划转。
 这是一项离线压力研究，不修改执行账本。
