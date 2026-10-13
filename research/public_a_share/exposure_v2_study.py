@@ -31,7 +31,6 @@ from quant_risk_monitor.style_descriptors import (
     annual_growth_descriptors,
     paired_market_descriptors,
 )
-
 from run_study import date_grid, risk_components
 
 VARIANTS = {

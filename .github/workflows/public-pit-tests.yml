@@ -25,6 +25,6 @@ jobs:
           beautifulsoup4==4.15.0 pypdf==6.20.1 pymupdf==1.28.2
           pytest==9.1.1 ruff==0.16.10
       - name: Offline original-document and PIT tests
-        run: python -m pytest research/public_a_share/test_public_pit.py -q
+        run: python -m pytest research/public_a_share -q
       - name: Research source lint
         run: python -m ruff check --config research/public_a_share/ruff.toml research/public_a_share/*.py

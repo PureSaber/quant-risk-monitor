@@ -170,12 +170,12 @@ def test_daily_cache_reuses_market_snapshot_and_rejects_corruption(tmp_path):
     }
     first, hit = store.get_or_build(**arguments)
     assert not hit
+    file = next(tmp_path.glob("*.json"))
     second, hit = store.get_or_build(**arguments)
     assert hit and len(calls) == 1
     pd.testing.assert_frame_equal(first.values, second.values)
     _, hit = store.get_or_build(**{**arguments, "input_digests": {"daily": "b" * 64}})
     assert not hit and len(calls) == 2
-    file = next(tmp_path.glob("*.json"))
     file.write_text(file.read_text().replace('"S0"', '"BAD"'), encoding="utf-8")
     with pytest.raises(ValueError, match="mismatch"):
         store.get_or_build(**arguments)
