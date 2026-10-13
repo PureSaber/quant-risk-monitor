@@ -127,3 +127,39 @@ The HTML report, executed audit notebook, per-forecast predictions, paired score
 source manifest, frozen configuration and acceptance record are retained in the
 local archive. The report independently recalculates both scores and bootstrap
 intervals. See `docs/PUBLIC_A_SHARE_VALIDATION.md` for the completed run's results.
+
+## Exposure definition v2
+
+Use the existing v1 archive read-only and a new output root. The commands below
+run from the repository root with this directory's research environment:
+
+```text
+python research/public_a_share/collect_exposure_inputs.py --old-root OLD --out NEW
+python research/public_a_share/exposure_v2_study.py --old-root OLD --out NEW
+python research/public_a_share/collect_confirmation_inputs.py --old-root OLD --out NEW/confirmation-inputs
+python research/public_a_share/confirmation_context.py --old-root OLD --out NEW/confirmation-inputs
+python research/public_a_share/confirm_exposure_v2.py --old-root OLD --study-root NEW
+python research/public_a_share/audit_exposure_v2.py --old-root OLD --out NEW
+python research/public_a_share/benchmark_exposure_v2.py --out NEW/capacity
+python -m pytest research/public_a_share -q
+```
+
+The v2 protocol is created before development scores. Seven exposure variants
+share assets, dates, portfolio definitions and fixed risk estimators; the 2024–25
+outcomes are explicitly reused diagnostics. 2026 confirmation reads a frozen
+selection binding, never reselects, and retains the 80-forecast requirement.
+Public acquisition is retrospective reconstruction, not authenticated historical
+vendor vintages. No Huisheng/Dataway feed is used.
+
+`--resume-histories` verifies `history-manifest.json` before unpickling the local
+regressions. Only use trusted local archives. Source/configuration changes need a
+new run; report-only edits may reuse a mathematically identical history producer.
+The full daily snapshot cache preserves imputation/source audit records. The
+smaller history pickle omits their repeated provenance to reduce memory use.
+
+Current local evidence roots: `barra-public-pit-20261013` (original) and
+`barra-exposure-v2-20261014` (new), under the user's ChatGPT SCRATCH directory.
+The first v2 run's producer code, selection and diagnostics were retained before
+adding manifest checks; independently rescoring its forecast CSVs produced
+identical metrics and selection. This is recorded explicitly in its result JSON.
+Do not overwrite the original archive or describe seen diagnostics as a new holdout.

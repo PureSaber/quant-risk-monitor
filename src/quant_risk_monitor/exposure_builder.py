@@ -38,6 +38,9 @@ class ExposureBuildConfig:
     max_descriptor_age_days: float | None = None
     max_classification_age_days: float | None = None
     orthogonalize: dict[str, list[str]] = field(default_factory=dict)
+    definition_version: str = "v1"
+    derived_styles: dict[str, str] = field(default_factory=dict)
+    available_styles: tuple[str, ...] = ()
 
     def __post_init__(self):
         if not isinstance(self.styles, dict) or not self.styles:
@@ -102,26 +105,64 @@ class ExposureBuildConfig:
                 isinstance(value, bool) or not math.isfinite(value) or value < 0
             ):
                 raise ValueError(f"invalid {name}")
+        if self.definition_version not in {"v1", "v2"}:
+            raise ValueError("unknown definition_version")
+        if not isinstance(self.derived_styles, dict):
+            raise TypeError("derived_styles must be a mapping")
+        if self.definition_version == "v1" and (self.derived_styles or self.available_styles):
+            raise ValueError("derived/available styles require definition_version v2")
+        all_styles = set(self.styles) | set(self.derived_styles)
+        for name, parent in self.derived_styles.items():
+            if (
+                not isinstance(name, str)
+                or not name.strip()
+                or name == "market"
+                or name.startswith("industry:")
+                or name in self.styles
+                or parent not in all_styles
+                or name == parent
+            ):
+                raise ValueError("invalid derived style or parent")
+        if len(set(self.available_styles)) != len(self.available_styles) or set(
+            self.available_styles
+        ) - set(self.styles):
+            raise ValueError("available_styles must name distinct descriptor composites")
+        available_descriptors = {
+            d for s in self.available_styles for d, w in self.styles[s].items() if w
+        }
+        strict_descriptors = {
+            d
+            for s, ds in self.styles.items()
+            if s not in self.available_styles
+            for d, w in ds.items()
+            if w
+        }
+        if available_descriptors & strict_descriptors:
+            raise ValueError(
+                "descriptor cannot have both strict and available composition policies"
+            )
         if not isinstance(self.orthogonalize, dict):
             raise TypeError("orthogonalize must be a mapping")
-        for name in self.styles:
+        for name in all_styles:
             controls = self.orthogonalize.get(name, [])
             if (
                 not isinstance(controls, (list, tuple))
                 or len(set(controls)) != len(controls)
-                or set(controls) - set(self.styles)
+                or set(controls) - all_styles
                 or name in controls
             ):
                 raise ValueError("orthogonalization controls must be distinct other styles")
-        if set(self.orthogonalize) - set(self.styles):
+        if set(self.orthogonalize) - all_styles:
             raise ValueError("orthogonalization references an unknown style")
-        _style_order(self.styles, self.orthogonalize)
+        _style_order(all_styles, self.orthogonalize, self.derived_styles)
         object.__setattr__(self, "styles", deepcopy(self.styles))
         object.__setattr__(self, "industry_universe", industries)
         object.__setattr__(self, "orthogonalize", deepcopy(self.orthogonalize))
+        object.__setattr__(self, "derived_styles", deepcopy(self.derived_styles))
+        object.__setattr__(self, "available_styles", tuple(self.available_styles))
 
 
-def _style_order(styles, orthogonalize):
+def _style_order(styles, orthogonalize, derived=None):
     result, visiting = [], set()
 
     def visit(name):
@@ -130,7 +171,10 @@ def _style_order(styles, orthogonalize):
         if name in result:
             return
         visiting.add(name)
-        for dependency in sorted(orthogonalize.get(name, [])):
+        dependencies = set(orthogonalize.get(name, []))
+        if derived and name in derived:
+            dependencies.add(derived[name])
+        for dependency in sorted(dependencies):
             visit(dependency)
         visiting.remove(name)
         result.append(name)
@@ -140,7 +184,14 @@ def _style_order(styles, orthogonalize):
     return result
 
 
-def public_equity_style_config(industry_universe, **overrides):
+def public_equity_style_config(
+    industry_universe,
+    *,
+    definition_version="v1",
+    enhancements=(),
+    available_growth=False,
+    **overrides,
+):
     """Ten public single-descriptor styles matching quant-factors' catalog.
 
     This explicit research preset is not a vendor style definition. Descriptor
@@ -164,6 +215,34 @@ def public_equity_style_config(industry_universe, **overrides):
         "min_assets": 30,
         "orthogonalize": {"nonlinear_size": ["size"], "residual_volatility": ["beta", "size"]},
     }
+    enhancements = tuple(enhancements)
+    if len(set(enhancements)) != len(enhancements) or set(enhancements) - {
+        "liquidity",
+        "growth",
+        "residual_volatility",
+    }:
+        raise ValueError("unknown or duplicate exposure enhancement")
+    if definition_version == "v1" and (enhancements or available_growth):
+        raise ValueError("enhancements require v2")
+    defaults["definition_version"] = definition_version
+    if definition_version == "v2":
+        defaults["styles"].pop("nonlinear_size")
+        defaults["derived_styles"] = {"nonlinear_size": "size"}
+        composites = {
+            "liquidity": {f"liquidity_log_turnover_{n}d": 1.0 for n in (21, 63, 252)},
+            "growth": {"revenue_growth_3y": 1.0, "profit_growth_3y": 1.0},
+            "residual_volatility": {
+                "daily_vol_252d": 1.0,
+                "cumulative_range_252d": 1.0,
+                "residual_vol_252d": 1.0,
+            },
+        }
+        for name in enhancements:
+            defaults["styles"][name] = composites[name]
+        if available_growth:
+            if "growth" not in enhancements:
+                raise ValueError("available_growth requires growth enhancement")
+            defaults["available_styles"] = ("growth",)
     return ExposureBuildConfig(**{**defaults, **overrides})
 
 
@@ -206,6 +285,48 @@ def _standardize(values, weights, label):
     if not np.isfinite(variance) or variance <= 0:
         raise ValueError(f"{label} has no cross-sectional dispersion")
     return (values - mean) / np.sqrt(variance), {"mean": mean, "scale": float(np.sqrt(variance))}
+
+
+def _fill_composite(values, groups, config, label):
+    """Fallback only after combining genuinely observed descriptors."""
+    values = values.copy()
+    observed = values.copy()
+    missing = values.isna()
+    if missing.mean() > config.max_missing_fraction:
+        raise ValueError(f"composite {label} exceeds the missing-coverage limit")
+    audit = {}
+    for asset in values.index[missing]:
+        if config.missing_policy == "error":
+            raise ValueError(f"composite {label} is missing for {asset}")
+        peers = observed[groups == groups[asset]].dropna()
+        fallback = len(peers) < config.min_industry_observations
+        if fallback:
+            if config.missing_group_fallback == "error":
+                raise ValueError(f"composite {label} lacks observed industry peers")
+            peers = observed.dropna()
+        if len(peers) < config.min_industry_observations:
+            raise ValueError(f"composite {label} lacks observed imputation peers")
+        values[asset] = float(peers.median())
+        audit[asset] = {
+            "value": float(values[asset]),
+            "global_fallback": fallback,
+            "peer_assets": list(peers.index),
+        }
+    return values.to_numpy(), audit
+
+
+def _clip_array(array, config):
+    if config.winsor_method == "mad":
+        median = float(np.median(array))
+        mad = float(np.median(np.abs(array - median)))
+        if mad == 0 and np.ptp(array) != 0:
+            raise ValueError("derived style has zero MAD")
+        bounds = (median - config.winsor_limit * mad, median + config.winsor_limit * mad)
+    elif config.winsor_method == "quantile":
+        bounds = np.quantile(array, [config.winsor_limit, 1 - config.winsor_limit])
+    else:
+        bounds = (float(array.min()), float(array.max()))
+    return np.clip(array, *bounds), {"lower": float(bounds[0]), "upper": float(bounds[1])}
 
 
 def build_exposure_snapshot(*, descriptor_history, classification_history, assets, as_of, config):
@@ -259,15 +380,52 @@ def build_exposure_snapshot(*, descriptor_history, classification_history, asset
             weights = np.sqrt(weights)
     weights /= weights.sum()
     processed, descriptor_audit = {}, {}
+    available_descriptors = {
+        d for s in config.available_styles for d, w in config.styles[s].items() if w
+    }
     for name in descriptors:
         values = pd.to_numeric(selected[name], errors="raise").astype(float)
         if np.isinf(values).any():
             raise ValueError(f"descriptor {name} contains infinity")
         missing = values.isna()
-        if missing.mean() > config.max_missing_fraction:
+        available = name in available_descriptors
+        if not available and missing.mean() > config.max_missing_fraction:
             raise ValueError(f"descriptor {name} exceeds the missing-coverage limit")
         filled = {}
         observed = values.copy()
+        if available:
+            mask = ~missing.to_numpy()
+            observed_array = values.to_numpy()[mask]
+            array = np.full(len(assets), np.nan)
+            if (
+                len(observed_array) >= config.min_industry_observations
+                and np.ptp(observed_array) > 0
+            ):
+                clipped, bounds = _clip_array(observed_array, config)
+                observed_weights = weights[mask] / weights[mask].sum()
+                if np.ptp(clipped) > 0:
+                    array[mask], normalization = _standardize(clipped, observed_weights, name)
+                    descriptor_audit[name] = {
+                        "imputed": {},
+                        "observed_count": int(mask.sum()),
+                        "clipped_assets": [
+                            a
+                            for a, c in zip(
+                                values.index[mask], observed_array != clipped, strict=True
+                            )
+                            if c
+                        ],
+                        **bounds,
+                        **normalization,
+                    }
+            if name not in descriptor_audit:
+                descriptor_audit[name] = {
+                    "imputed": {},
+                    "observed_count": int(mask.sum()),
+                    "unusable_reason": "insufficient_observations_or_dispersion",
+                }
+            processed[name] = array
+            continue
         for asset in values.index[missing]:
             if config.missing_policy == "error":
                 raise ValueError(f"descriptor {name} is missing for {asset}")
@@ -313,18 +471,48 @@ def build_exposure_snapshot(*, descriptor_history, classification_history, asset
     style_audit = {}
     if config.market_factor:
         values["market"] = 1.0
-    style_order = _style_order(config.styles, config.orthogonalize)
+    style_order = _style_order(
+        set(config.styles) | set(config.derived_styles), config.orthogonalize, config.derived_styles
+    )
     for name in style_order:
-        components = config.styles[name]
-        denominator = sum(abs(weight) for weight in components.values())
-        composite = (
-            sum(
-                weight * processed[descriptor]
-                for descriptor, weight in components.items()
-                if weight
-            )
-            / denominator
-        )
+        composition_audit = {}
+        if name in config.derived_styles:
+            composite = values[config.derived_styles[name]].to_numpy() ** 3
+            composition_audit = {
+                "transform": "standardized-parent-cube",
+                "parent": config.derived_styles[name],
+            }
+        else:
+            components = {d: w for d, w in config.styles[name].items() if w}
+            denominator = sum(abs(weight) for weight in components.values())
+            if name in config.available_styles:
+                matrix = np.column_stack([processed[d] for d in components])
+                coefficients = np.array(list(components.values()))
+                available_weight = np.isfinite(matrix) @ np.abs(coefficients)
+                composite = np.divide(
+                    np.nan_to_num(matrix) @ coefficients,
+                    available_weight,
+                    out=np.full(len(assets), np.nan),
+                    where=available_weight > 0,
+                )
+                composite, imputed = _fill_composite(
+                    pd.Series(composite, index=assets), groups, config, name
+                )
+                composition_audit = {
+                    "policy": "available",
+                    "imputed": imputed,
+                    "observed_weight_fraction": dict(
+                        zip(assets, (available_weight / denominator).tolist(), strict=True)
+                    ),
+                    "observed_descriptors": {
+                        a: [d for d, valid in zip(components, row, strict=True) if valid]
+                        for a, row in zip(assets, np.isfinite(matrix), strict=True)
+                    },
+                }
+            else:
+                composite = (
+                    sum(weight * processed[d] for d, weight in components.items()) / denominator
+                )
         controls = config.orthogonalize.get(name, [])
         coefficients = None
         if controls:
@@ -337,12 +525,23 @@ def build_exposure_snapshot(*, descriptor_history, classification_history, asset
             if np.linalg.norm(residual) <= 1e-12 * np.linalg.norm(composite):
                 raise ValueError(f"orthogonalized style {name} has no independent dispersion")
             composite = residual
+        if name in config.derived_styles:
+            composite, bounds = _clip_array(composite, config)
+            composition_audit["winsorization"] = bounds
+            # Clipping can reintroduce the parent; remove it again so the final
+            # standardized derived exposure remains orthogonal to its controls.
+            if controls:
+                post = np.linalg.lstsq(weighted, np.sqrt(weights) * composite, rcond=None)[0]
+                composite = composite - design @ post
+                composition_audit["post_clip_projection"] = post.tolist()
         values[name], normalization = _standardize(composite, weights, name)
         style_audit[name] = {
             **normalization,
             "controls": list(controls),
             "coefficients": None if coefficients is None else coefficients.tolist(),
         }
+        if composition_audit:
+            style_audit[name]["composition"] = composition_audit
     industry_factors = []
     if config.include_industries:
         for industry in config.industry_universe:
@@ -369,6 +568,10 @@ def build_exposure_snapshot(*, descriptor_history, classification_history, asset
         ),
     }
     config_payload = asdict(config)
+    if config.definition_version == "v1":
+        # Preserve legacy provenance hashes as well as numerical results.
+        for key in ("definition_version", "derived_styles", "available_styles"):
+            config_payload.pop(key)
     binding = {
         "config": config_payload,
         "style_order": style_order,
@@ -383,12 +586,12 @@ def build_exposure_snapshot(*, descriptor_history, classification_history, asset
         effective_at=cutoff,
         available_at=cutoff,
         values=values,
-        source="quant-risk.exposure-builder/v1:" + digest,
+        source=f"quant-risk.exposure-builder/{config.definition_version}:" + digest,
         market_caps=caps,
         industries=groups,
         industry_factors=tuple(industry_factors),
         provenance={
-            "schema": "quant-risk.exposure-build/v1",
+            "schema": f"quant-risk.exposure-build/{config.definition_version}",
             "sha256": digest,
             **binding,
             "descriptor_processing": descriptor_audit,

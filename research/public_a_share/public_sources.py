@@ -87,16 +87,17 @@ def fetch(name, url, *, params=None, data=None, binary=False):
             time.sleep(1 + attempt)
 
 
-def industry_sources():
+def industry_sources(*, year_pattern=r"202[1345]", maximum_publication_year=2025):
     html = fetch("industry/index.html", "https://www.capco.org.cn/xhgg/hyfl/hyfljg/index.html")
     soup = BeautifulSoup(html, "html.parser")
     records = []
     for a in soup.find_all("a", href=True):
         title = a.get_text(strip=True)
-        if "上市公司行业分类结果" not in title or not re.search(r"202[1345]", title):
+        if "上市公司行业分类结果" not in title or not re.search(year_pattern, title):
             continue
         url = urljoin("https://www.capco.org.cn/xhgg/hyfl/hyfljg/index.html", a["href"])
-        if "/2026" in url:
+        publication_year = re.search(r"/(20\d{2})", url)
+        if publication_year and int(publication_year[1]) > maximum_publication_year:
             continue
         if not url.endswith(".html"):
             continue
