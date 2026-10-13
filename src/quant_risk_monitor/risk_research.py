@@ -80,7 +80,13 @@ def calibrate_risk_spec(spec):
         "plan_available_at",
         "evaluation_as_of",
     }
-    if set(spec) - {"outcomes"} != required or spec["schema"] != "quant-risk.calibration-study/v1":
+    retrospective = spec.get("schema") == "quant-risk.calibration-study/v2"
+    if retrospective:
+        required = required - {"plan_available_at"} | {"research_design"}
+    if set(spec) - {"outcomes"} != required or spec.get("schema") not in {
+        "quant-risk.calibration-study/v1",
+        "quant-risk.calibration-study/v2",
+    }:
         raise ValueError("complete calibration study schema required; unknown fields rejected")
     candidates = spec["candidates"]
     if not isinstance(candidates, dict) or not 2 <= len(candidates) <= 32:
@@ -104,11 +110,27 @@ def calibrate_risk_spec(spec):
     holdout = [RiskForecastRequest(**item) for item in spec["holdout_requests"]]
     if len(selection) < 2 or len(holdout) < 2:
         raise ValueError("selection and holdout each require at least two forecasts")
-    plan_at = _timestamp(spec["plan_available_at"], "plan_available_at")
-    if plan_at > min(item.period_start for item in selection):
-        raise ValueError("candidate plan must be declared before the first selection forecast")
     selection_as_of = _timestamp(spec["selection_as_of"], "selection_as_of")
     evaluation_as_of = _timestamp(spec["evaluation_as_of"], "evaluation_as_of")
+    if retrospective:
+        design = spec["research_design"]
+        if (
+            not isinstance(design, dict)
+            or set(design) != {"kind", "created_at"}
+            or design["kind"] != "retrospective"
+        ):
+            raise ValueError("v2 requires an explicit retrospective research_design")
+        created_at = _timestamp(design["created_at"], "research_design.created_at")
+        if created_at > evaluation_as_of:
+            raise ValueError("research design cannot be created after evaluation_as_of")
+        plan_binding = {
+            "research_design": {"kind": "retrospective", "created_at": created_at.isoformat()}
+        }
+    else:
+        plan_at = _timestamp(spec["plan_available_at"], "plan_available_at")
+        if plan_at > min(item.period_start for item in selection):
+            raise ValueError("candidate plan must be declared before the first selection forecast")
+        plan_binding = {"plan_available_at": plan_at.isoformat()}
     if not (
         max(item.period_end for item in selection)
         <= selection_as_of
@@ -140,7 +162,7 @@ def calibrate_risk_spec(spec):
     # This binding contains only causally filtered training inputs and mature
     # selection outcomes, so future/holdout poisoning cannot change selection.
     selection_binding = {
-        "plan_available_at": plan_at.isoformat(),
+        **plan_binding,
         "candidate_configs": candidates,
         "selection_as_of": selection_as_of.isoformat(),
         "forecast_sha256": {
@@ -163,7 +185,9 @@ def calibrate_risk_spec(spec):
             }
         )
     return {
-        "schema": "quant-risk.calibration-result/v1",
+        "schema": "quant-risk.calibration-result/v2"
+        if retrospective
+        else "quant-risk.calibration-result/v1",
         "status": "complete",
         "evidence_kind": spec["evidence_kind"],
         "input_sha256": _digest(spec),

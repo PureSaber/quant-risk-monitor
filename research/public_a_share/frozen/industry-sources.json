@@ -1,0 +1,74 @@
+[
+  {
+    "title": "2025年上半年上市公司行业分类结果",
+    "page": "https://www.capco.org.cn/xhgg/hyfl/hyfljg/202509/20250930/j_2025093014371200017592143530187679.html",
+    "date_strings": [
+      "2025-09-30"
+    ],
+    "pdf_url": "https://sp.capco.org.cn:82/file/202603/hangyefenlei/2025shangban/hangyefenleigupiaodaima.pdf",
+    "file": "raw/industry/d430db5068d22ef9.pdf"
+  },
+  {
+    "title": "2024年下半年上市公司行业分类结果",
+    "page": "https://www.capco.org.cn/xhgg/hyfl/hyfljg/202504/20250418/j_2025041815003000017449597508305299.html",
+    "date_strings": [
+      "2025-04-18"
+    ],
+    "pdf_url": "https://sp.capco.org.cn:82/file/202603/hangyefenlei/2024xiaban/hangyefenleigupiaodaima.pdf",
+    "file": "raw/industry/3f8717f1763f6f48.pdf"
+  },
+  {
+    "title": "2024年上半年上市公司行业分类结果",
+    "page": "https://www.capco.org.cn/xhgg/hyfl/hyfljg/202409/20240930/j_2024093015525600017276828969068447.html",
+    "date_strings": [
+      "2024-09-30"
+    ],
+    "pdf_url": "https://sp.capco.org.cn:82/file/202603/hangyefenlei/2024shangban/2024shangbangupiaodaima.pdf",
+    "file": "raw/industry/1867ac26f4a50c33.pdf"
+  },
+  {
+    "title": "2023年下半年上市公司行业分类结果",
+    "page": "https://www.capco.org.cn/xhgg/hyfl/hyfljg/202404/20240403/j_2024040315552200017121310425305369.html",
+    "date_strings": [
+      "2024-04-03"
+    ],
+    "pdf_url": "https://sp.capco.org.cn:82/file/202603/hangyefenlei/2023xiaban/2023xiabangupiaodaima.pdf",
+    "file": "raw/industry/bde4be84118ef2d8.pdf"
+  },
+  {
+    "title": "2023年上半年上市公司行业分类结果",
+    "page": "https://www.capco.org.cn/xhgg/hyfl/hyfljg/202402/20240208/j_2024020815341400017073777753078836.html",
+    "date_strings": [
+      "2024-02-08"
+    ],
+    "pdf_url": "https://sp.capco.org.cn:82/file/202603/hangyefenlei/2023shangban/2023shangbangupiaodaima.pdf",
+    "file": "raw/industry/1150e07d2ab77db7.pdf"
+  },
+  {
+    "title": "2021年第3季度上市公司行业分类结果",
+    "page": "https://www.capco.org.cn/xhgg/hyfl/hyfljg/202111/20211111/j_2021111119522400016366315575369324.html",
+    "date_strings": [
+      "2021-11-11"
+    ],
+    "pdf_url": "https://www.capco.org.cn/upload/ueditor/uploadfile/202111/20211111/2021111119511636631513052058502.pdf",
+    "file": "raw/industry/2b735e969aea60b3.pdf"
+  },
+  {
+    "title": "2021年2季度上市公司行业分类结果",
+    "page": "https://www.capco.org.cn/xhgg/hyfl/hyfljg/202107/20210720/j_2021072014494800016267638013288549.html",
+    "date_strings": [
+      "2021-07-20"
+    ],
+    "pdf_url": "https://www.capco.org.cn/upload/ueditor/uploadfile/202107/20210720/2021072014341626762882823059309.pdf",
+    "file": "raw/industry/722585d190000076.pdf"
+  },
+  {
+    "title": "2021年1季度上市公司行业分类结果",
+    "page": "https://www.capco.org.cn/xhgg/hyfl/hyfljg/202106/20210623/j_2021062309465800016244128316914439.html",
+    "date_strings": [
+      "2021-06-23"
+    ],
+    "pdf_url": "https://www.capco.org.cn/upload/ueditor/uploadfile/202106/20210623/2021062309461624412773391059486.pdf",
+    "file": "raw/industry/c6000937f93c4d3f.pdf"
+  }
+]
