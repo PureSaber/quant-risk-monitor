@@ -108,6 +108,9 @@ class DecisionPortfolioLimits:
             "max_estimated_cost_rate",
             "max_positions",
         }
+        unknown = set(values) - supported
+        if unknown:
+            raise ValidationError(f"Unknown portfolio limit fields: {sorted(map(str, unknown))}")
         return cls(**{key: values[key] for key in supported if key in values})
 
 

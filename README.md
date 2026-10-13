@@ -1,5 +1,8 @@
 # quant-risk-monitor
 
+`DecisionPortfolioLimits.from_mapping` rejects unknown field names. A misspelled limit now
+fails input validation instead of silently reverting to the default threshold.
+
 组合级连续情景资金压力见[资金路径接口](docs/FUNDING_PATH.md)：读取外部原生账户情景估值，
 计算保证金、抵押品、清算容量、结算延迟和资金缺口；多抵押池汇总不假设自动资金划转。
 这是一项离线压力研究，不修改执行账本。
