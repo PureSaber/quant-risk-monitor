@@ -103,8 +103,9 @@ def test_confirmation_adjustment_bridge_does_not_fill_suspended_returns(tmp_path
     future_dates = pd.to_datetime(["2026-01-05", "2026-01-06"])
     dates = old_dates.append(future_dates)
     closes = pd.DataFrame({"000001": [100.0, 101.0, 102.0, 103.0, 104.0, 105.0]}, index=old_dates)
+    closes["000002"] = 20.0
     panel = {
-        "assets": ["000001"],
+        "assets": ["000001", "000002"],
         "prices": {n: closes.copy() for n in ("close", "adjusted_close", "volume", "turnover")},
     }
     market = pd.Series(range(len(dates)), index=dates)
@@ -122,6 +123,10 @@ def test_confirmation_adjustment_bridge_does_not_fill_suspended_returns(tmp_path
     )
     bao.to_csv(path, index=False)
     path.with_suffix(".receipt.json").write_text(json.dumps({"sha256": digest(path)}))
+    (tmp_path / "raw/prices/000002-0.json").write_text(json.dumps({"data": None}))
+    empty = tmp_path / "raw/bao-prices/000002.csv"
+    pd.DataFrame(columns=["date", "close", "tradestatus"]).to_csv(empty, index=False)
+    empty.with_suffix(".receipt.json").write_text(json.dumps({"sha256": digest(empty)}))
     prices, audit = merge_prices(panel, tmp_path, market)
     pd.testing.assert_frame_equal(
         prices["adjusted_close"].loc[old_dates], closes, check_names=False, check_freq=False
@@ -129,6 +134,8 @@ def test_confirmation_adjustment_bridge_does_not_fill_suspended_returns(tmp_path
     assert prices["adjusted_close"].loc[future_dates[0], "000001"] == 106.0
     assert np.isnan(prices["adjusted_close"].loc[future_dates[1], "000001"])
     assert np.isnan(prices["returns"].loc[future_dates[1], "000001"])
+    assert prices["close"].loc[future_dates, "000002"].isna().all()
+    assert all(dtype == np.dtype(float) for dtype in prices["close"].dtypes)
     assert audit[0]["adjustment_scale"] == 2.0
     bao.loc[0, "close"] = 45.0
     bao.to_csv(path, index=False)

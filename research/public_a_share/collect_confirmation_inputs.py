@@ -118,12 +118,29 @@ def collect_one(args):
     for module in (public_sources, filings, original_financials):
         module.ROOT = root
     original_request = requests.sessions.Session.request
+    capital_payload = None
 
     def bounded(self, *args, **kwargs):
+        nonlocal capital_payload
         kwargs.setdefault("timeout", (10, 35))
         if kwargs["timeout"] is None:
             kwargs["timeout"] = (10, 35)
-        return original_request(self, *args, **kwargs)
+        response = original_request(self, *args, **kwargs)
+        if response.url.startswith("https://webapi.cninfo.com.cn/api/stock/p_stock2215"):
+            response.raise_for_status()
+            capital_payload = response.json()
+            raw = root / "raw/shares" / (code + "-api.json")
+            raw.parent.mkdir(parents=True, exist_ok=True)
+            raw.write_bytes(response.content)
+            save_json(
+                raw.with_name(raw.name + ".receipt.json"),
+                {
+                    "source": response.url,
+                    "sha256": sha(raw),
+                    "captured_at": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+        return response
 
     requests.sessions.Session.request = bounded
     errors = []
@@ -202,9 +219,22 @@ def collect_one(args):
             if sha(path) != json.loads(receipt.read_text(encoding="utf8"))["sha256"]:
                 raise ValueError("changed capital archive")
         else:
-            data = ak.stock_share_change_cninfo(
-                symbol=code, start_date="20250101", end_date="20260930"
-            )
+            try:
+                data = ak.stock_share_change_cninfo(
+                    symbol=code, start_date="20250101", end_date="20260930"
+                )
+            except KeyError:
+                if (
+                    not isinstance(capital_payload, dict)
+                    or capital_payload.get("records") != []
+                    or str(capital_payload.get("resultcode")) != "200"
+                ):
+                    raise
+                # The upstream adapter accesses date columns before handling a
+                # successful empty response. Preserve an explicit empty table.
+                data = pd.DataFrame(
+                    columns=["证券代码", "公告日期", "变动日期", "总股本", "人民币普通股"]
+                )
             path.parent.mkdir(parents=True, exist_ok=True)
             data.to_csv(path, index=False, encoding="utf8")
             save_json(

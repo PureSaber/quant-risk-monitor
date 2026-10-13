@@ -93,8 +93,10 @@ def merge_prices(old_panel, root, market):
     prices = {}
     for name in ("close", "adjusted_close", "volume", "turnover"):
         new = long.pivot(index="date", columns="asset", values=name)
-        prices[name] = pd.concat([old_panel["prices"][name], new]).reindex(
-            index=dates, columns=old_panel["assets"]
+        prices[name] = (
+            pd.concat([old_panel["prices"][name], new])
+            .reindex(index=dates, columns=old_panel["assets"])
+            .astype(float)
         )
     prices["returns"] = prices["adjusted_close"].pct_change(fill_method=None)
     return prices, audit
@@ -168,11 +170,18 @@ def prepare(old, root, out, selection, protocol):
     )
     (merged_root / "raw/shares").mkdir(parents=True, exist_ok=True)
     for asset in panel["assets"]:
-        pieces = [
-            pd.read_csv(p, dtype={"证券代码": str})
-            for p in (old / "raw/shares" / (asset + ".csv"), root / "raw/shares" / (asset + ".csv"))
-            if p.exists()
-        ]
+        pieces = []
+        for source_root in (old, root):
+            path = source_root / "raw/shares" / (asset + ".csv")
+            if not path.exists():
+                continue
+            capital = pd.read_csv(path, dtype={"证券代码": str})
+            if source_root == root:
+                ann = pd.to_datetime(capital["公告日期"], errors="coerce") + pd.Timedelta(days=1)
+                effective = pd.to_datetime(capital["变动日期"], errors="coerce")
+                known_at = pd.concat([ann, effective], axis=1).max(axis=1)
+                capital = capital[ann.notna() & effective.notna() & (known_at >= "2026-01-01")]
+            pieces.append(capital)
         if pieces:
             pd.concat(pieces, ignore_index=True).drop_duplicates().to_csv(
                 merged_root / "raw/shares" / (asset + ".csv"), index=False
@@ -188,6 +197,35 @@ def prepare(old, root, out, selection, protocol):
         )
         returns = market.pct_change(fill_method=None).reindex(dates)
         caps, descriptors = build_panel.descriptors_from_history(prices, financial, shares, returns)
+        # Fresh supplier downloads cannot revise the frozen training history.
+        past_dates = panel["dates"][panel["dates"] >= "2021-11-11"]
+        equality = {
+            "check_names": False,
+            "check_freq": False,
+            "check_dtype": False,
+            "rtol": 1e-12,
+            "atol": 1e-12,
+        }
+        for name, frame in panel["prices"].items():
+            pd.testing.assert_frame_equal(
+                prices[name].loc[past_dates],
+                frame.loc[past_dates],
+                **equality,
+            )
+        pd.testing.assert_frame_equal(
+            caps.loc[past_dates], panel["caps"].loc[past_dates], **equality
+        )
+        pd.testing.assert_frame_equal(
+            groups.loc[past_dates],
+            panel["groups"].loc[past_dates],
+            **equality,
+        )
+        for name, frame in panel["descriptors"].items():
+            pd.testing.assert_frame_equal(
+                descriptors[name].loc[past_dates],
+                frame.loc[past_dates],
+                **equality,
+            )
         combined = {
             "dates": dates,
             "assets": assets,
