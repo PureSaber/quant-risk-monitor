@@ -1,0 +1,1408 @@
+{
+  "selection_cutoff": "2021-11-10",
+  "created_at": "2026-10-13T10:29:29.938439+00:00",
+  "sampling": "8 per historical major sector then SHA256 rank to 200; Shanghai/Shenzhen main boards; never condition on future prices or survival",
+  "population": 3072,
+  "members": [
+    {
+      "code": "000009",
+      "name_2021": "中国宝安",
+      "industry_code": "S90",
+      "sector": "S",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000014",
+      "name_2021": "沙河股份",
+      "industry_code": "K70",
+      "sector": "K",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000028",
+      "name_2021": "国药一致",
+      "industry_code": "F51",
+      "sector": "F",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000048",
+      "name_2021": "京基智农",
+      "industry_code": "C13",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000056",
+      "name_2021": "皇庭国际",
+      "industry_code": "L72",
+      "sector": "L",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000150",
+      "name_2021": "宜华健康",
+      "industry_code": "P83",
+      "sector": "P",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000401",
+      "name_2021": "冀东水泥",
+      "industry_code": "C30",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000428",
+      "name_2021": "华天酒店",
+      "industry_code": "H61",
+      "sector": "H",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000506",
+      "name_2021": "中润资源",
+      "industry_code": "B09",
+      "sector": "B",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000507",
+      "name_2021": "珠海港",
+      "industry_code": "G55",
+      "sector": "G",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000509",
+      "name_2021": "*ST华塑",
+      "industry_code": "Q83",
+      "sector": "Q",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000516",
+      "name_2021": "国际医学",
+      "industry_code": "Q83",
+      "sector": "Q",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000524",
+      "name_2021": "岭南控股",
+      "industry_code": "L72",
+      "sector": "L",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000526",
+      "name_2021": "学大教育",
+      "industry_code": "P82",
+      "sector": "P",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000534",
+      "name_2021": "万泽股份",
+      "industry_code": "C27",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000543",
+      "name_2021": "皖能电力",
+      "industry_code": "D44",
+      "sector": "D",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000545",
+      "name_2021": "金浦钛业",
+      "industry_code": "C26",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000546",
+      "name_2021": "金圆股份",
+      "industry_code": "N77",
+      "sector": "N",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000552",
+      "name_2021": "靖远煤电",
+      "industry_code": "B06",
+      "sector": "B",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000554",
+      "name_2021": "泰山石油",
+      "industry_code": "F51",
+      "sector": "F",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000561",
+      "name_2021": "烽火电子",
+      "industry_code": "C39",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000563",
+      "name_2021": "陕国投A",
+      "industry_code": "J69",
+      "sector": "J",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000592",
+      "name_2021": "平潭发展",
+      "industry_code": "A02",
+      "sector": "A",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000608",
+      "name_2021": "阳光股份",
+      "industry_code": "K70",
+      "sector": "K",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000613",
+      "name_2021": "*ST东海A",
+      "industry_code": "H61",
+      "sector": "H",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000631",
+      "name_2021": "顺发恒业",
+      "industry_code": "K70",
+      "sector": "K",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000666",
+      "name_2021": "经纬纺机",
+      "industry_code": "J67",
+      "sector": "J",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000703",
+      "name_2021": "恒逸石化",
+      "industry_code": "C28",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000707",
+      "name_2021": "*ST双环",
+      "industry_code": "C26",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000713",
+      "name_2021": "丰乐种业",
+      "industry_code": "A05",
+      "sector": "A",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000721",
+      "name_2021": "西安饮食",
+      "industry_code": "H62",
+      "sector": "H",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000755",
+      "name_2021": "山西路桥",
+      "industry_code": "G54",
+      "sector": "G",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000759",
+      "name_2021": "中百集团",
+      "industry_code": "F52",
+      "sector": "F",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000779",
+      "name_2021": "甘咨询",
+      "industry_code": "M74",
+      "sector": "M",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000826",
+      "name_2021": "启迪环境",
+      "industry_code": "N77",
+      "sector": "N",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000833",
+      "name_2021": "粤桂股份",
+      "industry_code": "S90",
+      "sector": "S",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000852",
+      "name_2021": "石化机械",
+      "industry_code": "C35",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000905",
+      "name_2021": "厦门港务",
+      "industry_code": "G55",
+      "sector": "G",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000917",
+      "name_2021": "电广传媒",
+      "industry_code": "H63",
+      "sector": "H",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "000967",
+      "name_2021": "盈峰环境",
+      "industry_code": "N77",
+      "sector": "N",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "001201",
+      "name_2021": "东瑞股份",
+      "industry_code": "A03",
+      "sector": "A",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "001210",
+      "name_2021": "金房节能",
+      "industry_code": "D44",
+      "sector": "D",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002007",
+      "name_2021": "华兰生物",
+      "industry_code": "C27",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002044",
+      "name_2021": "美年健康",
+      "industry_code": "Q83",
+      "sector": "Q",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002072",
+      "name_2021": "*ST凯瑞",
+      "industry_code": "I64",
+      "sector": "I",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002096",
+      "name_2021": "南岭民爆",
+      "industry_code": "C26",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002103",
+      "name_2021": "广博股份",
+      "industry_code": "L72",
+      "sector": "L",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002124",
+      "name_2021": "天邦股份",
+      "industry_code": "A03",
+      "sector": "A",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002156",
+      "name_2021": "通富微电",
+      "industry_code": "C39",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002168",
+      "name_2021": "惠程科技",
+      "industry_code": "I64",
+      "sector": "I",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002173",
+      "name_2021": "创新医疗",
+      "industry_code": "Q83",
+      "sector": "Q",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002178",
+      "name_2021": "延华智能",
+      "industry_code": "M74",
+      "sector": "M",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002184",
+      "name_2021": "海得控制",
+      "industry_code": "C38",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002219",
+      "name_2021": "*ST恒康",
+      "industry_code": "Q83",
+      "sector": "Q",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002248",
+      "name_2021": "华东数控",
+      "industry_code": "C34",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002252",
+      "name_2021": "上海莱士",
+      "industry_code": "C27",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002255",
+      "name_2021": "海陆重工",
+      "industry_code": "C34",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002323",
+      "name_2021": "*ST雅博",
+      "industry_code": "E50",
+      "sector": "E",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002343",
+      "name_2021": "慈文传媒",
+      "industry_code": "R86",
+      "sector": "R",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002355",
+      "name_2021": "兴民智通",
+      "industry_code": "C36",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002381",
+      "name_2021": "双箭股份",
+      "industry_code": "C29",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002393",
+      "name_2021": "力生制药",
+      "industry_code": "C27",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002422",
+      "name_2021": "科伦药业",
+      "industry_code": "C27",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002436",
+      "name_2021": "兴森科技",
+      "industry_code": "C39",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002453",
+      "name_2021": "华软科技",
+      "industry_code": "I65",
+      "sector": "I",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002478",
+      "name_2021": "常宝股份",
+      "industry_code": "C33",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002483",
+      "name_2021": "润邦股份",
+      "industry_code": "C34",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002524",
+      "name_2021": "光正眼科",
+      "industry_code": "Q83",
+      "sector": "Q",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002542",
+      "name_2021": "中化岩土",
+      "industry_code": "E48",
+      "sector": "E",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002544",
+      "name_2021": "杰赛科技",
+      "industry_code": "I65",
+      "sector": "I",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002586",
+      "name_2021": "*ST围海",
+      "industry_code": "E48",
+      "sector": "E",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002601",
+      "name_2021": "龙佰集团",
+      "industry_code": "C26",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002607",
+      "name_2021": "中公教育",
+      "industry_code": "P82",
+      "sector": "P",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002621",
+      "name_2021": "美吉姆",
+      "industry_code": "P82",
+      "sector": "P",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002654",
+      "name_2021": "万润科技",
+      "industry_code": "L72",
+      "sector": "L",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002659",
+      "name_2021": "凯文教育",
+      "industry_code": "P82",
+      "sector": "P",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002699",
+      "name_2021": "美盛文化",
+      "industry_code": "R87",
+      "sector": "R",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002712",
+      "name_2021": "思美传媒",
+      "industry_code": "L72",
+      "sector": "L",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002731",
+      "name_2021": "萃华珠宝",
+      "industry_code": "C24",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002739",
+      "name_2021": "万达电影",
+      "industry_code": "R86",
+      "sector": "R",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002771",
+      "name_2021": "真视通",
+      "industry_code": "I65",
+      "sector": "I",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002792",
+      "name_2021": "通宇通讯",
+      "industry_code": "C39",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002818",
+      "name_2021": "富森美",
+      "industry_code": "L72",
+      "sector": "L",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002819",
+      "name_2021": "东方中科",
+      "industry_code": "F51",
+      "sector": "F",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002835",
+      "name_2021": "同为股份",
+      "industry_code": "C39",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002845",
+      "name_2021": "同兴达",
+      "industry_code": "C39",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002872",
+      "name_2021": "ST天圣",
+      "industry_code": "F51",
+      "sector": "F",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002881",
+      "name_2021": "美格智能",
+      "industry_code": "C39",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002887",
+      "name_2021": "绿茵生态",
+      "industry_code": "N77",
+      "sector": "N",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002896",
+      "name_2021": "中大力德",
+      "industry_code": "C34",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "002967",
+      "name_2021": "广电计量",
+      "industry_code": "M74",
+      "sector": "M",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600054",
+      "name_2021": "黄山旅游",
+      "industry_code": "N78",
+      "sector": "N",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600104",
+      "name_2021": "上汽集团",
+      "industry_code": "C36",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600108",
+      "name_2021": "亚盛集团",
+      "industry_code": "A01",
+      "sector": "A",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600158",
+      "name_2021": "中体产业",
+      "industry_code": "R88",
+      "sector": "R",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600165",
+      "name_2021": "新日恒力",
+      "industry_code": "C26",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600166",
+      "name_2021": "福田汽车",
+      "industry_code": "C36",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600188",
+      "name_2021": "兖州煤业",
+      "industry_code": "B06",
+      "sector": "B",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600190",
+      "name_2021": "锦州港",
+      "industry_code": "G55",
+      "sector": "G",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600207",
+      "name_2021": "安彩高科",
+      "industry_code": "D45",
+      "sector": "D",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600212",
+      "name_2021": "江泉实业",
+      "industry_code": "S90",
+      "sector": "S",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600215",
+      "name_2021": "长春经开",
+      "industry_code": "K70",
+      "sector": "K",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600229",
+      "name_2021": "城市传媒",
+      "industry_code": "R85",
+      "sector": "R",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600249",
+      "name_2021": "两面针",
+      "industry_code": "C26",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600258",
+      "name_2021": "首旅酒店",
+      "industry_code": "H61",
+      "sector": "H",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600266",
+      "name_2021": "城建发展",
+      "industry_code": "K70",
+      "sector": "K",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600323",
+      "name_2021": "瀚蓝环境",
+      "industry_code": "N77",
+      "sector": "N",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600348",
+      "name_2021": "华阳股份",
+      "industry_code": "B06",
+      "sector": "B",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600350",
+      "name_2021": "山东高速",
+      "industry_code": "G54",
+      "sector": "G",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600371",
+      "name_2021": "万向德农",
+      "industry_code": "A01",
+      "sector": "A",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600467",
+      "name_2021": "好当家",
+      "industry_code": "A04",
+      "sector": "A",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600487",
+      "name_2021": "亨通光电",
+      "industry_code": "C38",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600497",
+      "name_2021": "驰宏锌锗",
+      "industry_code": "B09",
+      "sector": "B",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600535",
+      "name_2021": "天士力",
+      "industry_code": "C27",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600547",
+      "name_2021": "山东黄金",
+      "industry_code": "B09",
+      "sector": "B",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600571",
+      "name_2021": "信雅达",
+      "industry_code": "I65",
+      "sector": "I",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600603",
+      "name_2021": "广汇物流",
+      "industry_code": "S90",
+      "sector": "S",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600606",
+      "name_2021": "绿地控股",
+      "industry_code": "E48",
+      "sector": "E",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600609",
+      "name_2021": "金杯汽车",
+      "industry_code": "C36",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600620",
+      "name_2021": "天宸股份",
+      "industry_code": "S90",
+      "sector": "S",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600636",
+      "name_2021": "国新文化",
+      "industry_code": "I65",
+      "sector": "I",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600661",
+      "name_2021": "昂立教育",
+      "industry_code": "P82",
+      "sector": "P",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600664",
+      "name_2021": "哈药股份",
+      "industry_code": "C27",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600665",
+      "name_2021": "天地源",
+      "industry_code": "K70",
+      "sector": "K",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600673",
+      "name_2021": "东阳光",
+      "industry_code": "S90",
+      "sector": "S",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600698",
+      "name_2021": "湖南天雁",
+      "industry_code": "C36",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600711",
+      "name_2021": "盛屯矿业",
+      "industry_code": "B09",
+      "sector": "B",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600721",
+      "name_2021": "*ST百花",
+      "industry_code": "M73",
+      "sector": "M",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600730",
+      "name_2021": "中国高科",
+      "industry_code": "P82",
+      "sector": "P",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600754",
+      "name_2021": "锦江酒店",
+      "industry_code": "H61",
+      "sector": "H",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600763",
+      "name_2021": "通策医疗",
+      "industry_code": "Q83",
+      "sector": "Q",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600765",
+      "name_2021": "中航重机",
+      "industry_code": "C37",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600766",
+      "name_2021": "*ST园城",
+      "industry_code": "S90",
+      "sector": "S",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600773",
+      "name_2021": "西藏城投",
+      "industry_code": "K70",
+      "sector": "K",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600805",
+      "name_2021": "悦达投资",
+      "industry_code": "S90",
+      "sector": "S",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600827",
+      "name_2021": "百联股份",
+      "industry_code": "F52",
+      "sector": "F",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600829",
+      "name_2021": "人民同泰",
+      "industry_code": "F51",
+      "sector": "F",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600853",
+      "name_2021": "龙建股份",
+      "industry_code": "E48",
+      "sector": "E",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600862",
+      "name_2021": "中航高科",
+      "industry_code": "C37",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600886",
+      "name_2021": "国投电力",
+      "industry_code": "D44",
+      "sector": "D",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600896",
+      "name_2021": "*ST海医",
+      "industry_code": "Q83",
+      "sector": "Q",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600906",
+      "name_2021": "财达证券",
+      "industry_code": "J67",
+      "sector": "J",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600918",
+      "name_2021": "中泰证券",
+      "industry_code": "J67",
+      "sector": "J",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600977",
+      "name_2021": "中国电影",
+      "industry_code": "R86",
+      "sector": "R",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "600992",
+      "name_2021": "贵绳股份",
+      "industry_code": "C33",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601007",
+      "name_2021": "金陵饭店",
+      "industry_code": "H61",
+      "sector": "H",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601019",
+      "name_2021": "山东出版",
+      "industry_code": "R85",
+      "sector": "R",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601021",
+      "name_2021": "春秋航空",
+      "industry_code": "G56",
+      "sector": "G",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601113",
+      "name_2021": "ST华鼎",
+      "industry_code": "C28",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601139",
+      "name_2021": "深圳燃气",
+      "industry_code": "D45",
+      "sector": "D",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601156",
+      "name_2021": "东航物流",
+      "industry_code": "G56",
+      "sector": "G",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601158",
+      "name_2021": "重庆水务",
+      "industry_code": "D46",
+      "sector": "D",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601318",
+      "name_2021": "中国平安",
+      "industry_code": "J68",
+      "sector": "J",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601399",
+      "name_2021": "国机重装",
+      "industry_code": "E48",
+      "sector": "E",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601519",
+      "name_2021": "大智慧",
+      "industry_code": "J69",
+      "sector": "J",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601595",
+      "name_2021": "上海电影",
+      "industry_code": "R86",
+      "sector": "R",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601618",
+      "name_2021": "中国中冶",
+      "industry_code": "E48",
+      "sector": "E",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601628",
+      "name_2021": "中国人寿",
+      "industry_code": "J68",
+      "sector": "J",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601633",
+      "name_2021": "长城汽车",
+      "industry_code": "C36",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601666",
+      "name_2021": "平煤股份",
+      "industry_code": "B06",
+      "sector": "B",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601878",
+      "name_2021": "浙商证券",
+      "industry_code": "J67",
+      "sector": "J",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "601968",
+      "name_2021": "宝钢包装",
+      "industry_code": "C33",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603007",
+      "name_2021": "ST花王",
+      "industry_code": "E48",
+      "sector": "E",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603011",
+      "name_2021": "合锻智能",
+      "industry_code": "C34",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603029",
+      "name_2021": "天鹅股份",
+      "industry_code": "C35",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603099",
+      "name_2021": "长白山",
+      "industry_code": "N78",
+      "sector": "N",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603105",
+      "name_2021": "芯能科技",
+      "industry_code": "C38",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603115",
+      "name_2021": "海星股份",
+      "industry_code": "C39",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603225",
+      "name_2021": "新凤鸣",
+      "industry_code": "C28",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603300",
+      "name_2021": "华铁应急",
+      "industry_code": "L71",
+      "sector": "L",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603319",
+      "name_2021": "湘油泵",
+      "industry_code": "C36",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603333",
+      "name_2021": "尚纬股份",
+      "industry_code": "C38",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603359",
+      "name_2021": "东珠生态",
+      "industry_code": "N77",
+      "sector": "N",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603378",
+      "name_2021": "亚士创能",
+      "industry_code": "C26",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603399",
+      "name_2021": "吉翔股份",
+      "industry_code": "C32",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603458",
+      "name_2021": "勘设股份",
+      "industry_code": "M74",
+      "sector": "M",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603477",
+      "name_2021": "巨星农牧",
+      "industry_code": "A03",
+      "sector": "A",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603506",
+      "name_2021": "南都物业",
+      "industry_code": "K70",
+      "sector": "K",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603558",
+      "name_2021": "健盛集团",
+      "industry_code": "C17",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603602",
+      "name_2021": "纵横通信",
+      "industry_code": "I65",
+      "sector": "I",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603608",
+      "name_2021": "天创时尚",
+      "industry_code": "C19",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603679",
+      "name_2021": "华体科技",
+      "industry_code": "C38",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603682",
+      "name_2021": "锦和商业",
+      "industry_code": "L72",
+      "sector": "L",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603687",
+      "name_2021": "大胜达",
+      "industry_code": "C22",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603696",
+      "name_2021": "安记食品",
+      "industry_code": "C14",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603706",
+      "name_2021": "东方环宇",
+      "industry_code": "D45",
+      "sector": "D",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603708",
+      "name_2021": "家家悦",
+      "industry_code": "F52",
+      "sector": "F",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603718",
+      "name_2021": "海利生物",
+      "industry_code": "C27",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603776",
+      "name_2021": "永安行",
+      "industry_code": "M74",
+      "sector": "M",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603806",
+      "name_2021": "福斯特",
+      "industry_code": "C29",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603855",
+      "name_2021": "华荣股份",
+      "industry_code": "C35",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603859",
+      "name_2021": "能科科技",
+      "industry_code": "M74",
+      "sector": "M",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603860",
+      "name_2021": "中公高科",
+      "industry_code": "M74",
+      "sector": "M",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603868",
+      "name_2021": "飞科电器",
+      "industry_code": "C38",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603949",
+      "name_2021": "雪龙集团",
+      "industry_code": "C36",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "603950",
+      "name_2021": "长源东谷",
+      "industry_code": "C36",
+      "sector": "C",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "605050",
+      "name_2021": "福然德",
+      "industry_code": "G58",
+      "sector": "G",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "605090",
+      "name_2021": "九丰能源",
+      "industry_code": "D45",
+      "sector": "D",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "605098",
+      "name_2021": "行动教育",
+      "industry_code": "P82",
+      "sector": "P",
+      "available_date": "2021-11-10"
+    },
+    {
+      "code": "605108",
+      "name_2021": "同庆楼",
+      "industry_code": "H62",
+      "sector": "H",
+      "available_date": "2021-11-10"
+    }
+  ]
+}

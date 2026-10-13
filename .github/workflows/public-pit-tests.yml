@@ -1,0 +1,30 @@
+name: Public PIT research tests
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  public-pit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install research test dependencies
+        run: >-
+          python -m pip install numpy==2.5.4 pandas==3.0.6 requests==2.34.2
+          beautifulsoup4==4.15.0 pypdf==6.20.1 pymupdf==1.28.2
+          pytest==9.1.1 ruff==0.16.10
+      - name: Offline original-document and PIT tests
+        run: python -m pytest research/public_a_share/test_public_pit.py -q
+      - name: Research source lint
+        run: python -m ruff check --config research/public_a_share/ruff.toml research/public_a_share/*.py

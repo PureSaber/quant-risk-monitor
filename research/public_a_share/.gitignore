@@ -1,0 +1,14 @@
+/raw/
+/clean/
+/runs/
+/active-run.json
+/*-status.json
+/*.log
+/pytest-tmp*/
+/cohort.json
+/protocol.json
+/protocol-clarifications.json
+/industry-sources.json
+
+/jupyter-runtime/
+/ipython-runtime/

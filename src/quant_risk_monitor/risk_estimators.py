@@ -137,14 +137,20 @@ def regime_multiplier(values, config, *, half_life):
     if config.regime_window == 0:
         return 1.0, {"enabled": False}
     values = np.asarray(values, dtype=float)
+    if values.ndim != 2 or not np.isfinite(values).all():
+        raise ValueError("regime adjustment requires a finite time-by-series matrix")
     if len(values) < config.regime_min_periods + config.regime_window:
         raise ValueError("regime adjustment requires prior history plus the complete regime window")
     scores = []
     for position in range(len(values) - config.regime_window, len(values)):
         prior = values[:position]
-        covariance, _ = estimate_covariance(prior, half_life=half_life)
-        variance = np.diag(covariance)
-        innovation = values[position] - time_weights(len(prior), half_life) @ prior
+        # Only marginal variances enter the regime score. Computing the full
+        # covariance and its eigendecomposition costs O(N^3) for a specific-risk
+        # panel, without contributing any information to this calculation.
+        weights = time_weights(len(prior), half_life)
+        center = weights @ prior
+        variance = weights @ (prior - center) ** 2 / (1 - weights @ weights)
+        innovation = values[position] - center
         if np.any((variance <= 0) & (innovation != 0)):
             raise ValueError("regime innovation is nonzero against a zero-variance history")
         positive = variance > 0

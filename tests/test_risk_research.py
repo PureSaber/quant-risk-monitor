@@ -172,3 +172,37 @@ def test_late_candidate_plan_cannot_claim_untouched_selection():
     study["plan_available_at"] = study["selection_as_of"]
     with pytest.raises(ValueError, match="candidate plan"):
         calibrate_risk_spec(study)
+
+
+def test_retrospective_design_keeps_actual_creation_date_and_holdout_separation():
+    _, study = fixture()
+    study["schema"] = "quant-risk.calibration-study/v2"
+    study.pop("plan_available_at")
+    study["research_design"] = {"kind": "retrospective", "created_at": study["evaluation_as_of"]}
+    result = calibrate_risk_spec(study)
+    assert result["schema"] == "quant-risk.calibration-result/v2"
+    assert result["selection"]["research_design"]["kind"] == "retrospective"
+    assert "plan_available_at" not in result["selection"]
+    altered = copy.deepcopy(study)
+    for row in altered["outcomes"]:
+        if row["period_start"] >= study["selection_as_of"]:
+            row["values"] = {a: r * 7 for a, r in row["values"].items()}
+    assert calibrate_risk_spec(altered)["selection_sha256"] == result["selection_sha256"]
+
+
+@pytest.mark.parametrize("mutation", ["kind", "future_creation", "unknown", "overlap"])
+def test_retrospective_design_cannot_bypass_schema_or_time_boundaries(mutation):
+    _, study = fixture()
+    study["schema"] = "quant-risk.calibration-study/v2"
+    study.pop("plan_available_at")
+    study["research_design"] = {"kind": "retrospective", "created_at": study["evaluation_as_of"]}
+    if mutation == "kind":
+        study["research_design"]["kind"] = "historically_registered"
+    elif mutation == "future_creation":
+        study["research_design"]["created_at"] = "2099-01-01T00:00:00Z"
+    elif mutation == "unknown":
+        study["research_design"]["certified"] = True
+    else:
+        study["selection_as_of"] = study["holdout_requests"][0]["period_end"]
+    with pytest.raises(ValueError):
+        calibrate_risk_spec(study)

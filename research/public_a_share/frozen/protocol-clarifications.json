@@ -1,0 +1,27 @@
+{
+  "created_at": "2026-10-13T11:34:59.936141+00:00",
+  "before_any_selection_or_holdout_scores": true,
+  "original_protocol_sha256": "b86773d2392a9cd6d466df789c8bc0dcfdf889ccdf25b43b098183ae6c7fc57b",
+  "financial_admission": "Extract each original disclosure independently of present-day vendor values; secondary tables are diagnostic only. Scanned/unreadable issuer tables remain missing; never substitute subsidiary tables.",
+  "bias_guardrail": "For every portfolio family, abs(log(realized/predicted volatility)) must not deteriorate by more than 0.1 from the common-basis OLS control.",
+  "additional_original_ols_control": "Original 54fcf4d algorithm: full-rank unconstrained equal-weight OLS on style plus industry intercepts (no redundant market column), sample covariance 20% diagonal shrinkage, specific variance 20% global-mean shrinkage. Same data, eligibility, weights and forecast dates. Primary common-basis OLS control remains unchanged.",
+  "ablations": "Selected enhanced specification minus one feature at a time on 2023 only; diagnostic, no parameter reselection.",
+  "promotion_clarification": "Require improvements against both common-basis OLS and the original unconstrained OLS control; no automatic deployment.",
+  "price_source_correction": {
+    "recorded_at": "2026-10-13T11:47:07.602344+00:00",
+    "before_any_model_scores": true,
+    "evidence": "clean/price-crosscheck.csv: eight historical issuers, including later exits; raw prices match but EM additive HFQ percentage returns are distorted.",
+    "model_prices": "Eastmoney unadjusted prices for cap and turnover; BaoStock multiplicatively adjusted close ratios for stock returns, momentum and outcomes. No synthetic zero return on suspended/unobserved quote.",
+    "excluded_price_field": "Eastmoney fqt=2 is retained for diagnosis only and never used as a model input."
+  },
+  "capital_source_completion": {
+    "recorded_at": "2026-10-13T12:42:04.876167+00:00",
+    "before_any_model_scores": true,
+    "policy": "Nine CNINFO endpoint gaps supplemented with archived Sina capital-history tables carrying both announcement and effective dates. Reject unknown 19000101 announcement placeholders. Future dated rows remain unusable before their availability. Original filing share extraction is independent of the presence of any current vendor file."
+  },
+  "coverage_reporting": {
+    "recorded_at": "2026-10-13T13:04:39.739840+00:00",
+    "before_any_model_scores": true,
+    "policy": "Keep the frozen minimum of 80 complete holdout dates as a promotion gate. If fewer complete dates are observed, publish available paired scores and the preplanned stale-mark sensitivity, label coverage failure, and prohibit promotion. Do not change dates, holdings or threshold to obtain a pass."
+  }
+}
