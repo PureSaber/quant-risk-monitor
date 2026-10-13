@@ -1,5 +1,8 @@
 # quant-risk-monitor
 
+`DecisionPortfolioLimits.from_mapping` rejects unknown field names. A misspelled limit now
+fails input validation instead of silently reverting to the default threshold.
+
 Barra风格风险研究现支持统一PIT风格暴露、加权与行业约束回归、EWMA/Newey–West、
 波动状态调整、行业贝叶斯特异风险和独立留出期校准。新增`build-exposures`、
 `calibrate-risk`、`verify-research`命令，完整合成示例、公式与证据边界见
