@@ -87,6 +87,13 @@ def test_holdout_poison_does_not_change_selected_parameters_or_selection_hash():
     assert set(result["holdout_reports"]) == {selected, "baseline"}
 
 
+def test_hac_calibration_rejects_gaps_in_training_periods():
+    _, study = fixture()
+    del study["returns"][10]
+    with pytest.raises(ValueError, match="contiguous return periods"):
+        calibrate_risk_spec(study)
+
+
 @pytest.mark.parametrize("kind", ["exposures", "calibration"])
 def test_cli_and_recomputed_artifacts_reject_rehashed_tampering(tmp_path, capsys, kind):
     exposure, calibration = fixture()

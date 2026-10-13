@@ -733,11 +733,25 @@ def fit_barra_style_risk_model(
     period_keys = [(item.period_start, item.period_end) for item in observations]
     if len(set(period_keys)) != len(period_keys):
         raise ValueError("return observations contain duplicate periods")
+    requires_contiguous = (
+        config.factor_half_life is not None
+        or config.specific_half_life is not None
+        or config.newey_west_lags
+        or config.specific_newey_west_lags
+        or config.regime_window
+        or config.risk_horizon > 1
+    )
     for position, observation in enumerate(observations):
         if observation.period_end > cutoff or observation.available_at > cutoff:
             raise ValueError("return observations must be complete and available by as_of")
         if position and observation.period_start < observations[position - 1].period_end:
             raise ValueError("return observation periods must not overlap")
+        if (
+            position
+            and requires_contiguous
+            and observation.period_start != observations[position - 1].period_end
+        ):
+            raise ValueError("advanced risk estimation requires contiguous return periods")
     if len(observations) < config.min_periods:
         raise ValueError(
             f"at least {config.min_periods} matured return periods are required; "
