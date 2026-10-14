@@ -86,6 +86,20 @@ def test_barra_style_proxy_closes_x_f_d_covariance_loop() -> None:
     json.dumps(model.to_dict(), allow_nan=False)
 
 
+def test_factor_analysis_never_materializes_asset_covariance(monkeypatch):
+    model = _fit_model()
+    assert object.__getattribute__(model, "_asset_covariance") is None
+
+    def forbidden(_):
+        raise AssertionError("asset covariance must not be materialized")
+
+    monkeypatch.setattr(type(model), "asset_covariance", property(forbidden))
+    report = model.analyze({"A": 0.4, "B": 0.3}, {"A": 0.2, "B": 0.3, "C": 0.5})
+    assert report.tracking_risk.volatility >= 0
+    assert model.asset_variances.min() >= 0
+    assert "asset_covariance" not in model.to_dict(include_asset_covariance=False)
+
+
 def test_factor_model_returns_defensive_copies_and_rejects_inconsistent_internal_state() -> None:
     model = _fit_model()
     original = model.factor_covariance
