@@ -6,6 +6,7 @@ Barra model and does not contain vendor descriptors, calibrations, or data.
 
 from __future__ import annotations
 
+import hashlib
 import math
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
@@ -392,7 +393,7 @@ class BarraStyleRiskModel:
     _factor_returns: pd.DataFrame = field(repr=False)
     _factor_covariance: pd.DataFrame = field(repr=False)
     _specific_variances: pd.Series = field(repr=False)
-    _asset_covariance: pd.DataFrame = field(repr=False)
+    _asset_covariance: pd.DataFrame | None = field(repr=False)
     _diagnostics: FactorModelDiagnostics = field(repr=False)
 
     def __init__(
@@ -404,7 +405,7 @@ class BarraStyleRiskModel:
         factor_returns: pd.DataFrame,
         factor_covariance: pd.DataFrame,
         specific_variances: pd.Series,
-        asset_covariance: pd.DataFrame,
+        asset_covariance: pd.DataFrame | None,
         diagnostics: FactorModelDiagnostics,
     ) -> None:
         if model_kind not in ("fundamental_style", "statistical_proxy"):
@@ -440,10 +441,19 @@ class BarraStyleRiskModel:
         object.__setattr__(
             self,
             "_asset_covariance",
-            self._finite_frame_copy(asset_covariance, "asset covariance"),
+            None
+            if asset_covariance is None
+            else self._finite_frame_copy(asset_covariance, "asset covariance"),
         )
         object.__setattr__(self, "_diagnostics", deepcopy(diagnostics))
         self._validate_consistency()
+        object.__setattr__(self, "_component_fingerprint", self._fingerprint())
+
+    def _fingerprint(self) -> str:
+        digest = hashlib.sha256()
+        for value in (self._exposures, self._factor_covariance, self._specific_variances):
+            digest.update(value.to_numpy(dtype=float).tobytes())
+        return digest.hexdigest()
 
     @staticmethod
     def _finite_frame_copy(values: pd.DataFrame, name: str) -> pd.DataFrame:
@@ -485,7 +495,20 @@ class BarraStyleRiskModel:
 
     @property
     def asset_covariance(self) -> pd.DataFrame:
-        return self._asset_covariance.copy(deep=True)
+        """Materialize the dense matrix only when explicitly requested."""
+        if self._asset_covariance is not None:
+            return self._asset_covariance.copy(deep=True)
+        x = self._exposures.to_numpy()
+        matrix = x @ self._factor_covariance.to_numpy() @ x.T
+        matrix[np.diag_indices_from(matrix)] += self._specific_variances.to_numpy()
+        return pd.DataFrame(matrix, index=self._exposures.index, columns=self._exposures.index)
+
+    @property
+    def asset_variances(self) -> pd.Series:
+        """Diagonal of X F X' + D in O(N K²) work and O(N K) storage."""
+        x = self._exposures.to_numpy()
+        variances = np.einsum("ij,ij->i", x @ self._factor_covariance.to_numpy(), x)
+        return pd.Series(variances, index=self._exposures.index) + self._specific_variances
 
     @property
     def diagnostics(self) -> FactorModelDiagnostics:
@@ -504,7 +527,6 @@ class BarraStyleRiskModel:
             ("model exposures", exposures),
             ("factor returns", factor_returns),
             ("factor covariance", factor_covariance),
-            ("asset covariance", asset_covariance),
         ):
             if not isinstance(values, pd.DataFrame) or values.empty:
                 raise ValueError(f"{name} must remain a non-empty DataFrame")
@@ -526,17 +548,20 @@ class BarraStyleRiskModel:
             raise ValueError("factor covariance labels must exactly match model factors")
         if list(specific_variances.index) != assets:
             raise ValueError("specific variance labels must exactly match model assets")
-        if list(asset_covariance.index) != assets or list(asset_covariance.columns) != assets:
+        if asset_covariance is not None and (
+            list(asset_covariance.index) != assets or list(asset_covariance.columns) != assets
+        ):
             raise ValueError("asset covariance labels must exactly match model assets")
         if (specific_variances < 0).any():
             raise ValueError("specific variances must be non-negative")
 
         factor_matrix = factor_covariance.to_numpy(dtype=float)
-        asset_matrix = asset_covariance.to_numpy(dtype=float)
-        for name, matrix in (
-            ("factor covariance", factor_matrix),
-            ("asset covariance", asset_matrix),
-        ):
+        matrices = [("factor covariance", factor_matrix)]
+        if asset_covariance is not None:
+            matrices.append(("asset covariance", asset_covariance.to_numpy(dtype=float)))
+        for name, matrix in matrices:
+            if not np.isfinite(matrix).all():
+                raise ValueError(f"{name} must remain finite")
             if not np.allclose(matrix, matrix.T, rtol=1e-10, atol=1e-12):
                 raise ValueError(f"{name} must be symmetric")
         factor_eigenvalues = np.linalg.eigvalsh(factor_matrix)
@@ -544,17 +569,15 @@ class BarraStyleRiskModel:
         if float(factor_eigenvalues.min()) < -factor_tolerance:
             raise ValueError("factor covariance must be positive semidefinite")
 
-        exposure_matrix = exposures.to_numpy(dtype=float)
-        reconstructed = exposure_matrix @ factor_matrix @ exposure_matrix.T + np.diag(
-            specific_variances.to_numpy(dtype=float)
-        )
-        scale = max(
-            float(np.abs(reconstructed).max()),
-            float(np.abs(asset_matrix).max()),
-            1.0,
-        )
-        if not np.allclose(asset_matrix, reconstructed, rtol=1e-10, atol=scale * 1e-12):
-            raise ValueError("asset covariance is inconsistent with X F X.T + D")
+        if asset_covariance is not None:
+            exposure_matrix = exposures.to_numpy(dtype=float)
+            reconstructed = exposure_matrix @ factor_matrix @ exposure_matrix.T + np.diag(
+                specific_variances.to_numpy(dtype=float)
+            )
+            asset_matrix = asset_covariance.to_numpy(dtype=float)
+            scale = max(float(np.abs(reconstructed).max()), float(np.abs(asset_matrix).max()), 1.0)
+            if not np.allclose(asset_matrix, reconstructed, rtol=1e-10, atol=scale * 1e-12):
+                raise ValueError("asset covariance is inconsistent with X F X.T + D")
 
         diagnostics = self._diagnostics
         if (
@@ -565,6 +588,13 @@ class BarraStyleRiskModel:
             or diagnostics.assets != tuple(assets)
         ):
             raise ValueError("factor model diagnostics are inconsistent with the model state")
+        if (
+            hasattr(self, "_component_fingerprint")
+            and self._fingerprint() != self._component_fingerprint
+        ):
+            raise ValueError(
+                "mutated factor components are inconsistent with X F X.T + D construction"
+            )
 
     def _align_weights(self, values: pd.Series | Mapping[str, object], name: str) -> pd.Series:
         weights = _portfolio_weights(values, name)
@@ -575,14 +605,13 @@ class BarraStyleRiskModel:
         return weights.reindex(self._exposures.index, fill_value=0.0)
 
     def _decompose(self, weights: pd.Series) -> RiskDecomposition:
-        vector = weights.to_numpy(dtype=float)
         exposure = self._exposures.T @ weights
         factor_marginal = self._factor_covariance @ exposure
         factor_contributions = exposure * factor_marginal
         specific_contributions = weights.pow(2) * self._specific_variances
         factor_variance = float(factor_contributions.sum())
         specific_variance = float(specific_contributions.sum())
-        total_variance = float(vector @ self._asset_covariance.to_numpy() @ vector)
+        total_variance = factor_variance + specific_variance
         scale = max(abs(factor_variance) + abs(specific_variance), 1.0)
         if total_variance < -scale * 1e-12:
             raise ValueError("portfolio variance is negative beyond numerical tolerance")
@@ -630,9 +659,9 @@ class BarraStyleRiskModel:
             risk_horizon=self._diagnostics.estimation.get("risk_horizon", 1),
         )
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self, *, include_asset_covariance: bool = True) -> dict[str, Any]:
         self._validate_consistency()
-        return {
+        result = {
             "name": "barra_style_factor_risk_model",
             "vendor_model": False,
             "model_kind": self.model_kind,
@@ -648,9 +677,13 @@ class BarraStyleRiskModel:
             "factor_returns": _frame_payload(self._factor_returns),
             "factor_covariance": _frame_payload(self._factor_covariance),
             "specific_variances": _series_payload(self._specific_variances),
-            "asset_covariance": _frame_payload(self._asset_covariance),
             "diagnostics": self._diagnostics.to_dict(),
         }
+        if include_asset_covariance:
+            result["asset_covariance"] = _frame_payload(self.asset_covariance)
+        else:
+            result["covariance_representation"] = "factorized-XFXt-plus-diagonal-D"
+        return result
 
 
 def _latest_snapshot(
@@ -845,20 +878,8 @@ def fit_barra_style_risk_model(
         residuals, current_snapshot, config, len(observations)
     )
 
-    exposure_matrix = current_exposures.to_numpy(dtype=float)
-    asset_matrix = exposure_matrix @ factor_covariance.to_numpy(
-        dtype=float
-    ) @ exposure_matrix.T + np.diag(specific_variances.to_numpy(dtype=float))
-    asset_matrix = (asset_matrix + asset_matrix.T) / 2
-    eigenvalues = np.linalg.eigvalsh(asset_matrix)
-    tolerance = max(float(np.abs(eigenvalues).max()) * 1e-12, 1e-15)
-    if float(eigenvalues.min()) < -tolerance:
-        raise ValueError("reconstructed asset covariance is not positive semidefinite")
-    asset_covariance = pd.DataFrame(
-        asset_matrix,
-        index=current_exposures.index,
-        columns=current_exposures.index,
-    )
+    # PSD follows from PSD F and nonnegative D; validate those small components
+    # in the model constructor instead of diagonalizing an N by N matrix.
     diagnostics = FactorModelDiagnostics(
         model_kind=config.model_kind,
         as_of=cutoff,
@@ -895,6 +916,6 @@ def fit_barra_style_risk_model(
         factor_returns=factor_returns,
         factor_covariance=factor_covariance,
         specific_variances=specific_variances,
-        asset_covariance=asset_covariance,
+        asset_covariance=None,
         diagnostics=diagnostics,
     )
