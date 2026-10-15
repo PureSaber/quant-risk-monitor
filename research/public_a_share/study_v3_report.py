@@ -27,6 +27,13 @@ def table(frame):
     )
 
 
+def facts_table(mapping):
+    return table(pd.DataFrame({"项目": list(mapping), "证据": [
+        json.dumps(v, ensure_ascii=False) if isinstance(v, (dict, list)) else v
+        for v in mapping.values()
+    ]}))
+
+
 def page(title, body):
     return f"""<!doctype html><html lang="zh-CN"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)}</title>
@@ -186,15 +193,15 @@ def run(out, independent, batch_id, *, allow_partial=False):
     comparison = pd.DataFrame(comparisons)
     comparison.to_csv(out / "risk-comparison-summary.csv", index=False, encoding="utf-8-sig")
     quality_body = f"""<p class="note">固定保留 200 家原历史样本；不以今天是否存续更换公司。数据按原公告可用时间重建，实际抓取时间单独记录。这是回顾性公开数据重建，不等于认证的历史供应商数据版本。</p>
-<h2>逐日覆盖与缺口</h2>{table(pd.DataFrame([quality]))}
+<h2>逐日覆盖与缺口</h2>{facts_table(quality)}
 <p>缺报价不推断为退市，不填零收益，也不对剩余持仓重新归一化。原十个缺失窗口的价格端点已与停牌原始记录逐项核查，保留为缺失结果。</p>
 <p><a href="prior-ten-window-audit.json">原十窗口证据</a> · <a href="daily-quality.parquet">237,400 条逐资产日质量记录</a> · <a href="company-quality.csv">逐公司清单</a> · <a href="listing-exit-audit.parquet">上市和退出状态核查</a></p>
-<h2>财报版本与填补</h2>{table(pd.DataFrame([financial]))}
+<h2>财报版本与填补</h2>{facts_table(financial)}
 <p>财报过期、缺少成熟财报及已知修订逐日保留；暴露填补比例按模型版本记录，不把填补后的完整矩阵当作原始数据完整。</p>
 <p><a href="financial-vintages.parquet">财报版本清单</a> · <a href="financial-daily-quality.parquet">财报逐日质量</a> · <a href="imputation-daily-quality.parquet">暴露填补与来源</a> · <a href="descriptor-coverage.parquet">描述子原始覆盖率</a></p>
 <h2>执行价格与实际权益</h2><p>交换参考价与股东实际现金、股份分开。差异化分红和缺失分红由发行人公告佐证；宁科生物重整不向原股东分配，花王股份的普通股东比例不能用公司总股本转增比例替代。无法精确确认的实际持仓权益触发明确停止。</p>
 <p><a href="corporate-action-repair-evidence.json">逐项修复与原公告摘要</a> · <a href="execution-input-guards.json">未解决权益保护条件</a> · <a href="execution-input-issues.json">剩余价格复权冲突</a></p>
-<h2>独立复算</h2>{table(pd.DataFrame([recompute]))}<p>全部原始价格重新解析，暴露缓存从空目录重建；财务输入使用已归档的提取事实，原 PDF 摘要另行核验，不声称本轮重新人工核读全部 PDF。</p>"""
+<h2>独立复算</h2>{facts_table(recompute)}<p>全部原始价格重新解析，暴露缓存从空目录重建；财务输入使用已归档的提取事实，原 PDF 摘要另行核验，不声称本轮重新人工核读全部 PDF。</p>"""
     (out / "data-quality-report.html").write_text(
         page("200 家样本：数据质量与修复证据", quality_body), encoding="utf8"
     )
@@ -202,6 +209,7 @@ def run(out, independent, batch_id, *, allow_partial=False):
         """<p class="note">模型推广未通过：新增独立窗口为 0。2024—2026 全部属于已查看的回顾性诊断；不能将这些窗口重新计入 80 个独立成熟窗口门槛。</p>
 <p>先固定 OLS 比较三种暴露，再固定修正版暴露比较原十二组估计参数及五项消融。5 日预测、252 日历史，使用相同资产、日期和评价权重。负的 ΔQLIKE 表示相对该实验控制组改善；必须同时检查经多重比较校正的区间上界。</p>
 <p>按预测日期联合区块重采样 5,000 次，每块十个日期，日期内保留全部组合；先按组合族汇总，避免行业组合数量改变权重。高低波动状态只用预测日前数据。</p>
+<p>v3 沿连续五日网格安排 180 个预测日期，其中 2026 年为 35 个、完整共同结果为 27 个。这与此前独立安排的 36 个窗口不是同一日期网格；原十个缺失窗口仍单独保留，不把新网格的样本数变化称为修复了缺失价格。</p>
 <h2>冻结比较结果</h2><div class="scroll">"""
         + table(comparison)
         + """</div>
@@ -330,7 +338,7 @@ def run(out, independent, batch_id, *, allow_partial=False):
     overview = f"""<p class="card">研究交付状态：{acceptance["study_delivery"]}。独立重算通过，默认模型和冻结账户保持原配置。模型推广未通过，新增独立成熟窗口为 0。</p>
 <p>本研究截止 2026-09-30，使用原 200 家历史公司样本及必要预热数据。工程交付、模型替换和策略推广分别验收；80 个真正独立的五日窗口门槛不降低，也不将等待前向数据包装成本轮工程完成。</p>
 <h2>三项交付</h2><ul><li><a href="data-quality-report.html">暴露、逐日数据质量、原十窗口缺口和修复证据</a></li><li><a href="risk-estimation-report.html">冻结暴露与估计器比较、校准和消融</a></li><li><a href="portfolio-report.html">62 个原生账户场景、交叉风险预测和失败记录</a></li></ul>
-<h2>验收与复现入口</h2>{table(pd.DataFrame([acceptance]))}
+<h2>验收与复现入口</h2>{facts_table(acceptance)}
 <p><a href="protocol.json">冻结实验协议</a> · <a href="study-acceptance.json">机器可读验收</a> · <a href="release-evidence.json">代码、环境与 CI 证据</a> · <a href="../independent-01/independent-recomputation.json">独立重算收据</a> · <a href="../../supplemental-recovery-receipt.json">新增证据恢复收据</a></p>
 <p>研究隔离运行，没有切换模拟服务或改写账户。恢复时使用已记录的固定环境和 SHA-256 输入清单，在新目录重放；同机跨盘副本不被描述为独立硬件备份。真实样本耗时、峰值内存和失败在组合表中，不能用合成性能替代。</p>"""
     (out / "report.html").write_text(page("Barra 200 家样本验证 · v3", overview), encoding="utf8")
