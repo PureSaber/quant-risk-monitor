@@ -210,7 +210,9 @@ def run(source, out):
                     diagnostics=diagnostic,
                 )
             except OptimizationError as exc:
-                record.update(status=exc.status, error=str(exc), diagnostics=exc.diagnostics)
+                record.update(
+                    status=exc.status, error=str(exc), diagnostics=exc.serializable_diagnostics()
+                )
             write_json(target, record)
             print(json.dumps({k: record[k] for k in ("scenario", "date", "status")}), flush=True)
     outputs = [json.loads(path.read_text()) for path in sorted(out.glob("integer-*.json"))]
