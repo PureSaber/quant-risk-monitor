@@ -1,8 +1,11 @@
 import json
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
 from repair_report import compare_branch_prefixes, cross_metrics, supplemental_coverage
+
+from study_v3_archive import digest
 
 
 def forecast_rows():
@@ -28,6 +31,31 @@ def test_newly_exposed_entitlement_requires_separate_evidenced_replay():
     assert supplemental_coverage(accounts, stops)[0]
     stops.append({"branch": "sensitivity_floor_extended", "scenario": 0, "asset": "001210"})
     assert not supplemental_coverage(accounts, stops)[0]
+
+
+def test_missing_supplemental_report_stops_before_loading_models(tmp_path, monkeypatch):
+    import repair_report
+
+    coverage = tmp_path / "coverage"
+    coverage.mkdir()
+    model = coverage / "portfolio-risk-models.pkl"
+    model.write_bytes(b"must not deserialize an incomplete campaign")
+    (coverage / "coverage-binding.json").write_text(json.dumps({"output": digest(model), "inputs": {}}))
+    folder = tmp_path / "account"
+    folder.mkdir()
+    (folder / "full-horizon-stop.json").write_text(json.dumps({"asset": "001210"}))
+    monkeypatch.setattr(repair_report, "batch_results", lambda *a, **kw: [
+        {"scenario": 0, "folder": str(folder), "outputs": {}}
+    ])
+    out = tmp_path / "report"
+    args = SimpleNamespace(out=out, coverage=coverage, source=tmp_path, partial=False,
+                           branch=[("sensitivity_floor", str(tmp_path), "test")])
+    repair_report.run(args)
+    result = json.loads((out / "acceptance.json").read_text())
+    assert result["engineering_research_delivery"] == "partial"
+    assert result["all_published_targets_independently_verified"] is False
+    assert (out / "report.html").exists()
+    assert not (out / "portfolio-before-after.csv").exists()
 
 
 def test_cross_risk_rejects_different_actual_returns_for_same_portfolio():
