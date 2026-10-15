@@ -13,6 +13,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
+    KeepTogether,
     LongTable,
     PageBreak,
     Paragraph,
@@ -36,7 +37,9 @@ def run(root, target, font):
         wordWrap="CJK",
         spaceAfter=8,
     )
-    title = ParagraphStyle("Title", parent=body, fontSize=24, leading=32, spaceAfter=18)
+    title = ParagraphStyle(
+        "Title", parent=body, fontSize=24, leading=32, spaceAfter=18, keepWithNext=True
+    )
     heading = ParagraphStyle(
         "Heading", parent=body, fontSize=15, leading=21, spaceBefore=14, spaceAfter=10,
         keepWithNext=True,
@@ -267,12 +270,11 @@ def run(root, target, font):
             small,
         )
     )
-    story.append(PageBreak())
     story.append(p("工程、存储与恢复", title))
     section("可复现边界")
     if (root / "resource-incident.json").exists():
         story.append(p(
-            "资源限制：补充批次扩大并行后曾触发 Windows 内存提交压力，出现 MemoryError 和进程崩溃。已停止补充批次，恢复四个主工作进程，保留失败现场并重做未完成账户。峰值工作集与 Windows 私有提交内存分别解释，空闲物理内存不能单独作为增加并发的依据；部分耗时包含临时额外进程竞争，不构成专用机器性能承诺。详见 resource-incident.json。"
+            "资源限制：扩大并行曾触发 Windows 内存提交压力，出现 MemoryError 和进程崩溃。引发压力的批次已停止并保留现场；单线程对照后，以通过资源检查的受限并发重做未完成账户。峰值工作集与私有提交内存分别解释，空闲物理内存不能单独作为增加并发的依据；共享机器耗时不构成专用机器性能承诺。详见 resource-incident.json。"
         ))
     if (root / "thread-control-validation/parity.json").exists():
         parity = read(root / "thread-control-validation/parity.json")
@@ -289,6 +291,7 @@ def run(root, target, font):
             "工程验收保留原覆盖率门槛。合成边界测试覆盖停牌、不可卖、部分成交、费用、财报修订、未来数据污染、缓存失效和未确认股份权益；不声称这些特殊情况全部经过真实 200 家样本验证。"
         )
     )
+    recovery_start = len(story)
     recovery = root.parents[1] / "supplemental-recovery-receipt.json"
     if recovery.exists():
         data = read(recovery)
@@ -318,7 +321,7 @@ def run(root, target, font):
             ],
             [150, 280, 320],
         )
-    section("恢复步骤")
+    recovery_steps = [p("恢复步骤", heading)]
     for text in (
         "1. 保留原始目录、旧环境、账户记录和本次失败证据，不覆盖或删除它们。",
         "2. 按 input-manifest.json 与 supplemental/manifest.json，从 F 盘对象库恢复到新的 D 盘目录，逐文件核对 SHA-256。",
@@ -326,13 +329,15 @@ def run(root, target, font):
         "4. 从空缓存运行独立重算，再运行固定批次；禁止将缓存损坏、输入缺失或求解失败转为等权回退。",
         "5. 本轮是隔离研究，没有切换模拟服务或冻结账户；模型替换与策略推广另行验收。",
     ):
-        story.append(p(text))
-    story.append(
+        recovery_steps.append(p(text))
+    recovery_steps.append(
         p(
             "恢复与可复算命令见仓库 research/public_a_share/README.md。报告数据截至 2026-09-30，工程记录以各收据实际生成时间为准。",
             small,
         )
     )
+    story.extend(recovery_steps)
+    story[recovery_start:] = [KeepTogether(story[recovery_start:])]
 
     target.parent.mkdir(parents=True, exist_ok=True)
     doc = SimpleDocTemplate(
