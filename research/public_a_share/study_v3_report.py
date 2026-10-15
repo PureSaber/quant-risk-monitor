@@ -281,33 +281,45 @@ def run(out, independent, batch_id, *, allow_partial=False):
         gaps = gaps.assign(asset=gaps.missing_risk_assets.str.split(",")).explode("asset")
         gaps.to_csv(out / "portfolio-risk-union-gaps.csv", index=False)
         # Shared portfolio identifiers ensure each predictor sees the same return.
-        finite = merged.dropna(subset=["qlike"]).copy()
-        consistency = merged.groupby("portfolio_id").actual_frozen_weight_return.nunique()
-        if (consistency > 1).any():
+        consistency = merged.groupby("portfolio_id")[["actual_frozen_weight_return", "active_frozen_weight_return"]].nunique()
+        if (consistency > 1).any().any():
             raise ValueError("models were evaluated against different actual returns")
-        finite["variance_ratio"] = finite.actual_frozen_weight_return**2 / finite.variance
-        calibration = (
-            finite.groupby(["generator", "predictor", "target_kind"])
-            .agg(
-                forecasts=("portfolio_id", "nunique"),
-                mean_qlike=("qlike", "mean"),
-                mean_squared_standardized_return=("variance_ratio", "mean"),
+        calibrations = []
+        for objective, variance_col, return_col, loss_col in (
+            ("absolute", "variance", "actual_frozen_weight_return", "qlike"),
+            ("active", "active_variance", "active_frozen_weight_return", "active_qlike"),
+        ):
+            evaluation = merged.copy()
+            evaluation["qlike"] = evaluation[loss_col]
+            finite = evaluation.dropna(subset=["qlike"]).copy()
+            finite["variance_ratio"] = finite[return_col]**2 / finite[variance_col]
+            calibration = (
+                finite.groupby(["generator", "predictor", "target_kind"])
+                .agg(
+                    forecasts=("portfolio_id", "nunique"),
+                    mean_qlike=("qlike", "mean"),
+                    mean_squared_standardized_return=("variance_ratio", "mean"),
+                )
+                .reset_index()
             )
-            .reset_index()
-        )
+            calibration["risk_objective"] = objective
+            calibrations.append(calibration)
+            cross_summary[objective] = {}
+            for kind in ("continuous", "integer", "actual_close"):
+                selected = evaluation[evaluation.target_kind.eq(kind)].copy()
+                # All-cash absolute risk is zero, but its active risk is the
+                # entire benchmark. Keep such active forecasts explicitly.
+                selected = selected[~selected[variance_col].eq(0)]
+                selected = selected.rename(columns={"predictor": "model"})
+                selected["family"] = selected.scenario.astype(str)
+                names = sorted(selected.model.unique())
+                cross_summary[objective][kind] = (
+                    paired_summary(selected, names, "legacy_ols") if "legacy_ols" in names else {}
+                )
+        calibration = pd.concat(calibrations, ignore_index=True)
         calibration.to_csv(
             out / "optimizer-risk-underestimation.csv", index=False, encoding="utf-8-sig"
         )
-        for kind in ("continuous", "integer", "actual_close"):
-            selected = merged[merged.target_kind.eq(kind)].copy()
-            if "zero_risk_cash" in selected:
-                selected = selected[~selected.zero_risk_cash.fillna(False)]
-            selected = selected.rename(columns={"predictor": "model"})
-            selected["family"] = selected.scenario.astype(str)
-            names = sorted(selected.model.unique())
-            cross_summary[kind] = (
-                paired_summary(selected, names, "legacy_ols") if "legacy_ols" in names else {}
-            )
     write_json(out / "optimizer-cross-inference.json", cross_summary)
     status_counts = dict(Counter(r["status"] for r in results))
     acceptance = {
@@ -331,7 +343,7 @@ def run(out, independent, batch_id, *, allow_partial=False):
 <p>每 5 个交易日调仓，初始资金 100 万元，预算 95%/80%，单股上限 5%，首次建仓完整计费，其后 L1 换手上限 20%。3%/6% 是模型预测的年化跟踪误差上限；表中实际 TE 来自账户与完整研究样本基准的五日复合收益差，二者不能互相替代。基准端点缺失的窗口不填零、不重新归一化。</p>
 <h2>原生账户比较</h2><div class="scroll">{table(account_frame)}</div>
 <p><a href="portfolio-comparison.csv">完整比较表</a> · <a href="account-independent-checks.json">精确账本、现金、股份与连续约束独立复核</a> · <a href="portfolios/">每个账户的原生订单、成交、费用、持仓和失败证据</a></p>
-<h2>相同组合的交叉风险预测</h2><p>六组冻结模型负责生成组合，全部 22 个风险配置对相同连续、整数及实际收盘持仓交叉预测；组合身份绑定日期与完整权重。同一组合的实际收益已逐项检查一致。平方标准化收益高于 1 提示低估方向，不能仅凭这个均值认定模型失效；需结合日期区块区间、覆盖率和样本量。</p>
+<h2>相同组合的交叉风险预测</h2><p>六组冻结模型负责生成组合，全部 22 个风险配置对相同连续、整数及实际收盘持仓交叉预测；组合身份绑定日期与完整权重。同一组合的实际收益已逐项检查一致。绝对风险与相对完整基准的主动风险分别计算损失和区块区间；全现金账户的绝对风险为零，主动风险仍包含完整基准。平方标准化收益高于 1 提示低估方向，不能仅凭这个均值认定模型失效；需结合日期区块区间、覆盖率和样本量。</p>
 <p><a href="optimizer-risk-underestimation.csv">生成模型 × 预测模型的低估诊断</a> · <a href="optimizer-cross-inference.json">联合日期区块比较</a> · <a href="portfolio-cross-predictions.parquet">全部交叉预测</a> · <a href="portfolio-cross-coverage.csv">包括失败调仓日的风险覆盖</a> · <a href="portfolio-risk-union-gaps.csv">持仓风险缺口逐项清单</a></p>
 <p class="note">估计比较采用 252 日残差完整的共同资产集合。停牌等缺样会使已持仓证券退出风险可用集合；全账户缺少必要风险输入时停止发布新目标。随后持仓的收益和低换手不能解释为优化器持续正常运行。表中调仓 P95 仅统计成功发布目标的完整优化与整手修复，完整账户回放耗时和失败数另列，未记录的失败输入校验耗时不作估算。</p>
 <h2>约束与实际执行的边界</h2><p>连续目标残差验收上限为 1e-7；整数修复采用原执行层的现金、费用、可卖数量与整手规则，不声称整数全局最优。真实成交后，持仓可能偏离目标，实际收盘持仓的风险另行预测。原生账本逐笔复式记账复核，实际持仓是整数股、现金非负。未解释的错误使工程验收保持未完成。</p>"""

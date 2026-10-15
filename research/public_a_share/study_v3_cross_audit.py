@@ -88,6 +88,8 @@ def recompute_cross(decisions, positions, snapshots, models, panel):
                     "factor_variance": None,
                     "specific_variance": None,
                     "annualized_predicted_te": None,
+                    "active_variance": None,
+                    "active_qlike": None,
                     "qlike": None,
                     "zero_risk_cash": not len(nonzero),
                 }
@@ -103,6 +105,10 @@ def recompute_cross(decisions, positions, snapshots, models, panel):
                         factor_variance=factor * 5,
                         specific_variance=specific * 5,
                         annualized_predicted_te=float(np.sqrt(max(active * 252, 0))),
+                        active_variance=active * 5,
+                        active_qlike=None
+                        if record["active_frozen_weight_return"] is None or active <= 0
+                        else float(np.log(active * 5) + record["active_frozen_weight_return"]**2 / (active * 5)),
                         qlike=None
                         if actual_return is None or variance <= 0
                         else float(np.log(variance * 5) + actual_return**2 / (variance * 5)),

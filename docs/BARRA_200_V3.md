@@ -84,6 +84,9 @@ benchmark is explicitly a research-sample benchmark, not a market index.
 All 22 configurations cross-predict common continuous, integer and actual-close
 portfolios. An independent reporting pass also includes actual holdings on dates
 when allocation failed. It preserves missing risk assets and outcome coverage.
+Absolute and active-risk losses have separate calibration and date-block
+inference. All-cash accounts have zero absolute equity risk but retain the full
+benchmark's active risk; they are not dropped from active-risk evaluation.
 Actual account returns include native costs; frozen-weight risk outcomes use
 the common five-session return definition. These are separate evaluation lines.
 

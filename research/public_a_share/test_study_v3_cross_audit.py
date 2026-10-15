@@ -38,6 +38,9 @@ def test_failed_target_retains_actual_portfolio_and_risk_coverage(holding):
         assert result.zero_risk_cash.all()
         assert result.qlike.isna().all()
         assert (result.annualized_predicted_te > 0).all()
+        assert result.active_qlike.notna().all()
+        assert result.active_frozen_weight_return.iloc[0] == pytest.approx(-0.05)
+        assert result.active_variance.iloc[0] == pytest.approx(0.055)
     else:
         assert result.actual_frozen_weight_return.iloc[0] == pytest.approx(0.025)
         assert result.qlike.notna().all()
