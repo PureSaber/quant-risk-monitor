@@ -134,12 +134,15 @@ def run(args):
             checked = verify(folder, models, bars, statuses)
             checks[f"{label}:{row['scenario']}"] = checked
             decisions = read(folder / "allocation-decisions.json")
+            decision_source = folder / "allocation-decisions.json"
+            if not decision_source.exists():
+                decision_source = decision_source.with_suffix(".json.gz")
             for decision in decisions:
                 if "weights" not in decision:
                     failures.append({
                         "branch": label, "scenario": row["scenario"], "date": decision["session"],
                         "status": decision.get("status"), "reason": decision.get("error"),
-                        "source": str(folder / "allocation-decisions.json"),
+                        "source": str(decision_source),
                     })
             if (folder / "full-horizon-stop.json").exists():
                 stop = read(folder / "full-horizon-stop.json")

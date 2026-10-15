@@ -445,6 +445,19 @@ def execution_metrics(replay, models, bundle, destination):
     }
 
 
+def write_decisions(destination, decisions):
+    """Losslessly compress large reproduction payloads with deterministic bytes."""
+    import gzip
+
+    target = destination / "allocation-decisions.json.gz"
+    temporary = target.with_suffix(".pending")
+    payload = json.dumps(decisions, ensure_ascii=False, indent=2, allow_nan=False).encode("utf8")
+    with temporary.open("wb") as raw:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as stream:
+            stream.write(payload)
+    os.replace(temporary, target)
+
+
 def run(
     out, scenario_index, *, limit_dates=None, source=None, coverage=None, share_rules_path=None
 ):
@@ -572,6 +585,7 @@ def _run_owned(
         "tax_scope": "trading costs and gross distributions; no investor-specific dividend income tax",
         "coverage_version": "complete" if coverage is None else binding["version"],
         "share_branch": share_bundle.get("branch", "legacy_strict"),
+        "decision_artifact_encoding": "gzip-json",
     }
     identity = hashlib.sha256(json.dumps(specification, sort_keys=True).encode()).hexdigest()
     destination = out / "portfolios" / f"{scenario_index:03d}-{identity[:16]}"
@@ -719,7 +733,7 @@ def _run_owned(
             replay = _replay(raw, config, identity, **kwargs)
         for name, frame in replay.frames.items():
             frame.to_parquet(destination / (name + ".parquet"), index=False)
-        write_json(destination / "allocation-decisions.json", list(replay.allocation_decisions))
+        write_decisions(destination, list(replay.allocation_decisions))
         write_json(destination / "retry-diagnostics.json", list(replay.retry_diagnostics))
         write_json(destination / "risk-events.json", list(replay.runtime_risk_events))
         from quant_data_kit import market_event_payload

@@ -102,3 +102,13 @@ delivery complete until all 62 strict scenarios and the required sensitivity
 scenarios have receipts. Use a new output directory for every report version.
 The current source contains the report pipeline; final full replay acceptance
 must be read from its generated `acceptance.json`, not inferred from unit tests.
+
+Large decision artifacts use deterministic gzip JSON in new sensitivity runs;
+readers accept both old plain JSON and compressed JSON, rejecting ambiguous or
+corrupt copies. This preserves every failure input/trace without consuming the
+whole storage budget. A six-session historical native-account parity run checks
+identical weights, integer targets, fees and exact economic ledger fields.
+The strict runtime remains immutable; the compression-only runtime is identified
+separately. Recovery verifies every decoded archived payload and materializes
+representative accounts plus their inputs, with explicit counts rather than
+claiming all files were restored to disk.

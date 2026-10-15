@@ -1,7 +1,10 @@
 """Budgeted content-addressed recovery of the completed repair campaign."""
 
 import argparse
+import gzip
+import hashlib
 import json
+import os
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -16,6 +19,48 @@ def collect_tree(entries, prefix, root):
             raise ValueError("recovery input cannot be a symlink")
         if path.is_file() and "__pycache__" not in path.parts:
             entries[prefix + "/" + path.relative_to(root).as_posix()] = path
+
+
+def verify_object(path, metadata, target=None):
+    """Read every archived byte and verify its decoded original SHA-256."""
+    opener = gzip.open if metadata["encoding"] == "gzip" else open
+    result, length = hashlib.sha256(), 0
+    temporary = None if target is None else target.with_suffix(target.suffix + ".pending")
+    if target is not None:
+        if target.exists():
+            if digest(target) != metadata["sha256"]:
+                raise ValueError("existing restoration differs; not overwritten")
+            target = temporary = None
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+    output = None if temporary is None else temporary.open("wb")
+    try:
+        with opener(path, "rb") as stream:
+            for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+                result.update(chunk)
+                length += len(chunk)
+                if output is not None:
+                    output.write(chunk)
+    finally:
+        if output is not None:
+            output.close()
+    if result.hexdigest() != metadata["sha256"] or length != metadata["bytes"]:
+        raise ValueError("restored payload changed")
+    if target is not None:
+        os.replace(temporary, target)
+
+
+def restore_selection(key):
+    # Decode every object, but materialize only the inputs and representative
+    # accounts used in the recovery exercise. Other objects remain restorable.
+    if key.startswith("run/"):
+        if key in ("run/coverage/portfolio-risk-models.pkl", "run/coverage/coverage-binding.json"):
+            return True
+        parts = key.split("/")
+        return len(parts) >= 5 and parts[2] == "portfolios" and parts[3][:4] in ("016-", "046-")
+    if key.startswith("frozen-inputs/"):
+        return key.split("/")[-1] in ("execution-bars.parquet", "source-trading-status.parquet")
+    return not key.startswith("engineering-logs/")
 
 
 def run(args):
@@ -38,7 +83,9 @@ def run(args):
         ("certificates", args.code / "certified-feasibility-04"),
         ("data-evidence", args.code / "data-evidence-02"),
         ("corporate-evidence", args.code / "corporate-evidence"),
+        ("compression-parity", args.code / "compression-parity-01"),
         ("runtime-research", args.code / "runtime-research-03"),
+        ("runtime-research-compressed", args.code / "runtime-research-04"),
         ("git-bundles", args.code / "git-bundles"),
         ("report-source", args.code / "quant-risk-monitor/research/public_a_share"),
     ):
@@ -68,25 +115,57 @@ def run(args):
                  args.backup / "supplemental/objects", archive / "objects"):
         if root.exists():
             existing.update({p.name: p for p in root.iterdir() if p.is_file()})
-    unique = {meta["sha256"]: meta["bytes"] for meta in manifest.values()}
-    new_archive_bytes = sum(amount for sha, amount in unique.items() if sha not in existing)
-    restore_bytes = sum(meta["bytes"] for meta in manifest.values())
+    staged = {}
+    staging = args.code / "recovery-staging"
+    staging.mkdir(exist_ok=True)
+    code_bytes = size(args.code)
+    for key, source_path in entries.items():
+        meta = manifest[key]
+        sha = meta["sha256"]
+        if sha in existing:
+            meta.update(encoding="identity", object=existing[sha].relative_to(args.backup).as_posix())
+        else:
+            packed = staging / (sha + ".gz")
+            if sha not in staged:
+                if code_bytes + meta["bytes"] > 5 * GIB:
+                    raise ValueError("C compression staging could exceed budget; no evidence deleted")
+                if not packed.exists():
+                    with source_path.open("rb") as src, packed.open("wb") as raw:
+                        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as stream:
+                            shutil.copyfileobj(src, stream)
+                    code_bytes += packed.stat().st_size
+                staged[sha] = packed
+            meta.update(encoding="gzip", object=f"{args.version}/objects/{sha}.gz",
+                        encoded_sha256=digest(packed), encoded_bytes=packed.stat().st_size)
+    new_archive_bytes = sum(path.stat().st_size for sha, path in staged.items()
+                            if not (archive / "objects" / (sha + ".gz")).exists())
+    restore_bytes = sum(meta["bytes"] for key, meta in manifest.items()
+                        if restore_selection(key) and not contained(restored, key).exists())
     if size(args.backup) + new_archive_bytes > 20 * GIB:
         raise ValueError("F archive budget exceeded; no evidence deleted")
     if size(args.data) + restore_bytes > 25 * GIB:
         raise ValueError("D restore budget exceeded; no evidence deleted")
     if size(args.code) > 5 * GIB or shutil.disk_usage(args.code).free < 40 * GIB:
         raise ValueError("C workspace budget/reserve exceeded")
+    restored_files = []
     for key, source_path in entries.items():
-        sha = manifest[key]["sha256"]
-        object_path = existing.get(sha, contained(archive, "objects/" + sha))
-        checked_copy(source_path, object_path, sha)
-        manifest[key]["object"] = object_path.relative_to(args.backup).as_posix()
-        checked_copy(object_path, contained(restored, key), sha)
+        meta = manifest[key]
+        sha = meta["sha256"]
+        object_path = contained(args.backup, meta["object"])
+        if meta["encoding"] == "gzip":
+            checked_copy(staged[sha], object_path, meta["encoded_sha256"])
+        else:
+            checked_copy(source_path, object_path, sha)
+        target = contained(restored, key) if restore_selection(key) else None
+        verify_object(object_path, meta, target)
+        if target is not None:
+            restored_files.append(key)
     write_json(archive / "manifest.json", {"files": manifest})
     receipt = {
         "status": "passed", "created_at": datetime.now(timezone.utc).isoformat(),
-        "files_restored_and_hashed": len(manifest), "manifest": str(archive / "manifest.json"),
+        "all_files_decoded_and_hashed": len(manifest),
+        "representative_files_restored": len(restored_files), "restored_files": restored_files,
+        "manifest": str(archive / "manifest.json"),
         "manifest_sha256": digest(archive / "manifest.json"), "restored": str(restored),
         "backup_kind": "same-machine cross-drive copy; hardware independence not asserted",
         "original_raw_inputs": "retained in earlier content-addressed archive; not redownloaded",
