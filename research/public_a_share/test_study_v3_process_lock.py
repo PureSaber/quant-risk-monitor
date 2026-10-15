@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 import pytest
+
 from study_v3_process_lock import process_lock
 
 

@@ -100,6 +100,41 @@ def test_date_block_inference_preserves_within_date_correlation_and_missingness(
     assert paired_summary(frame, ["control", "candidate"], "control")["complete_dates"] == 34
 
 
+@pytest.mark.parametrize("dates", [1, 6, 7, 10, 19])
+def test_small_date_samples_cannot_claim_degenerate_block_certainty(dates):
+    frame = pd.DataFrame([
+        {"date": day, "model": model, "family": "equal",
+         "qlike": 0.0 if model == "control" else -float(i + 1)}
+        for i, day in enumerate(pd.bdate_range("2023-01-01", periods=dates))
+        for model in ("control", "candidate")
+    ])
+    result = paired_summary(frame, ["control", "candidate"], "control")
+    comparison = result["comparisons"]["candidate"]
+    assert result["inference_status"] == "insufficient_date_blocks"
+    assert result["block_dates"] == 10
+    assert result["minimum_dates_for_interval"] == 20
+    assert comparison["mean_delta"] == -(dates + 1) / 2
+    assert comparison["simultaneous_95_interval"] is None
+    assert not comparison["historical_improvement"]
+
+
+def test_two_complete_date_blocks_produce_nontrivial_uncertainty():
+    frame = pd.DataFrame([
+        {"date": day, "model": model, "family": "equal",
+         "qlike": 0.0 if model == "control" else float(i - 10)}
+        for i, day in enumerate(pd.bdate_range("2023-01-01", periods=20))
+        for model in ("control", "candidate")
+    ])
+    result = paired_summary(frame, ["control", "candidate"], "control")
+    assert result["inference_status"] == "available"
+    lo, hi = result["comparisons"]["candidate"]["simultaneous_95_interval"]
+    assert lo < 0 < hi
+    frame["qlike"] = np.nan
+    missing = paired_summary(frame, ["control", "candidate"], "control")
+    assert missing["inference_status"] == "no_complete_dates"
+    assert missing["comparisons"] == missing["means"] == {}
+
+
 def test_five_session_windows_never_cross_development_boundary():
     dates = pd.bdate_range("2022-01-01", "2026-09-30")
     grid = forecast_grid(dates)
