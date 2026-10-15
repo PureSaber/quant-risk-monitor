@@ -47,7 +47,10 @@ a{{color:#075d98}}table{{border-collapse:collapse;font-size:13px;width:100%;marg
 def batch_results(out, batch_id, *, allow_partial):
     logs = out / ("portfolio-logs-" + batch_id)
     progress = read(logs / "progress.json")
-    if not allow_partial and len(progress) != 62:
+    indices = [item["scenario"] for item in progress]
+    if len(indices) != len(set(indices)) or not set(indices) <= set(range(62)):
+        raise ValueError("batch scenario identities must be unique and in the frozen specification")
+    if not allow_partial and set(indices) != set(range(62)):
         raise ValueError("all 62 scenario processes must finish before final reporting")
     results = []
     for item in progress:

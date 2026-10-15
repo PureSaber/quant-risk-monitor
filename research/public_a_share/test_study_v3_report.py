@@ -5,7 +5,7 @@ import json
 import pandas as pd
 import pytest
 
-from study_v3_report import verify_account
+from study_v3_report import batch_results, verify_account
 
 
 @pytest.mark.parametrize("fault", [None, "journal", "integer_residual", "fees", "weights", "cash"])
@@ -35,3 +35,12 @@ def test_account_audit_detects_corruption(tmp_path, fault):
         result = verify_account(tmp_path)
         assert result["integer_fee_cash_reconciliation"]
         assert result["maximum_integer_residual"] == 0
+
+
+@pytest.mark.parametrize("indices", [list(range(61)), list(range(61)) + [60], list(range(61)) + [62]])
+def test_missing_or_duplicated_scenario_cannot_claim_completion(tmp_path, indices):
+    logs = tmp_path / "portfolio-logs-test"
+    logs.mkdir()
+    (logs / "progress.json").write_text(json.dumps([{"scenario": i} for i in indices]), encoding="utf8")
+    with pytest.raises(ValueError):
+        batch_results(tmp_path, "test", allow_partial=False)
