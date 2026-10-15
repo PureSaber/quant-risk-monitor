@@ -322,6 +322,11 @@ def main(argv: list[str] | None = None) -> None:
         research = sub.add_parser(command, help="Build auditable risk-model research artifacts")
         research.add_argument("--input", required=True)
         research.add_argument("--out", required=True)
+        if command == "build-exposures":
+            research.add_argument(
+                "--cache-dir",
+                help="Reuse daily snapshots bound to input, configuration and code hashes",
+            )
     research_verify = sub.add_parser(
         "verify-research", help="Recompute exposure/calibration evidence"
     )
@@ -360,6 +365,7 @@ def main(argv: list[str] | None = None) -> None:
                     "exposures" if args.command == "build-exposures" else "calibration",
                     args.input,
                     args.out,
+                    cache_directory=getattr(args, "cache_dir", None),
                 )
             )
         except (ValueError, TypeError, KeyError, OSError, ArithmeticError) as exc:

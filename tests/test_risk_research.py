@@ -22,6 +22,47 @@ fixture = runpy.run_path(str(Path(__file__).parents[1] / "examples/advanced_barr
 ]
 
 
+def test_daily_cache_cli_reuses_build_and_verification_recomputes(tmp_path, capsys, monkeypatch):
+    import quant_risk_monitor.risk_research as research
+
+    spec, _ = fixture()
+    path = tmp_path / "input.json"
+    path.write_text(json.dumps(spec), encoding="utf-8")
+    expected = build_exposure_spec(spec)
+    cache = tmp_path / "cache"
+    assert build_exposure_spec(spec, cache_directory=cache) == expected
+    original = research.build_exposure_snapshot
+
+    def forbidden(**kwargs):
+        raise AssertionError("cached input must not be rebuilt")
+
+    monkeypatch.setattr(research, "build_exposure_snapshot", forbidden)
+    main(
+        [
+            "build-exposures",
+            "--input",
+            str(path),
+            "--out",
+            str(tmp_path / "run"),
+            "--cache-dir",
+            str(cache),
+        ]
+    )
+    assert json.loads(capsys.readouterr().out)["status"] == "complete"
+    with pytest.raises(AssertionError, match="must not be rebuilt"):
+        verify_risk_research(tmp_path / "run")
+    changed = copy.deepcopy(spec)
+    changed["descriptor_history"][0]["value"] += 1
+    with pytest.raises(AssertionError, match="must not be rebuilt"):
+        build_exposure_spec(changed, cache_directory=cache)
+    monkeypatch.setattr(research, "build_exposure_snapshot", original)
+    assert verify_risk_research(tmp_path / "run") == expected
+    with pytest.raises(ValueError, match="separate"):
+        run_risk_research(
+            "exposures", path, tmp_path / "another", cache_directory=tmp_path / "another/cache"
+        )
+
+
 def test_complete_advanced_model_and_horizon_variance_identity():
     _, study = fixture()
     forecast_spec = {

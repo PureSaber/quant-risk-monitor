@@ -311,7 +311,7 @@ def disclosure_period(title, text, announcement_date):
     return result
 
 
-def extract_member(member):
+def extract_member(member, *, first_period="20190331", last_period="20250930"):
     records = []
     missing = []
     code = member["code"]
@@ -327,7 +327,7 @@ def extract_member(member):
         if str(ann["announcementId"]) not in selected_ids:
             continue
         p = period(ann["announcementTitle"])
-        if p is None or not "20190331" <= p <= "20250930":
+        if p is None or not first_period <= p <= last_period:
             continue
         path = ROOT / "raw/filings" / code / (str(ann["announcementId"]) + ".logical.txt")
         if not path.exists():
@@ -346,7 +346,7 @@ def extract_member(member):
             .normalize()
         )
         p = disclosure_period(ann["announcementTitle"], text, ann_date)
-        if p is None or not "20190331" <= p <= "20250930":
+        if p is None or not first_period <= p <= last_period:
             missing.append(
                 {
                     "asset": code,

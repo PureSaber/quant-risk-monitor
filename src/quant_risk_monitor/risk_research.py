@@ -5,11 +5,13 @@ from __future__ import annotations
 import hashlib
 import json
 from copy import deepcopy
+from dataclasses import asdict
 from pathlib import Path
 
 import pandas as pd
 
 from quant_risk_monitor.exposure_builder import ExposureBuildConfig, build_exposure_snapshot
+from quant_risk_monitor.exposure_cache import DailyExposureStore
 from quant_risk_monitor.factor_model import FactorModelConfig, _timestamp
 from quant_risk_monitor.risk_validation import (
     RiskForecastRequest,
@@ -20,7 +22,7 @@ from quant_risk_monitor.risk_validation import (
 )
 
 
-def build_exposure_spec(spec):
+def build_exposure_spec(spec, *, cache_directory=None):
     required = {
         "schema",
         "evidence_kind",
@@ -38,16 +40,39 @@ def build_exposure_spec(spec):
     if not cutoffs or cutoffs != sorted(set(cutoffs)):
         raise ValueError("exposure as_of values must be strictly increasing")
     config = ExposureBuildConfig(**spec["config"])
-    exposures = [
-        build_exposure_snapshot(
-            descriptor_history=pd.DataFrame(spec["descriptor_history"]),
-            classification_history=pd.DataFrame(spec["classification_history"]),
-            assets=spec["assets"],
-            as_of=cutoff,
-            config=config,
+    descriptors = pd.DataFrame(spec["descriptor_history"])
+    classifications = pd.DataFrame(spec["classification_history"])
+    store = None if cache_directory is None else DailyExposureStore(cache_directory)
+    bindings = {"input": _digest(spec)}
+    if store is not None:
+        for name in (
+            "exposure_builder.py",
+            "exposure_cache.py",
+            "factor_model.py",
+            "risk_estimators.py",
+            "risk_research.py",
+        ):
+            bindings[name] = hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
+    exposures = []
+    for cutoff in cutoffs:
+
+        def build(cutoff=cutoff):
+            return build_exposure_snapshot(
+                descriptor_history=descriptors,
+                classification_history=classifications,
+                assets=spec["assets"],
+                as_of=cutoff,
+                config=config,
+            )
+
+        snapshot = (
+            build()
+            if store is None
+            else store.get_or_build(
+                as_of=cutoff, configuration=asdict(config), input_digests=bindings, build=build
+            )[0]
         )
-        for cutoff in cutoffs
-    ]
+        exposures.append(snapshot)
     return {
         "schema": "quant-risk.exposure-result/v1",
         "status": "complete",
@@ -215,14 +240,28 @@ def _evaluate(kind, spec):
     raise ValueError("unknown risk research kind")
 
 
-def run_risk_research(kind, input_path, output):
+def run_risk_research(kind, input_path, output, *, cache_directory=None):
     input_path, output = Path(input_path).resolve(), Path(output).resolve()
     if output == input_path or output in input_path.parents:
         raise ValueError("research output must not contain the input")
     if output.exists():
         raise FileExistsError("research output already exists")
+    if cache_directory is not None:
+        if kind != "exposures":
+            raise ValueError("daily exposure cache is only supported for exposure builds")
+        cache_directory = Path(cache_directory).resolve()
+        if (
+            cache_directory == input_path
+            or cache_directory == output
+            or output in cache_directory.parents
+        ):
+            raise ValueError("cache must be separate from the research output and input file")
     original = input_path.read_bytes()
-    result = _evaluate(kind, json.loads(original))
+    result = (
+        _evaluate(kind, json.loads(original))
+        if cache_directory is None
+        else build_exposure_spec(json.loads(original), cache_directory=cache_directory)
+    )
     if input_path.read_bytes() != original:
         raise ValueError("research input changed during computation")
     result_bytes = (_canonical(result) + "\n").encode("utf-8")

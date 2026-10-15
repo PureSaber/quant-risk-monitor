@@ -12,7 +12,7 @@ import pymupdf
 from public_sources import ROOT, fetch
 
 
-def announcements(code, org):
+def announcements(code, org, *, start="2019-01-01", end="2025-12-31"):
     rows = []
     payload = {
         "pageNum": 1,
@@ -25,7 +25,7 @@ def announcements(code, org):
         "secid": "",
         "category": "category_ndbg_szsh;category_bndbg_szsh;category_yjdbg_szsh;category_sjdbg_szsh;category_bcgz_szsh;category_tbclts_szsh;category_tszlq_szsh",
         "trade": "",
-        "seDate": "2019-01-01~2025-12-31",
+        "seDate": f"{start}~{end}",
         "sortName": "time",
         "sortType": "asc",
         "isHLtitle": "false",

@@ -32,6 +32,7 @@ from quant_risk_monitor.exposure_builder import (
     build_exposure_snapshot,
     public_equity_style_config,
 )
+from quant_risk_monitor.exposure_cache import DailyExposureStore
 from quant_risk_monitor.factor_model import (
     AssetReturnObservation,
     BarraStyleRiskModel,
@@ -49,6 +50,11 @@ from quant_risk_monitor.risk_validation import (
     forecast_factor_risk,
     readable_risk_forecast_summary,
 )
+from quant_risk_monitor.style_descriptors import (
+    additional_market_descriptors,
+    annual_growth_descriptors,
+    paired_market_descriptors,
+)
 
 __all__ = [
     "AnalyticsRiskSnapshot",
@@ -56,6 +62,7 @@ __all__ = [
     "BarraStyleRiskModel",
     "CrossAssetRiskLimits",
     "CrossAssetRiskPolicy",
+    "DailyExposureStore",
     "DecisionPortfolioLimits",
     "ExposureBuildConfig",
     "ExposureSnapshot",
@@ -72,6 +79,8 @@ __all__ = [
     "RiskForecastRequest",
     "StrategyExposureSnapshot",
     "StressScenario",
+    "additional_market_descriptors",
+    "annual_growth_descriptors",
     "build_exposure_snapshot",
     "check_decision_portfolio",
     "evaluate_portfolio_overlap",
@@ -83,6 +92,7 @@ __all__ = [
     "forecast_factor_risk",
     "historical_var_cvar",
     "liquidity_days_to_exit",
+    "paired_market_descriptors",
     "parametric_var_cvar",
     "public_equity_style_config",
     "readable_risk_forecast_summary",

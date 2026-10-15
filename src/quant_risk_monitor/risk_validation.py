@@ -184,6 +184,11 @@ def forecast_factor_risk(
     )
     report = model.analyze(request.weights, request.benchmark_weights)
     model_payload = model.to_dict()
+    # The legacy v1 artifact validates exact serialized diagonal values. Reuse
+    # its already materialized matrix once instead of rebuilding it per asset.
+    asset_variances = pd.Series(
+        np.diag(model_payload["asset_covariance"]["data"]), index=model.exposures.index
+    )
     prediction = {
         "portfolio": report.portfolio_risk.total_variance
         / config.annualization
@@ -192,7 +197,7 @@ def forecast_factor_risk(
         if report.tracking_risk is None
         else report.tracking_risk.total_variance / config.annualization * config.risk_horizon,
         "assets": {
-            str(asset): float(model.asset_covariance.loc[asset, asset])
+            str(asset): float(asset_variances.loc[asset])
             / config.annualization
             * config.risk_horizon
             for asset in model.exposures.index

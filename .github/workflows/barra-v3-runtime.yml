@@ -1,0 +1,47 @@
+name: Barra v3 frozen runtime
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  runtime:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Ordinary installation from the exact study lock
+        run: |
+          python -m pip install --no-deps --requirement research/public_a_share/requirements-v3.lock
+          python -m pip check
+          python -m pip install --no-deps --no-build-isolation .
+          python -m pip check
+      - name: Verify installed public APIs and native solvers
+        run: >-
+          python -c "from pathlib import Path;
+          import quant_risk_monitor, quant_portfolio, a_share_multifactor;
+          import cvxpy, pymupdf, pypdf, baostock;
+          from py_mini_racer import MiniRacer;
+          assert MiniRacer().eval('1+1') == 2;
+          assert {'OSQP','CLARABEL'} <= set(cvxpy.installed_solvers());
+          paths=[str(Path(m.__file__).resolve()) for m in (quant_risk_monitor,quant_portfolio,a_share_multifactor)];
+          assert all('site-packages' in p for p in paths), paths;
+          print(paths)"
+      - name: Offline source, causal-risk and numerical study regressions
+        run: >-
+          python -m pytest -q research/public_a_share tests/test_study_v3.py
+          tests/test_price_availability_index.py tests/test_cross_asset_policy.py

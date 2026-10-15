@@ -127,3 +127,151 @@ The HTML report, executed audit notebook, per-forecast predictions, paired score
 source manifest, frozen configuration and acceptance record are retained in the
 local archive. The report independently recalculates both scores and bootstrap
 intervals. See `docs/PUBLIC_A_SHARE_VALIDATION.md` for the completed run's results.
+
+## Exposure definition v2
+
+Use the existing v1 archive read-only and a new output root. The commands below
+run from the repository root with this directory's research environment:
+
+```text
+python research/public_a_share/collect_exposure_inputs.py --old-root OLD --out NEW
+python research/public_a_share/exposure_v2_study.py --old-root OLD --out NEW
+python research/public_a_share/collect_confirmation_inputs.py --old-root OLD --out NEW/confirmation-inputs
+python research/public_a_share/confirmation_context.py --old-root OLD --out NEW/confirmation-inputs
+python research/public_a_share/confirm_exposure_v2.py --old-root OLD --study-root NEW
+python research/public_a_share/audit_exposure_v2.py --old-root OLD --out NEW
+python research/public_a_share/validate_exposure_v2.py --old-root OLD --out NEW
+python research/public_a_share/benchmark_exposure_v2.py --out NEW/capacity
+python -m pytest research/public_a_share -q
+```
+
+The v2 protocol is created before development scores. Seven exposure variants
+share assets, dates, portfolio definitions and fixed risk estimators; the 2024–25
+outcomes are explicitly reused diagnostics. 2026 confirmation reads a frozen
+selection binding, never reselects, and retains the 80-forecast requirement.
+Public acquisition is retrospective reconstruction, not authenticated historical
+vendor vintages. No Huisheng/Dataway feed is used.
+
+`--resume-histories` verifies `history-manifest.json` before unpickling the local
+regressions. Only use trusted local archives. Source/configuration changes need a
+new run; report-only edits may reuse a mathematically identical history producer.
+The full daily snapshot cache preserves imputation/source audit records. The
+smaller history pickle omits their repeated provenance to reduce memory use.
+
+Current local evidence roots: `barra-public-pit-20261013` (original) and
+`barra-exposure-v2-20261014` (new), under the user's ChatGPT SCRATCH directory.
+The first v2 run's producer code, selection and diagnostics were retained before
+adding manifest checks; independently rescoring its forecast CSVs produced
+identical metrics and selection. This is recorded explicitly in its result JSON.
+Do not overwrite the original archive or describe seen diagnostics as a new holdout.
+
+The completed 2026 confirmation retained the development-selected residual-volatility
+candidate. Of 36 scheduled five-session forecasts, 26 have complete common outcomes;
+ten are excluded for missing held-stock endpoint prices without renormalizing weights.
+Neither fixed estimator establishes an advantage against the original definitions,
+and the frozen 80-forecast promotion minimum is unmet. v1 remains the default.
+See `docs/EXPOSURE_V2.md` for scores, intervals, source limitations and capacity results.
+
+The new archive contains `confirmation/result.json`, `forecasts.csv`, source and
+selection bindings, producer-code snapshots, and an independent forecast audit in
+`confirmation/independent-forecast-validation.json`. Its arithmetic/pairing/source
+validator is retained as `verify_confirmation.py` in the same archive. The original
+study's producer hashes remain intact: later parser-validation hardening did not
+change its actual descriptor values, as recorded in `independent-model-validation.json`.
+
+## Fixed 200-company study v3
+
+The v3 experiment integrates the v2 exposure candidate with the current optimizer
+and native A-share execution bridge. It does not change the default exposure
+definition, promote a strategy, or modify frozen accounts. The cutoff is
+2026-09-30; 2023 is development and every observed 2024–2026 outcome is explicitly
+retrospective. Eighty genuinely independent five-session windows remain required
+for any later promotion decision.
+
+Use an ordinary installed environment, the exact repository revisions and the
+frozen dependency manifest. `OLD` and `V2` below are read-only input archives;
+`DATA`, `BACKUP` and `RUN` must be separate dedicated directories. The approved
+local budgets are 25 GiB for data, 20 GiB for the same-machine recovery copy and
+5 GiB for code/environment, retaining 40 GiB free on the system drive.
+
+```text
+python research/public_a_share/study_v3_archive.py --old OLD --exposure V2 --out DATA --backup BACKUP
+python research/public_a_share/study_v3_inputs.py --old OLD --exposure V2 --out RUN
+python research/public_a_share/study_v3_quality.py --old OLD --exposure V2 --out RUN
+python research/public_a_share/study_v3_risk.py --out RUN
+python research/public_a_share/study_v3_execution_inputs.py --old OLD --exposure V2 --root DATA/inputs --out RUN
+python research/public_a_share/study_v3_batch.py --out RUN --workers 4 --batch-id unique-run-id
+python research/public_a_share/study_v3_recompute.py --old DATA/inputs/old --exposure DATA/inputs/exposure --reference RUN --out EMPTY_RECOMPUTATION
+python research/public_a_share/study_v3_recovery.py --data DATA --backup BACKUP --code CODE_ENVIRONMENT_ROOT
+python research/public_a_share/study_v3_report.py --out RUN --independent EMPTY_RECOMPUTATION --batch-id unique-run-id
+```
+
+Install `requirements-v3.lock` with `python -m pip install --no-deps -r`
+and run `python -m pip check`. It pins all distributions and the eight related
+repositories to immutable revisions. The frozen-runtime workflow validates
+ordinary installs on Windows/Linux and Python 3.10–3.12, including native solvers
+and the public-source parser runtime. Record the workflow result separately from
+study completion. `study_v3_provenance.py --out RUN/producer-source` preserves the
+exact installed source bytes; later implementation-only speed improvements are
+explicit producer versions, not changes to frozen scientific parameters.
+
+The optional `study_v3_pdf.py --root RUN --pdf OUTPUT.pdf --font FONT.ttf`
+renders the report directly from its structured evidence using ReportLab.
+The renderer is a separate presentation dependency; it is not required to
+recompute the research. Generate the final report only after all 62 processes
+finish. `--allow-partial` is for clearly marked interim reports only.
+
+Run `--help` on the evidence collectors and execution-input builder for their
+explicit archive paths. Public responses, issuer PDFs, their actual capture
+times and source hashes are retained; failed captures require a new capture root
+when retried. Financial disclosure availability and actual collection time are
+separate. Revised financial facts are not overwritten. The ten old incomplete
+2026 windows are audited against original suspension records, without inserting
+zero returns or renormalizing surviving positions.
+
+The risk experiment fixes three exposure variants, the original twelve estimator
+configurations and five ablations. It uses joint date-block resampling (5,000
+draws, ten forecast dates per block), family-level aggregation and Bonferroni
+simultaneous intervals. Selection uses 2023 only. Independent recomputation uses
+an empty exposure cache and compares every forecast; dense covariance arithmetic
+is confined to explicit validation checks.
+
+There are 62 native-account scenarios: each investment budget (95% and 80%) has
+one equal-weight reference and six frozen model combinations with minimum
+variance, minimum active risk at 3%/6% TE, and IC-vol cost-aware momentum at
+3%/6% TE. All 22 risk configurations cross-predict the same continuous, integer
+and actual-close portfolios. Each account starts with CNY 1,000,000, a 5%
+single-name cap and a 20% subsequent L1 turnover cap. The full initial build pays
+actual native fees. The benchmark is the research-sample capitalization portfolio,
+not a market index. Prediction windows use linear five-session returns for risk
+loss; actual account returns and sample-benchmark returns compound independently.
+
+`complete.json` means the scenario process produced verified artifacts; inspect
+`full_horizon_completed`, `published`, failure statuses and the optional
+`full-horizon-stop.json` before interpreting performance. An unsupported exact
+entitlement rolls back the full replay. A separately rebuilt safe prefix is only
+diagnostic and never supplies post-failure NAV. An infeasible target retains the
+existing account and publishes no fallback. A pilot's `limit_dates` is part of
+its identity and must never be reported as a full-period result. Raw failed
+attempts and superseded run identities remain available.
+
+Use `tests/test_study_v3.py` and `tests/test_price_availability_index.py` in
+addition to the existing exposure/PIT/cache regressions. The execution bridge
+also tests exact daily/event parity, cached/uncached account parity, distinct
+exchange references and shareholder entitlements, fractional-share failure and
+guard rollback. These synthetic edge tests are separate from evidence actually
+encountered in the fixed historical sample.
+
+Recovery is a read-only source-to-object-store copy followed by a separate
+restore and SHA-256 verification. Never replace an old manifest or a changed
+output; start a new run. Restore the fixed environment and archived inputs into
+fresh paths and rerun the commands with the recorded specification. No service
+or account rollback is needed for this isolated research workflow.
+
+After all scenario and engineering checks have passed, freeze and restore the
+final report/source evidence with `study_v3_delivery.py --data DATA --backup
+BACKUP --code CODE_ENVIRONMENT_ROOT --version delivery-v1`. The immutable
+manifest excludes only the reproducible daily exposure cache. Original raw
+inputs have their separate original/supplemental manifests. Restoring the
+environment from the lock still needs package sources; the same-machine copy
+does not claim an offline environment or an independent hardware backup.
