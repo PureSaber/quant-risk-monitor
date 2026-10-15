@@ -11,6 +11,8 @@ permissions:
 
 jobs:
   test:
+    # Keep the existing Linux check names required by the repository ruleset.
+    name: ${{ matrix.os == 'ubuntu-24.04' && format('test ({0})', matrix.python-version) || format('test ({0}, {1})', matrix.os, matrix.python-version) }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
