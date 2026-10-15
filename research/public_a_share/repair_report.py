@@ -168,6 +168,38 @@ def run(args):
     for name, value in binding["inputs"].items():
         if digest(args.source / name) != value:
             raise ValueError("frozen input changed: " + name)
+    batches, preflight_accounts, preflight_stops = {}, [], []
+    for label, root, batch in args.branch:
+        rows = batch_results(Path(root), batch, allow_partial=label != "strict" or args.partial)
+        if not args.partial and any("outputs" not in row for row in rows):
+            raise ValueError("worker failed before writing verifiable outputs")
+        batches[label] = rows
+        for row in rows:
+            preflight_accounts.append({"branch": label, "scenario": row["scenario"]})
+            stop_path = Path(row["folder"]) / "full-horizon-stop.json"
+            if stop_path.exists():
+                stop = read(stop_path)
+                preflight_stops.append({"branch": label, "scenario": row["scenario"],
+                                       "asset": stop.get("asset")})
+    ready, supplemental = supplemental_coverage(pd.DataFrame(preflight_accounts), preflight_stops)
+    if not ready and not args.partial:
+        # Avoid producing a large, knowingly incomplete cross-prediction report.
+        # Every base receipt remains available; no account verification is claimed.
+        write_json(out / "acceptance.json", {
+            "engineering_research_delivery": "partial",
+            "reason": "newly exposed entitlement sensitivity replay is missing",
+            "supplemental_entitlement_cases": supplemental,
+            "all_published_targets_independently_verified": False,
+            "producer_sha256": digest(__file__), "coverage_binding": binding,
+        })
+        (out / "report.html").write_text(
+            "<!doctype html><meta charset='utf-8'><title>等待权益补跑</title>"
+            "<h1>报告尚未完成</h1><p>新发现的权益问题需要独立敏感性补跑。"
+            "本页不代表账户或模型验收通过。</p><a href='acceptance.json'>缺项清单</a>",
+            encoding="utf8",
+        )
+        print(json.dumps({"status": "partial", "supplemental": supplemental}), flush=True)
+        return
     with (args.coverage / "portfolio-risk-models.pkl").open("rb") as stream:
         models = pickle.load(stream)
     with (args.source / "portfolio-risk-models.pkl").open("rb") as stream:
@@ -181,9 +213,7 @@ def run(args):
     checks, records, failures, branches, cross_readouts = {}, [], [], {}, []
     stale_rows, unchanged_rows, stop_records = [], [], []
     for label, root, batch in args.branch:
-        rows = batch_results(Path(root), batch, allow_partial=label != "strict" or args.partial)
-        if not args.partial and any("outputs" not in r for r in rows):
-            raise ValueError("worker failed before writing verifiable outputs")
+        rows = batches[label]
         branch_cross = []
         for row in rows:
             if "outputs" not in row:
