@@ -11,9 +11,10 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-24.04, windows-latest]
         python-version: ["3.10", "3.11", "3.12"]
 
     steps:

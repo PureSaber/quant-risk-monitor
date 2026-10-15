@@ -408,6 +408,7 @@ def run(out, scenario_index, *, limit_dates=None):
     import a_share_multifactor.allocation_execution as adapter
     import a_share_multifactor.run_contract as contract
     import quant_portfolio.executable as integer
+
     import quant_risk_monitor.cross_asset as policy
     import quant_risk_monitor.factor_model as factor_model
 

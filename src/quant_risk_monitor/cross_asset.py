@@ -463,6 +463,7 @@ class CrossAssetRiskPolicy:
     inputs: PITRiskInputs
     stress_scenarios: tuple[StressScenario, ...]
     _price_index: Mapping = field(repr=False, compare=False)
+    _state_memo: tuple | None = field(repr=False, compare=False)
 
     def __init__(
         self,
@@ -493,6 +494,7 @@ class CrossAssetRiskPolicy:
         object.__setattr__(self, "inputs", inputs)
         object.__setattr__(self, "stress_scenarios", scenarios)
         object.__setattr__(self, "_price_index", _price_availability_index(inputs.prices))
+        object.__setattr__(self, "_state_memo", None)
 
     def check_order(
         self,
@@ -552,6 +554,18 @@ class CrossAssetRiskPolicy:
         return self._evaluate(state)
 
     def _state(self, context: RiskCheckContext) -> _ExposureState | RiskDecision:
+        # Inputs and the portfolio view are immutable. Cache only one exact
+        # object identity, and copy mutable projections for every order.
+        memo = self._state_memo
+        if memo is not None and memo[0] is context.portfolio_snapshot:
+            value = memo[1]
+            return value.copy() if isinstance(value, _ExposureState) else value
+        value = self._build_state(context)
+        stored = value.copy() if isinstance(value, _ExposureState) else value
+        object.__setattr__(self, "_state_memo", (context.portfolio_snapshot, stored))
+        return value
+
+    def _build_state(self, context: RiskCheckContext) -> _ExposureState | RiskDecision:
         portfolio = context.portfolio_snapshot
         state = _ExposureState(
             as_of=portfolio.event_time,

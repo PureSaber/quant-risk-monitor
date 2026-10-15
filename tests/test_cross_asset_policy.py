@@ -630,6 +630,43 @@ def test_reduce_only_decreases_projected_risk_without_mutating_policy() -> None:
     assert policy.check_order(increasing, increasing_context).code == "GROSS_LEVERAGE_LIMIT"
 
 
+def test_reused_immutable_snapshot_does_not_share_mutable_order_projections(monkeypatch):
+    spec = stock_spec()
+    policy = CrossAssetRiskPolicy(
+        instruments={STOCK: spec},
+        limits=CrossAssetRiskLimits(),
+        inputs=PITRiskInputs(prices=(price(STOCK, "10"),)),
+    )
+    context = single_position_context(
+        spec,
+        quantity=fp(100, 0),
+        mark_price=fp(10),
+        base_notional=fp(1000),
+        nav=fp(10000),
+        initial_margin=fp(0),
+        maintenance_margin=fp(0),
+    )
+    calls = []
+    original = CrossAssetRiskPolicy._build_state
+
+    def counted(self, ctx):
+        calls.append(ctx.portfolio_snapshot)
+        return original(self, ctx)
+
+    monkeypatch.setattr(CrossAssetRiskPolicy, "_build_state", counted)
+    first = policy._state(context)
+    first.notionals[STOCK] = Decimal(0)
+    first.specs.clear()
+    assert policy._state(context).notionals[STOCK] == 1000
+    assert policy._state(context).specs[STOCK] == spec
+    assert len(calls) == 1
+    changed = replace(context, portfolio_snapshot=replace(context.portfolio_snapshot, nav=fp(9000)))
+    assert policy._state(changed).nav == 9000
+    assert len(calls) == 2
+    assert policy._state(context).nav == 10000
+    assert len(calls) == 3
+
+
 def test_reduce_only_allows_monotonic_reduction_of_existing_multi_limit_breaches() -> None:
     first = stock_spec()
     second = replace(

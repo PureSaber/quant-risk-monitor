@@ -12,12 +12,12 @@ from time import perf_counter
 import numpy as np
 import pandas as pd
 
-from exposure_v2_study import subset
-from run_study import configurations, risk_components
 from study_v3_archive import digest, write_json
 
 
 def model_definitions(protocol):
+    from run_study import configurations
+
     baseline, grid = configurations(protocol["old_protocol"])
     frozen = grid["enhanced_s0.1_f90_d60_p10"]
     definitions = {
@@ -125,6 +125,9 @@ def paired_summary(frame, model_ids, control, *, replications=5000, block=10, se
 
 
 def run(out):
+    from exposure_v2_study import subset
+    from run_study import risk_components
+
     protocol = json.loads((out / "protocol.json").read_text(encoding="utf8"))
     binding = json.loads((out / "history-binding-v3.json").read_text(encoding="utf8"))
     for name in ("panel", "histories"):
