@@ -122,3 +122,8 @@ The strict runtime remains immutable; the compression-only runtime is identified
 separately. Recovery verifies every decoded archived payload and materializes
 representative accounts plus their inputs, with explicit counts rather than
 claiming all files were restored to disk.
+
+After the restored six-account audit passes, `repair_finalize_recovery.py` seals
+its receipts, final release record and report QA in a separate immutable
+`final-evidence/manifest.json`. It checks the base-manifest and audit bindings and
+does not rewrite the original recovery manifest to manufacture a completed audit.
