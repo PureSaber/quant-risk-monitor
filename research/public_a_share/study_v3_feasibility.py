@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 
 from study_v3_archive import write_json
-from study_v3_portfolios import GENERATORS
 
 
 def continuous_floor(model, benchmark, budget, *, cap=.05):
@@ -45,6 +44,8 @@ def continuous_floor(model, benchmark, budget, *, cap=.05):
 
 
 def run(out):
+    from study_v3_portfolios import GENERATORS
+
     raw = (out / "portfolio-risk-models.pkl").read_bytes()
     binding = json.loads((out / "portfolio-risk-models-binding.json").read_text())
     if hashlib.sha256(raw).hexdigest() != binding["models"]:
