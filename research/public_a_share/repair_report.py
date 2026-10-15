@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pandas as pd
 from repair_account_audit import verify
+from repair_account_quality import entitlement_stop_context, holdings_evidence
 from repair_failure_audit import frozen_accounts
 
 from study_v3_archive import digest, write_json
@@ -156,6 +157,7 @@ def run(args):
     old_results = batch_results(args.source, "cadence-03", allow_partial=False)
     old_by_id = {r["scenario"]: r for r in old_results}
     checks, records, failures, branches, cross_readouts = {}, [], [], {}, []
+    stale_rows, unchanged_rows = [], []
     for label, root, batch in args.branch:
         rows = batch_results(Path(root), batch, allow_partial=label != "strict" or args.partial)
         if not args.partial and any("outputs" not in r for r in rows):
@@ -169,6 +171,12 @@ def run(args):
             print(json.dumps({"branch": label, "scenario": row["scenario"], "phase": "audit"}), flush=True)
             checked = verify(folder, models, bars, statuses)
             checks[f"{label}:{row['scenario']}"] = checked
+            positions = pd.read_parquet(folder / "positions.parquet")
+            snapshots = pd.read_parquet(folder / "portfolio_snapshots.parquet")
+            quality, stale, unchanged = holdings_evidence(positions, snapshots, bars, statuses)
+            for frame, collection in ((stale, stale_rows), (unchanged, unchanged_rows)):
+                frame["branch"], frame["scenario"] = label, row["scenario"]
+                collection.append(frame)
             decisions = read(folder / "allocation-decisions.json")
             decision_source = folder / "allocation-decisions.json"
             if not decision_source.exists():
@@ -182,6 +190,7 @@ def run(args):
                     })
             if (folder / "full-horizon-stop.json").exists():
                 stop = read(folder / "full-horizon-stop.json")
+                checked["entitlement_stop_context"] = entitlement_stop_context(stop, positions)
                 failures.append({"branch": label, "scenario": row["scenario"],
                                  "date": stop["at"], "status": "execution_input_stop",
                                  "reason": json.dumps(stop, ensure_ascii=False),
@@ -200,9 +209,9 @@ def run(args):
                           old_evaluated_through=original.get("evaluated_through"),
                           old_net_return=original.get("net_return"),
                           return_endpoints_match=row.get("evaluated_through") == original.get("evaluated_through"))
+            record.update(quality)
             records.append(record)
-            frame = recompute_cross(decisions, pd.read_parquet(folder / "positions.parquet"),
-                                    pd.read_parquet(folder / "portfolio_snapshots.parquet"), models, panel)
+            frame = recompute_cross(decisions, positions, snapshots, models, panel)
             if len(frame):
                 frame["scenario"] = row["scenario"]
                 frame["generator"] = spec["model"]
@@ -236,6 +245,8 @@ def run(args):
         }
     accounts = pd.DataFrame(records)
     accounts.to_csv(out / "portfolio-before-after.csv", index=False, encoding="utf-8-sig")
+    pd.concat(stale_rows, ignore_index=True).to_parquet(out / "stale-valuation-holdings.parquet", index=False)
+    pd.concat(unchanged_rows, ignore_index=True).to_csv(out / "unchanged-holding-intervals.csv", index=False)
     prefixes = compare_branch_prefixes(accounts)
     prefixes.to_csv(out / "branch-prefix-comparison.csv", index=False)
     pd.DataFrame(failures).to_csv(out / "new-failure-inventory.csv", index=False, encoding="utf-8-sig")
@@ -271,6 +282,7 @@ def run(args):
     display = accounts[["branch", "scenario", "method", "model", "budget", "te", "status",
                         "old_published", "published", "decisions", "effective_rebalance_rate",
                         "longest_no_target_rebalances", "evaluated_through", "net_return",
+                        "endpoint_stale_assets", "endpoint_stale_nav_weight",
                         "actual_annualized_tracking_error", "total_fees", "rebalance_p95_seconds"]]
     cross_links = "".join(
         f'<li>{html.escape(label)}：<a href="{label}-cross-predictions.parquet">逐期预测</a> · '
@@ -295,9 +307,14 @@ def run(args):
 <p>仅终点相同的账户可以比较同区间净收益。3%/6% 限制是预测 TE，实际 TE 是随后已实现收益的统计量。
 首次目标计算全部成本，此后换手上限 20%；独立核验现金、最低佣金、印花税、整手、零股卖出及 T+1。
 P95 为成功发布目标的端到端调仓时间；所有失败及超时留在逐项清单，未记录的耗时不估造。</p>
+<p>账面收益扣除了已建模交易费用，现金分红按税前金额计入。存在停牌、缺报价或未知交易状态时，
+账本可能延续旧估值，这不代表当日可变现价格；期末陈旧估值占比以完整账户净值为分母。
+见 <a href="stale-valuation-holdings.parquet">逐日估值覆盖</a> 与
+<a href="unchanged-holding-intervals.csv">持仓数量不变区间</a>；后者区分全现金与非空持仓，
+只说明数量未变，不能据此推断没有收到分红或尝试调仓。</p>
 <h2>风险交叉预测与边界</h2><p>每个连续目标、整数目标及实际持仓由相同 22 个模型交叉预测，
 同一组合的实际五日收益保持一致。缺报价或风险输入保留缺失，不补零、不重新归一化。
-推断按日期联合区块重采样 5,000 次、每块十日并校正多重比较；少于 20 个共同日期不输出区间。
+推断按日期联合区块重采样 5,000 次、每块十个预测日期并校正多重比较；少于 20 个共同日期不输出区间。
 绝对风险为零的全现金组合仍保留相对完整基准的主动风险。该固定权重风险评价与含费用的真实账户收益分别展示。</p>
 <div class="scroll">{table(pd.DataFrame(cross_readouts))}</div><ul>{cross_links}</ul>
 <p>风险覆盖使用单独版本的 252 日历窗口、至少 126 个观测和有效样本量 20；完整历史原计算保持不变。

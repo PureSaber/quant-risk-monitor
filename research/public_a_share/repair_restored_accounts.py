@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 from repair_account_audit import verify
+from repair_account_quality import entitlement_stop_context
 
 from study_v3_archive import digest, write_json
 
@@ -43,6 +44,12 @@ def run(receipt_path, output):
                 if digest(folder / name) != sha:
                     raise ValueError("restored account receipt mismatch")
             checks[f"{branch}:{scenario}"] = verify(folder, models, bars, statuses)
+            stop_file = folder / "full-horizon-stop.json"
+            if stop_file.exists():
+                checks[f"{branch}:{scenario}"]["entitlement_stop_context"] = entitlement_stop_context(
+                    json.loads(stop_file.read_text(encoding="utf8")),
+                    pd.read_parquet(folder / "positions.parquet"),
+                )
             print(json.dumps({"branch": branch, "scenario": scenario, "check": "passed"}),
                   flush=True)
     if output.exists():
