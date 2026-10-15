@@ -265,6 +265,16 @@ existing account and publishes no fallback. A pilot's `limit_dates` is part of
 its identity and must never be reported as a full-period result. Raw failed
 attempts and superseded run identities remain available.
 
+Scenario processes hold an operating-system lock for their output root, scenario
+and full/pilot extent. A duplicate waits, then verifies and reuses the completed
+receipt; it never writes a second account concurrently. Crashed owners release
+their OS lock automatically. Lock address files remain in place and must not be
+deleted while a batch is active. Separate batch logs can therefore help finish
+pending scenarios on a machine with verified spare CPU and memory; the primary
+batch still requires its own complete set of 62 receipt references. Each batch
+remains bounded to at most four workers. The lock changes no mathematical or
+execution behavior; producer hashes retain the wrapper change explicitly.
+
 Use `tests/test_study_v3.py` and `tests/test_price_availability_index.py` in
 addition to the existing exposure/PIT/cache regressions. The execution bridge
 also tests exact daily/event parity, cached/uncached account parity, distinct
