@@ -253,7 +253,7 @@ def run(out, independent, batch_id, *, allow_partial=False):
             "成交额/初始资金": row.get("gross_traded_notional_over_initial_capital"),
             "成功调仓P95秒": row.get("rebalance_p95_seconds"),
             "全回放秒": row.get("wall_seconds"),
-            "进程峰值MiB": row.get("process_peak_bytes", 0) / 1024**2,
+            "峰值工作集MiB": row.get("process_peak_bytes", 0) / 1024**2,
         }
         accounts.append(record)
         if "outputs" not in row:
@@ -349,6 +349,19 @@ def run(out, independent, batch_id, *, allow_partial=False):
         "engineering_ci": "see release-evidence.json; study completion does not certify pending CI",
     }
     write_json(out / "study-acceptance.json", acceptance)
+    diagnosis = ""
+    if (out / "tracking-error-floor-diagnostic.json").exists():
+        floor = read(out / "tracking-error-floor-diagnostic.json")
+        if floor["model_sha256"] != binding["models"]:
+            raise ValueError("TE diagnosis uses a different portfolio model cache")
+        low, high = floor["benchmark_max_weight_range"]
+        diagnosis += f"""<h2>紧跟踪误差限制的原因诊断</h2><p>这是事后解释，不参与参数选择或账户交易。研究样本基准最大单股权重介于 {low:.2%} 和 {high:.2%}；组合单股上限为 5%。先保留确切仓位预算与单股上限，暂不加换手、费用和整数约束，计算连续最小主动风险。这个乐观下界超过 TE 上限时，更严格的账户问题也无法通过；下界低于上限不等于账户可执行。</p>
+<p>诊断共 {floor['problems']} 个问题，失败 {floor['failure_count']} 个；实际账户配置和失败记录没有因此改变。</p><div class="scroll">{table(pd.DataFrame(floor['results']))}</div><p><a href="tracking-error-floor-diagnostic.csv">逐日下界</a> · <a href="tracking-error-floor-diagnostic.json">诊断摘要与模型绑定</a></p>"""
+    if (out / "resource-incident.json").exists():
+        diagnosis += """<h2>共享机器的资源限制</h2><p class="note">增加补充工作进程后曾触发 Windows 内存提交压力，出现 MemoryError 和进程崩溃。空闲物理内存不能单独证明可以继续扩大并行。补充批次已停止，主批次恢复四个工作进程；原始失败和取消现场保留，再从初始账户重做未完成场景。表中的峰值内存为工作集；Windows 私有提交内存可能显著更高，不能据工作集推算并发容量。部分耗时包含临时额外进程竞争，因此不构成专用机器性能承诺。</p><p><a href="resource-incident.json">资源故障、处理及原始证据摘要</a> · <a href="failed-attempts/memory-pressure-01/receipt.json">重试前保存的失败现场</a></p>"""
+    if (out / "thread-control-validation/parity.json").exists():
+        parity = read(out / "thread-control-validation/parity.json")
+        diagnosis += f"""<h2>数值库线程控制对照</h2><p>后续直接运行入口在导入数值库前固定 OpenBLAS、OpenMP 和 MKL 为单线程，并把声明环境与实际线程池写入场景身份。独立 {parity['sessions']} 日对照的 {parity['decisions']} 次调仓，最大权重差为 {parity['maximum_weight_difference']:.3g}；成交、费用、持仓、净值和按经济字段排序的账本一致。试验峰值私有提交为 {parity['peak_private_bytes']/1024**2:.1f} MiB。这个短区间对照不代表全部场景的内存峰值或加速幅度；早期运行版本与结果继续保留。</p><p><a href="thread-control-validation/parity.json">前缀一致性与内存收据</a></p>"""
     portfolio_body = f"""<p class="note">完成 {len(results)}/62 个进程。状态统计：{html.escape(str(status_counts))}。不同终点的诊断前缀不能用来排序完整期间收益；全部目标失败而留在现金的场景也不是成功投资组合。</p>
 <p>每 5 个交易日调仓，初始资金 100 万元，预算 95%/80%，单股上限 5%，首次建仓完整计费，其后 L1 换手上限 20%。3%/6% 是模型预测的年化跟踪误差上限；表中实际 TE 来自账户与完整研究样本基准的五日复合收益差，二者不能互相替代。基准端点缺失的窗口不填零、不重新归一化。</p>
 <h2>原生账户比较</h2><div class="scroll">{table(account_frame)}</div>
@@ -356,7 +369,7 @@ def run(out, independent, batch_id, *, allow_partial=False):
 <h2>相同组合的交叉风险预测</h2><p>六组冻结模型负责生成组合，全部 22 个风险配置对相同连续、整数及实际收盘持仓交叉预测；组合身份绑定日期与完整权重。同一组合的实际收益已逐项检查一致。绝对风险与相对完整基准的主动风险分别计算损失和区块区间；全现金账户的绝对风险为零，主动风险仍包含完整基准。平方标准化收益高于 1 提示低估方向，不能仅凭这个均值认定模型失效；需结合日期区块区间、覆盖率和样本量。</p>
 <p><a href="optimizer-risk-underestimation.csv">生成模型 × 预测模型的低估诊断</a> · <a href="optimizer-cross-inference.json">联合日期区块比较</a> · <a href="portfolio-cross-predictions.parquet">全部交叉预测</a> · <a href="portfolio-cross-coverage.csv">包括失败调仓日的风险覆盖</a> · <a href="portfolio-risk-union-gaps.csv">持仓风险缺口逐项清单</a></p>
 <p class="note">估计比较采用 252 日残差完整的共同资产集合。停牌等缺样会使已持仓证券退出风险可用集合；全账户缺少必要风险输入时停止发布新目标。随后持仓的收益和低换手不能解释为优化器持续正常运行。表中调仓 P95 仅统计成功发布目标的完整优化与整手修复，完整账户回放耗时和失败数另列，未记录的失败输入校验耗时不作估算。</p>
-<h2>约束与实际执行的边界</h2><p>连续目标残差验收上限为 1e-7；整数修复采用原执行层的现金、费用、可卖数量与整手规则，不声称整数全局最优。真实成交后，持仓可能偏离目标，实际收盘持仓的风险另行预测。原生账本逐笔复式记账复核，实际持仓是整数股、现金非负。未解释的错误使工程验收保持未完成。</p>"""
+<h2>约束与实际执行的边界</h2><p>连续目标残差验收上限为 1e-7；整数修复采用原执行层的现金、费用、可卖数量与整手规则，不声称整数全局最优。真实成交后，持仓可能偏离目标，实际收盘持仓的风险另行预测。原生账本逐笔复式记账复核，实际持仓是整数股、现金非负。未解释的错误使工程验收保持未完成。</p>{diagnosis}"""
     (out / "portfolio-report.html").write_text(
         page("200 家样本：优化组合、风险交叉预测与执行", portfolio_body), encoding="utf8"
     )

@@ -5,18 +5,26 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import pickle
 import platform
 import traceback
 from pathlib import Path
 from time import perf_counter
 
-import numpy as np
-import pandas as pd
+NUMERICAL_THREAD_ENV = ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS")
+if __name__ == "__main__":
+    # Set before importing native numerical libraries: limiting an already loaded
+    # pool can leave its large Windows commitment allocation in place.
+    for _thread_variable in NUMERICAL_THREAD_ENV:
+        os.environ[_thread_variable] = "1"
 
-import quant_risk_monitor  # noqa: F401 -- initialize the public API before numerical bootstrap
-from study_v3_archive import digest, write_json
-from study_v3_risk import factor_variance
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+import quant_risk_monitor  # noqa: E402,F401 -- public API before numerical bootstrap
+from study_v3_archive import digest, write_json  # noqa: E402
+from study_v3_risk import factor_variance  # noqa: E402
 
 GENERATORS = [
     "legacy_ols",
@@ -395,6 +403,7 @@ def _run_owned(out, scenario_index, *, limit_dates=None):
     from a_share_multifactor.config import AppConfig, CostsConfig
     from a_share_multifactor.run_contract import ReplayInputError, _replay
     from quant_data_kit import StatusEvent
+    from threadpoolctl import threadpool_info
 
     method, model, budget, te = list(scenarios())[scenario_index]
     with (out / "panel.pkl").open("rb") as stream:
@@ -441,6 +450,13 @@ def _run_owned(out, scenario_index, *, limit_dates=None):
         "te": te,
         "inputs": inputs,
         "limit_dates": limit_dates,
+        "numerical_runtime": {
+            "blas_environment": {key: os.environ.get(key) for key in NUMERICAL_THREAD_ENV},
+            "loaded_thread_pools": [
+                {key: pool.get(key) for key in ("internal_api", "prefix", "num_threads", "version")}
+                for pool in threadpool_info()
+            ],
+        },
         "benchmark": "research-sample-cap-weighted",
         "generator_selection": "six frozen structural model combinations; all 22 estimators cross-predict",
         "tax_scope": "trading costs and gross distributions; no investor-specific dividend income tax",
