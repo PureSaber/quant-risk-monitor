@@ -127,3 +127,38 @@ After the restored six-account audit passes, `repair_finalize_recovery.py` seals
 its receipts, final release record and report QA in a separate immutable
 `final-evidence/manifest.json`. It checks the base-manifest and audit bindings and
 does not rewrite the original recovery manifest to manufacture a completed audit.
+
+## Completed historical acceptance
+
+The immutable `failure-repair-03/reports-v2` run contains 132 account runs and
+5,431 published targets, all independently checked. Maximum normalized constraint
+residual is 9.94326844749871e-08. Published-target P95 is at most 4.257 seconds
+across branches; maximum observed successful rebalance is 29.954 seconds. These
+timings do not impute elapsed time for missing-input failures.
+
+| Branch | Accounts | Reached 2026-09-30 | Published targets |
+| --- | ---: | ---: | ---: |
+| Strict | 62 | 31 | 1,548 |
+| Floor sensitivity | 33 | 31 | 1,879 |
+| Ceiling sensitivity | 33 | 31 | 1,880 |
+| Extended floor | 2 | 2 | 62 |
+| Extended ceiling | 2 | 2 | 62 |
+
+The strict full-horizon count includes 26 accounts with no targets. Both base
+sensitivity branches preserve the 001210 stops for scenarios 0/31; four separate
+extended accounts complete them under the explicitly allowed integer endpoints.
+Full-horizon completion is not continuous successful rebalancing. Every retained
+input, continuous and integer-search failure remains in the failure inventory.
+
+Model replacement is not accepted. In the floor branch, frozen-enhanced versus
+legacy-OLS integer-target absolute-risk loss difference is -0.1692 with corrected
+95% interval [-0.3418, 0.0152]; active-risk difference is +0.0243 with interval
+[-0.1663, 0.2774]. Both cross zero. Actual-held portfolios have only 14/15 common
+complete dates (absolute/active), below the block-inference gate. All reviewed
+history remains retrospective and contributes zero new independent windows.
+Four pre-entitlement branch comparisons differ (scenarios 29/30 in both branches);
+timed-search differences prevent attributing all later return changes to rights.
+
+The compact `failure_repair_configs/final-research-receipt.json` includes per-branch
+failure counts, cross-risk conclusions and SHA-256s for the full local evidence.
+It complements the raw reproducible account artifacts without uploading them to Git.
