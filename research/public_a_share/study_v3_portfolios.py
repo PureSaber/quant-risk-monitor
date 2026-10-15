@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib
 import json
 import os
 import pickle
@@ -34,6 +35,34 @@ GENERATORS = [
     "enhanced_s0.1_f90_d60_p10",
     "residual_enhanced",
 ]
+
+
+def additional_share_events(bundle, end):
+    """Normalize announced local timestamps before constructing native events."""
+    from quant_data_kit import CorporateActionEvent, FixedPoint
+
+    events = []
+    for item in bundle.get("add_events", []):
+        at = pd.Timestamp(item["available_at"]).tz_convert("UTC")
+        if at.tz_convert("Asia/Shanghai").tz_localize(None).normalize() > end:
+            continue
+        events.append(
+            CorporateActionEvent(
+                event_id=item["event_id"],
+                instrument_id=item["asset"],
+                event_time=at,
+                received_at=at,
+                available_at=at,
+                source=item["source"],
+                trading_day=at.tz_convert("Asia/Shanghai").date(),
+                session_id="share-entitlement",
+                sequence=0,
+                action_type="share_credit",
+                effective_date=pd.Timestamp(item["record_date"]).date(),
+                ratio=FixedPoint(1, 0),
+            )
+        )
+    return tuple(events)
 
 
 def scenarios():
@@ -122,7 +151,7 @@ def schedule(bundle, models, method, model, budget, te, input_digest):
             available_at=at,
             horizon_sessions=5,
             annualization=252,
-            model_version="barra-200-v3:" + model,
+            model_version="barra-200-v3:" + model + ":" + data.get("coverage_version", "complete"),
             input_digest=input_digest,
             exposures=x,
             factor_covariance=pd.DataFrame(
@@ -130,8 +159,9 @@ def schedule(bundle, models, method, model, budget, te, input_digest):
             ),
             specific_variance=pd.Series(data["D_daily_rate"] * 252, index=x.index),
             benchmark=entry["benchmark"],
+            coverage=data.get("coverage", {}),
         )
-        score = bundle["v2"]["descriptors"]["momentum_252_21"].loc[day, x.index]
+        score = bundle["v2"]["descriptors"]["momentum_252_21"].loc[day, entry["assets"]]
         # Exposure admission already requires these causal price descriptors.
         if not np.isfinite(score).all():
             raise ValueError("missing fixed momentum signal; no equal-weight fallback")
@@ -172,7 +202,7 @@ def schedule(bundle, models, method, model, budget, te, input_digest):
             "linear_costs": None,
         }
         if method in {"minimum_variance", "minimum_active_risk"}:
-            result[day.date()]["expected_returns"] = pd.Series(0.0, index=x.index)
+            result[day.date()]["expected_returns"] = pd.Series(0.0, index=score.index)
         if label_history is not None:
             # All labels supplied to the existing converter are already mature;
             # it independently checks maturity, revisions and non-overlap.
@@ -260,7 +290,7 @@ def cross_predictions(replay, models, bundle):
                     )
                     continue
                 w = weights.reindex(x.index, fill_value=0).to_numpy()
-                wb = entry["benchmark"].reindex(x.index).to_numpy()
+                wb = entry["benchmark"].reindex(x.index, fill_value=0).to_numpy()
                 variance, factor, specific = factor_variance(
                     x.to_numpy(), data["F_daily_rate"], data["D_daily_rate"], w
                 )
@@ -268,8 +298,8 @@ def cross_predictions(replay, models, bundle):
                     x.to_numpy(), data["F_daily_rate"], data["D_daily_rate"], w - wb
                 )
                 benchmark_actual = (
-                    float(entry["benchmark"] @ returns.reindex(x.index))
-                    if returns.reindex(x.index).notna().all()
+                    float(entry["benchmark"] @ returns.reindex(entry["benchmark"].index))
+                    if returns.reindex(entry["benchmark"].index).notna().all()
                     else None
                 )
                 records.append(
@@ -359,7 +389,28 @@ def execution_metrics(replay, models, bundle, destination):
     for item in failures:
         status = item.get("status", "unspecified")
         failure_counts[status] = failure_counts.get(status, 0) + 1
-    exposure_sizes = [len(v["models"][GENERATORS[0]]["exposures"]) for v in models.values()]
+    exposure_sizes = [len(v["assets"]) for v in models.values()]
+    longest_failure_streak = streak = 0
+    frozen_intervals, beginning = [], None
+    for decision in replay.allocation_decisions:
+        if "weights" not in decision:
+            streak += 1
+            beginning = beginning or decision["session"]
+            longest_failure_streak = max(longest_failure_streak, streak)
+        else:
+            if beginning:
+                frozen_intervals.append(
+                    {
+                        "start": beginning,
+                        "next_target": decision["session"],
+                        "failed_rebalances": streak,
+                    }
+                )
+            beginning, streak = None, 0
+    if beginning:
+        frozen_intervals.append(
+            {"start": beginning, "next_target": None, "failed_rebalances": streak}
+        )
     return {
         "actual_annualized_tracking_error": float(active.std(ddof=1) * np.sqrt(252 / 5))
         if len(active) > 1
@@ -387,31 +438,47 @@ def execution_metrics(replay, models, bundle, destination):
             exposure_sizes and min(exposure_sizes) * 0.05 > 0.95
         ),
         "published_target_count": len(successes),
+        "effective_rebalance_rate": len(successes) / max(len(successes) + len(failures), 1),
+        "longest_no_target_rebalances": longest_failure_streak,
+        "no_target_intervals": frozen_intervals,
         "actual_return_scope": "native ledger, including fees and gross entitlement cash; missing quoted marks remain explicitly stale",
     }
 
 
-def run(out, scenario_index, *, limit_dates=None):
+def run(
+    out, scenario_index, *, limit_dates=None, source=None, coverage=None, share_rules_path=None
+):
     from study_v3_process_lock import process_lock
 
     suffix = "full" if limit_dates is None else f"pilot-{limit_dates}"
     with process_lock(out / "scenario-locks" / f"{scenario_index:03d}-{suffix}.lock"):
-        return _run_owned(out, scenario_index, limit_dates=limit_dates)
+        return _run_owned(
+            out,
+            scenario_index,
+            limit_dates=limit_dates,
+            source=source,
+            coverage=coverage,
+            share_rules_path=share_rules_path,
+        )
 
 
-def _run_owned(out, scenario_index, *, limit_dates=None):
+def _run_owned(
+    out, scenario_index, *, limit_dates=None, source=None, coverage=None, share_rules_path=None
+):
     from a_share_multifactor.config import AppConfig, CostsConfig
     from a_share_multifactor.run_contract import ReplayInputError, _replay
     from quant_data_kit import StatusEvent
     from threadpoolctl import threadpool_info
 
     method, model, budget, te = list(scenarios())[scenario_index]
-    with (out / "panel.pkl").open("rb") as stream:
+    source = out if source is None else source
+    models_path = (source if coverage is None else coverage) / "portfolio-risk-models.pkl"
+    with (source / "panel.pkl").open("rb") as stream:
         bundle = pickle.load(stream)
-    with (out / "portfolio-risk-models.pkl").open("rb") as stream:
+    with models_path.open("rb") as stream:
         models = pickle.load(stream)
     inputs = {
-        name: digest(out / name)
+        name: digest(models_path if name == "portfolio-risk-models.pkl" else source / name)
         for name in (
             "panel.pkl",
             "risk-models.pkl",
@@ -427,22 +494,65 @@ def _run_owned(out, scenario_index, *, limit_dates=None):
         )
     }
     inputs["research_code"] = digest(__file__)
+    code_paths = {"research_code": Path(__file__)}
     import a_share_multifactor.allocation_execution as adapter
+    import a_share_multifactor.corporate_actions as actions_bridge
     import a_share_multifactor.run_contract as contract
+    import quant_data_kit.share_entitlements as share_protocol
+    import quant_execution.ledger as account_ledger
+    import quant_execution.rules as execution_rules
+    import quant_portfolio.allocation_v2 as allocation
     import quant_portfolio.executable as integer
+    import quant_portfolio.feasibility as feasibility
+    import quant_portfolio.risk_snapshot as risk_snapshot
+    import quant_portfolio.solver as solver
 
     import quant_risk_monitor.cross_asset as policy
     import quant_risk_monitor.factor_model as factor_model
 
-    for module in (contract, adapter, integer, policy, factor_model):
-        inputs[module.__name__] = digest(module.__file__)
-    binding = json.loads((out / "portfolio-risk-models-binding.json").read_text(encoding="utf8"))
-    if (
-        binding["models"] != inputs["portfolio-risk-models.pkl"]
-        or binding["protocol"] != inputs["protocol.json"]
-        or binding["panel"] != inputs["panel.pkl"]
+    for module in (
+        contract,
+        adapter,
+        integer,
+        policy,
+        factor_model,
+        account_ledger,
+        execution_rules,
+        share_protocol,
+        solver,
+        allocation,
+        feasibility,
+        risk_snapshot,
+        actions_bridge,
     ):
-        raise ValueError("risk model cache binding changed")
+        inputs[module.__name__] = digest(module.__file__)
+        code_paths[module.__name__] = Path(module.__file__)
+    if coverage is None:
+        binding = json.loads(
+            (source / "portfolio-risk-models-binding.json").read_text(encoding="utf8")
+        )
+        if (
+            binding["models"] != inputs["portfolio-risk-models.pkl"]
+            or binding["protocol"] != inputs["protocol.json"]
+            or binding["panel"] != inputs["panel.pkl"]
+        ):
+            raise ValueError("risk model cache binding changed")
+    else:
+        binding = json.loads((coverage / "coverage-binding.json").read_text(encoding="utf8"))
+        if binding["output"] != digest(models_path) or any(
+            digest(source / name) != sha for name, sha in binding["inputs"].items()
+        ):
+            raise ValueError("partial-history coverage binding changed")
+        if digest(Path(__file__).with_name("repair_risk_coverage.py")) != binding["producer"]:
+            raise ValueError("coverage producer changed; regenerate the versioned cache")
+        for name, sha in binding["code_modules"].items():
+            if digest(importlib.import_module(name).__file__) != sha:
+                raise ValueError("coverage estimation code differs from cache binding")
+    share_bundle = (
+        {} if share_rules_path is None else json.loads(share_rules_path.read_text(encoding="utf8"))
+    )
+    if share_rules_path is not None:
+        inputs["share_rules"] = digest(share_rules_path)
     specification = {
         "method": method,
         "model": model,
@@ -460,6 +570,8 @@ def _run_owned(out, scenario_index, *, limit_dates=None):
         "benchmark": "research-sample-cap-weighted",
         "generator_selection": "six frozen structural model combinations; all 22 estimators cross-predict",
         "tax_scope": "trading costs and gross distributions; no investor-specific dividend income tax",
+        "coverage_version": "complete" if coverage is None else binding["version"],
+        "share_branch": share_bundle.get("branch", "legacy_strict"),
     }
     identity = hashlib.sha256(json.dumps(specification, sort_keys=True).encode()).hexdigest()
     destination = out / "portfolios" / f"{scenario_index:03d}-{identity[:16]}"
@@ -472,12 +584,14 @@ def _run_owned(out, scenario_index, *, limit_dates=None):
     write_json(destination / "specification.json", specification)
     started = perf_counter()
     try:
-        raw = pd.read_parquet(out / "execution-bars.parquet")
+        raw = pd.read_parquet(source / "execution-bars.parquet")
         if limit_dates:
             final = sorted(raw.date.unique())[limit_dates - 1]
             raw = raw[raw.date <= final]
             models = {d: v for d, v in models.items() if d <= final}
-        plans = schedule(bundle, models, method, model, budget, te, inputs["portfolio-risk-models.pkl"])
+        plans = schedule(
+            bundle, models, method, model, budget, te, inputs["portfolio-risk-models.pkl"]
+        )
         print(
             json.dumps(
                 {
@@ -490,11 +604,13 @@ def _run_owned(out, scenario_index, *, limit_dates=None):
             ),
             flush=True,
         )
-        with (out / "corporate-action-events.pkl").open("rb") as stream:
+        with (source / "corporate-action-events.pkl").open("rb") as stream:
             events = tuple(
                 e for e in pickle.load(stream) if pd.Timestamp(e.trading_day) <= raw.date.max()
             )
-        unresolved = json.loads((out / "execution-input-issues.json").read_text(encoding="utf8"))
+        share_rules = share_bundle.get("rules", {})
+        events += additional_share_events(share_bundle, raw.date.max())
+        unresolved = json.loads((source / "execution-input-issues.json").read_text(encoding="utf8"))
         if unresolved:
             raise ValueError(
                 "unresolved execution-input discrepancies; full ledger publication blocked: "
@@ -518,13 +634,19 @@ def _run_owned(out, scenario_index, *, limit_dates=None):
                 retail_mode=False,
             ),
         )
-        guards = json.loads((out / "execution-input-guards.json").read_text(encoding="utf8"))
+        guards = json.loads((source / "execution-input-guards.json").read_text(encoding="utf8"))
+        replacements = {
+            (item["asset"], pd.Timestamp(item["available_at"]))
+            for item in share_bundle.get("add_events", [])
+            if item["event_id"] in share_rules
+        }
         guards = tuple(
             g
             for g in guards
             if pd.Timestamp(g["available_at"]).tz_localize(None).normalize() <= raw.date.max()
+            and (g["asset"], pd.Timestamp(g["available_at"])) not in replacements
         )
-        statuses = pd.read_parquet(out / "source-trading-status.parquet").loc[
+        statuses = pd.read_parquet(source / "source-trading-status.parquet").loc[
             raw.date.min() : raw.date.max()
         ]
         status_events = []
@@ -546,18 +668,19 @@ def _run_owned(out, scenario_index, *, limit_dates=None):
                         reason="observed at decision-day close; no future trading assumption",
                     )
                 )
-        kwargs = dict(
-            catalog_path=out / "execution-catalog.csv",
-            target_schedule={},
-            allocation_schedule=plans,
-            corporate_actions=events,
-            status_events=tuple(status_events),
-            input_guards=guards,
-            account_id="barra-200-v3-" + identity[:16],
-            strategy_id="research-" + method,
-            snapshot_frequency="daily",
-            cache_risk_views=True,
-        )
+        kwargs = {
+            "catalog_path": source / "execution-catalog.csv",
+            "target_schedule": {},
+            "allocation_schedule": plans,
+            "corporate_actions": events,
+            "status_events": tuple(status_events),
+            "input_guards": guards,
+            "account_id": "barra-200-v3-" + identity[:16],
+            "strategy_id": "research-" + method,
+            "snapshot_frequency": "daily",
+            "cache_risk_views": True,
+            "share_rules": share_rules,
+        }
         stopped = None
         try:
             replay = _replay(raw, config, identity, **kwargs)
@@ -576,6 +699,7 @@ def _run_owned(out, scenario_index, *, limit_dates=None):
                 "asset": exc.instrument_id,
                 "at": exc.occurred_at.isoformat(),
                 "reason": str(exc),
+                "diagnostics": exc.diagnostics,
                 "requested_end": str(raw.date.max().date()),
                 "diagnostic_prefix_end": str((raw.loc[raw.date < cutoff, "date"].max()).date()),
                 "subsequent_nav_and_targets": "unavailable; no continuation or substituted account",
@@ -598,6 +722,15 @@ def _run_owned(out, scenario_index, *, limit_dates=None):
         write_json(destination / "allocation-decisions.json", list(replay.allocation_decisions))
         write_json(destination / "retry-diagnostics.json", list(replay.retry_diagnostics))
         write_json(destination / "risk-events.json", list(replay.runtime_risk_events))
+        from quant_data_kit import market_event_payload
+
+        write_json(
+            destination / "corporate-action-resolutions.json",
+            [
+                market_event_payload(event)
+                for event in replay.ledger._resolved_share_events.values()
+            ],
+        )
         cross_predictions(replay, models, bundle).to_parquet(
             destination / "cross-predictions.parquet", index=False
         )
@@ -622,6 +755,8 @@ def _run_owned(out, scenario_index, *, limit_dates=None):
             "model_promotion": "not_passed",
             **execution_metrics(replay, models, bundle, destination),
         }
+        if any(digest(path) != inputs[name] for name, path in code_paths.items()):
+            raise ValueError("source changed during replay; publish a fresh versioned run")
         write_json(destination / "metrics.json", metrics)
         outputs = {
             p.name: digest(p)
@@ -655,14 +790,33 @@ if __name__ == "__main__":
     parser.add_argument("--scenario", type=int, required=True)
     parser.add_argument("--limit-dates", type=int)
     parser.add_argument("--debug-stacks", action="store_true")
+    parser.add_argument("--source", type=Path)
+    parser.add_argument("--coverage", type=Path)
+    parser.add_argument("--share-rules", type=Path)
     args = parser.parse_args()
     if args.debug_stacks:
         import faulthandler
 
         faulthandler.dump_traceback_later(120, repeat=True)
-    result = run(args.out, args.scenario, limit_dates=args.limit_dates)
+    result = run(
+        args.out,
+        args.scenario,
+        limit_dates=args.limit_dates,
+        source=args.source,
+        coverage=args.coverage,
+        share_rules_path=args.share_rules,
+    )
     if result["status"] == "failed":
         raise SystemExit(1)
     # Resumed verified artifacts need a log identity just like newly run accounts.
-    print(json.dumps({"scenario": args.scenario, "identity": result["identity"],
-                      "status": result["status"], "artifact_receipt": "complete.json"}), flush=True)
+    print(
+        json.dumps(
+            {
+                "scenario": args.scenario,
+                "identity": result["identity"],
+                "status": result["status"],
+                "artifact_receipt": "complete.json",
+            }
+        ),
+        flush=True,
+    )
