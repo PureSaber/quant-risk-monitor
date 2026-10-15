@@ -190,6 +190,8 @@ def cross_predictions(replay, models, bundle):
         day = pd.Timestamp(decision["session"])
         entry = models[day]
         i = panel["dates"].get_loc(day)
+        if i + 5 >= len(panel["dates"]):
+            continue
         end = panel["dates"][i + 5]
         if end > last_day:
             continue
@@ -302,6 +304,8 @@ def execution_metrics(replay, models, bundle, destination):
     calendar = bundle["panel"]["dates"]
     outcomes = []
     for day, entry in models.items():
+        if calendar.get_loc(day) + 5 >= len(calendar):
+            continue
         end = calendar[calendar.get_loc(day) + 5]
         if day not in nav.index or end not in nav.index:
             continue
@@ -387,13 +391,14 @@ def run(out, scenario_index, *, limit_dates=None):
     method, model, budget, te = list(scenarios())[scenario_index]
     with (out / "panel.pkl").open("rb") as stream:
         bundle = pickle.load(stream)
-    with (out / "risk-models.pkl").open("rb") as stream:
+    with (out / "portfolio-risk-models.pkl").open("rb") as stream:
         models = pickle.load(stream)
     inputs = {
         name: digest(out / name)
         for name in (
             "panel.pkl",
             "risk-models.pkl",
+            "portfolio-risk-models.pkl",
             "execution-bars.parquet",
             "execution-actions.parquet",
             "corporate-action-events.pkl",
@@ -414,10 +419,11 @@ def run(out, scenario_index, *, limit_dates=None):
 
     for module in (contract, adapter, integer, policy, factor_model):
         inputs[module.__name__] = digest(module.__file__)
-    binding = json.loads((out / "risk-models-binding.json").read_text(encoding="utf8"))
+    binding = json.loads((out / "portfolio-risk-models-binding.json").read_text(encoding="utf8"))
     if (
-        binding["models"] != inputs["risk-models.pkl"]
+        binding["models"] != inputs["portfolio-risk-models.pkl"]
         or binding["protocol"] != inputs["protocol.json"]
+        or binding["panel"] != inputs["panel.pkl"]
     ):
         raise ValueError("risk model cache binding changed")
     specification = {
@@ -447,7 +453,7 @@ def run(out, scenario_index, *, limit_dates=None):
             final = sorted(raw.date.unique())[limit_dates - 1]
             raw = raw[raw.date <= final]
             models = {d: v for d, v in models.items() if d <= final}
-        plans = schedule(bundle, models, method, model, budget, te, inputs["risk-models.pkl"])
+        plans = schedule(bundle, models, method, model, budget, te, inputs["portfolio-risk-models.pkl"])
         print(
             json.dumps(
                 {
@@ -581,6 +587,7 @@ def run(out, scenario_index, *, limit_dates=None):
             "full_horizon_completed": stopped is None,
             "evaluated_through": str(raw.date.max().date()),
             "decisions": len(decisions),
+            "scheduled_rebalance_dates": len(plans),
             "published": len(successes),
             "failure_rate": 1 - len(successes) / max(len(decisions), 1),
             "net_return": float(nav.iloc[-1] / 1_000_000 - 1),

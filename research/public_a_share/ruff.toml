@@ -14,4 +14,5 @@ known-first-party = [
   "study_v3_execution_inputs", "study_v3_action_repairs", "study_v3_actions",
   "study_v3_quality", "study_v3_supplements", "study_v3_batch", "study_v3_report",
   "study_v3_recompute", "study_v3_recovery", "study_v3_provenance", "study_v3_cross_audit",
+  "study_v3_portfolio_models",
 ]

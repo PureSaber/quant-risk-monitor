@@ -81,6 +81,13 @@ at 5%, pay all initial costs and subsequently enforce 20% L1 turnover. Active
 scenarios impose predicted annualized TE of 3% or 6%. The capitalization
 benchmark is explicitly a research-sample benchmark, not a market index.
 
+The account calendar has 182 decision dates. It includes 2023-12-28 and
+2026-09-28, which are not mature evaluation windows in the separate risk
+experiment. That distinction prevents a development-label cutoff or an
+unmatured final outcome from suppressing a scheduled rebalance. The original
+180 risk-evaluation windows and their selection are unchanged. Account results
+from the earlier `utc-02` batch are superseded and retained as evidence.
+
 All 22 configurations cross-predict common continuous, integer and actual-close
 portfolios. An independent reporting pass also includes actual holdings on dates
 when allocation failed. It preserves missing risk assets and outcome coverage.
