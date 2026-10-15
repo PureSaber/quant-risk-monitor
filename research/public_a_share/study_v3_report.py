@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 
 from study_v3_archive import digest, write_json
-from study_v3_cross_audit import recompute_cross
+from study_v3_cross_audit import recompute_cross, session_dates
 from study_v3_risk import factor_variance, paired_summary
 
 
@@ -95,6 +95,8 @@ def verify_account(folder, models=None, specification=None):
     if snapshots.cash_value_units.lt(0).any():
         raise ValueError("negative native cash")
     decisions = read(folder / "allocation-decisions.json")
+    if models is not None:
+        verify_decision_calendar(decisions, session_dates(snapshots), models)
     maximum, integer_maximum, durations, statuses, errors = 0.0, 0.0, [], Counter(), Counter()
     residuals = []
     for row in decisions:
@@ -157,13 +159,20 @@ def verify_account(folder, models=None, specification=None):
     }
 
 
+def verify_decision_calendar(decisions, snapshot_days, model_dates):
+    expected = [d for d in model_dates if snapshot_days.min() <= d <= snapshot_days.max()]
+    observed = [pd.Timestamp(row["session"]) for row in decisions]
+    if observed != expected:
+        raise ValueError("native account omitted or duplicated a scheduled five-session decision")
+
+
 def run(out, independent, batch_id, *, allow_partial=False):
     results = batch_results(out, batch_id, allow_partial=allow_partial)
-    binding = read(out / "risk-models-binding.json")
-    if digest(out / "risk-models.pkl") != binding["models"]:
+    binding = read(out / "portfolio-risk-models-binding.json")
+    if digest(out / "portfolio-risk-models.pkl") != binding["models"]:
         raise ValueError("risk model source changed before independent cross prediction")
     # Trusted, archived local research inputs, verified against the producer receipt.
-    with (out / "risk-models.pkl").open("rb") as stream:
+    with (out / "portfolio-risk-models.pkl").open("rb") as stream:
         models = pickle.load(stream)
     with (out / "panel.pkl").open("rb") as stream:
         panel = pickle.load(stream)["panel"]
@@ -325,6 +334,7 @@ def run(out, independent, batch_id, *, allow_partial=False):
     acceptance = {
         "scenario_processes": len(results),
         "expected_scenarios": 62,
+        "scheduled_rebalance_dates": binding["decision_dates"],
         "study_delivery": "complete_with_recorded_limitations"
         if len(results) == 62 and all("outputs" in r for r in results)
         else "incomplete",

@@ -31,8 +31,9 @@ def recompute_cross(decisions, positions, snapshots, models, panel):
     last_day = snapshot_days.max()
     for decision in decisions:
         day = pd.Timestamp(decision["session"])
-        end = panel["dates"][panel["dates"].get_loc(day) + 5]
-        if end > last_day:
+        start = panel["dates"].get_loc(day)
+        end = panel["dates"][start + 5] if start + 5 < len(panel["dates"]) else None
+        if end is not None and end > last_day:
             continue
         daily_snapshot = snapshots[snapshot_days.eq(day)]
         if daily_snapshot.empty:
@@ -51,20 +52,19 @@ def recompute_cross(decisions, positions, snapshots, models, panel):
         if "weights" in decision:
             variants["continuous"] = decision["weights"]
             variants["integer"] = decision["diagnostics"]["execution"]["integer_weights"]
-        start = panel["dates"].get_loc(day)
         returns = panel["prices"]["returns"].iloc[start + 1 : start + 6].sum(min_count=5)
         entry = models[day]
         benchmark = entry["benchmark"]
         benchmark_return = (
             float(benchmark @ returns.reindex(benchmark.index))
-            if returns.reindex(benchmark.index).notna().all()
+            if end is not None and returns.reindex(benchmark.index).notna().all()
             else None
         )
         for kind, mapping in variants.items():
             weights = pd.Series(mapping, dtype=float)
             nonzero = weights[weights.abs() > 1e-12]
             outcome = returns.reindex(nonzero.index)
-            actual_return = float(nonzero @ outcome) if outcome.notna().all() else None
+            actual_return = float(nonzero @ outcome) if end is not None and outcome.notna().all() else None
             identity = hashlib.sha256(
                 json.dumps({"date": str(day), "kind": kind, "weights": mapping}, sort_keys=True).encode()
             ).hexdigest()
@@ -100,7 +100,7 @@ def recompute_cross(decisions, positions, snapshots, models, panel):
                     variance, factor, specific = factor_variance(x, data["F_daily_rate"], data["D_daily_rate"], w)
                     active, _, _ = factor_variance(x, data["F_daily_rate"], data["D_daily_rate"], w - wb)
                     record.update(
-                        status="complete" if actual_return is not None else "outcome_missing",
+                        status="complete" if actual_return is not None else "outcome_pending" if end is None else "outcome_missing",
                         variance=variance * 5,
                         factor_variance=factor * 5,
                         specific_variance=specific * 5,

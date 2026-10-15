@@ -199,6 +199,7 @@ python research/public_a_share/study_v3_archive.py --old OLD --exposure V2 --out
 python research/public_a_share/study_v3_inputs.py --old OLD --exposure V2 --out RUN
 python research/public_a_share/study_v3_quality.py --old OLD --exposure V2 --out RUN
 python research/public_a_share/study_v3_risk.py --out RUN
+python research/public_a_share/study_v3_portfolio_models.py --out RUN
 python research/public_a_share/study_v3_execution_inputs.py --old OLD --exposure V2 --root DATA/inputs --out RUN
 python research/public_a_share/study_v3_batch.py --out RUN --workers 4 --batch-id unique-run-id
 python research/public_a_share/study_v3_recompute.py --old DATA/inputs/old --exposure DATA/inputs/exposure --reference RUN --out EMPTY_RECOMPUTATION
@@ -245,6 +246,15 @@ single-name cap and a 20% subsequent L1 turnover cap. The full initial build pay
 actual native fees. The benchmark is the research-sample capitalization portfolio,
 not a market index. Prediction windows use linear five-session returns for risk
 loss; actual account returns and sample-benchmark returns compound independently.
+
+The account calendar contains 182 decisions, including 2023-12-28 and
+2026-09-28. It is independent of the 180 mature risk-evaluation windows:
+development-boundary exclusions and an immature final outcome must not remove
+trades. The additional causal risk snapshots live in a separate bound cache;
+the original risk experiment and its selection stay unchanged. Final immature
+cross predictions retain predicted risk and an explicit `outcome_pending`
+status. The superseded `utc-02` account batch is retained; use a new batch id
+for the corrected cadence.
 
 `complete.json` means the scenario process produced verified artifacts; inspect
 `full_horizon_completed`, `published`, failure statuses and the optional
