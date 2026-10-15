@@ -359,6 +359,9 @@ def run(out, independent, batch_id, *, allow_partial=False):
 <p>诊断共 {floor['problems']} 个问题，失败 {floor['failure_count']} 个；实际账户配置和失败记录没有因此改变。</p><div class="scroll">{table(pd.DataFrame(floor['results']))}</div><p><a href="tracking-error-floor-diagnostic.csv">逐日下界</a> · <a href="tracking-error-floor-diagnostic.json">诊断摘要与模型绑定</a></p>"""
     if (out / "resource-incident.json").exists():
         diagnosis += """<h2>共享机器的资源限制</h2><p class="note">增加补充工作进程后曾触发 Windows 内存提交压力，出现 MemoryError 和进程崩溃。空闲物理内存不能单独证明可以继续扩大并行。补充批次已停止，主批次恢复四个工作进程；原始失败和取消现场保留，再从初始账户重做未完成场景。表中的峰值内存为工作集；Windows 私有提交内存可能显著更高，不能据工作集推算并发容量。部分耗时包含临时额外进程竞争，因此不构成专用机器性能承诺。</p><p><a href="resource-incident.json">资源故障、处理及原始证据摘要</a> · <a href="failed-attempts/memory-pressure-01/receipt.json">重试前保存的失败现场</a></p>"""
+    if (out / "thread-control-validation/parity.json").exists():
+        parity = read(out / "thread-control-validation/parity.json")
+        diagnosis += f"""<h2>数值库线程控制对照</h2><p>后续直接运行入口在导入数值库前固定 OpenBLAS、OpenMP 和 MKL 为单线程，并把声明环境与实际线程池写入场景身份。独立 {parity['sessions']} 日对照的 {parity['decisions']} 次调仓，最大权重差为 {parity['maximum_weight_difference']:.3g}；成交、费用、持仓、净值和按经济字段排序的账本一致。试验峰值私有提交为 {parity['peak_private_bytes']/1024**2:.1f} MiB。这个短区间对照不代表全部场景的内存峰值或加速幅度；早期运行版本与结果继续保留。</p><p><a href="thread-control-validation/parity.json">前缀一致性与内存收据</a></p>"""
     portfolio_body = f"""<p class="note">完成 {len(results)}/62 个进程。状态统计：{html.escape(str(status_counts))}。不同终点的诊断前缀不能用来排序完整期间收益；全部目标失败而留在现金的场景也不是成功投资组合。</p>
 <p>每 5 个交易日调仓，初始资金 100 万元，预算 95%/80%，单股上限 5%，首次建仓完整计费，其后 L1 换手上限 20%。3%/6% 是模型预测的年化跟踪误差上限；表中实际 TE 来自账户与完整研究样本基准的五日复合收益差，二者不能互相替代。基准端点缺失的窗口不填零、不重新归一化。</p>
 <h2>原生账户比较</h2><div class="scroll">{table(account_frame)}</div>

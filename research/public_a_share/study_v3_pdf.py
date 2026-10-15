@@ -274,6 +274,11 @@ def run(root, target, font):
         story.append(p(
             "资源限制：补充批次扩大并行后曾触发 Windows 内存提交压力，出现 MemoryError 和进程崩溃。已停止补充批次，恢复四个主工作进程，保留失败现场并重做未完成账户。峰值工作集与 Windows 私有提交内存分别解释，空闲物理内存不能单独作为增加并发的依据；部分耗时包含临时额外进程竞争，不构成专用机器性能承诺。详见 resource-incident.json。"
         ))
+    if (root / "thread-control-validation/parity.json").exists():
+        parity = read(root / "thread-control-validation/parity.json")
+        story.append(p(
+            f"后续入口在导入数值库前固定为单线程，并记录实际线程池。独立 {parity['sessions']} 日对照的 {parity['decisions']} 次调仓权重及账户经济事实一致，试验峰值私有提交为 {parity['peak_private_bytes']/1024**2:.1f} MiB。短区间对照不代表全部场景的峰值或加速幅度；早期运行身份与结果保留。详见 thread-control-validation/parity.json。"
+        ))
     story.append(
         p(
             "代码 PR、固定环境、实际导入路径和 CI 证据记录在 release-evidence.json。每个场景身份绑定输入摘要、配置和运行源码。源代码的精确字节保存在 producer-source 内容寻址副本中，性能改动不会隐藏为同一版本。"

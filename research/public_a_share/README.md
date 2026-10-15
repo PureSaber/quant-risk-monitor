@@ -279,6 +279,17 @@ failed attempts are preserved; incomplete scenarios are retried from initial
 state. Shared-machine timings include temporary resource competition. Check
 commit headroom as well as physical memory before any future concurrency change.
 
+Direct portfolio-worker entry points now set OpenBLAS, OpenMP and MKL thread
+limits to one before importing native numerical libraries. An isolated 60-session
+native-account comparison reproduced all 12 weights exactly and the same 430
+fills, fees, positions, NAV and economic journal postings; its measured peak
+private commitment was 486,379,520 bytes. Run-dependent journal hashes change
+export ordering, so economic postings were compared in canonical order. This is
+a prefix-equivalence check, not a full-study speed guarantee. Each new account
+identity records the declared environment and observed native thread pools.
+Earlier accounts retain their original producer identities and evidence. Calls
+that import the runner as a library retain their caller's threading environment.
+
 Scenario processes hold an operating-system lock for their output root, scenario
 and full/pilot extent. A duplicate waits, then verifies and reuses the completed
 receipt; it never writes a second account concurrently. Crashed owners release
