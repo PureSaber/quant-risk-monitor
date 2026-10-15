@@ -237,6 +237,13 @@ simultaneous intervals. Selection uses 2023 only. Independent recomputation uses
 an empty exposure cache and compares every forecast; dense covariance arithmetic
 is confined to explicit validation checks.
 
+Confidence intervals require at least two complete blocks at the frozen length
+of ten dates. Smaller samples retain their point estimates and an explicit
+`insufficient_date_blocks` status, with no confidence interval or historical
+improvement flag. This descriptive-inference safeguard does not relax the separate
+80 genuinely independent-window promotion gate. Actual-close portfolio common
+samples must be checked separately from continuous and integer target samples.
+
 There are 62 native-account scenarios: each investment budget (95% and 80%) has
 one equal-weight reference and six frozen model combinations with minimum
 variance, minimum active risk at 3%/6% TE, and IC-vol cost-aware momentum at

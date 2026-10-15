@@ -95,22 +95,39 @@ def portfolios(snap):
 
 def paired_summary(frame, model_ids, control, *, replications=5000, block=10, seed=20261015):
     """Resample dates jointly; every date keeps all its portfolio observations."""
+    if block < 1 or replications < 2:
+        raise ValueError("block must be positive and replications must be at least two")
+    metadata = {"block_dates": block, "replications": replications,
+                "minimum_dates_for_interval": 2 * block}
     if frame.empty:
-        return {"complete_dates": 0, "comparisons": {}, "means": {}}
+        return {**metadata, "complete_dates": 0, "comparisons": {}, "means": {},
+                "inference_status": "no_complete_dates"}
     grouped = frame.groupby(["date", "model", "family"], sort=True).qlike.mean()
     daily = grouped.groupby(["date", "model"]).mean().unstack("model").reindex(columns=model_ids)
     # A complete case is a date with every declared model and every portfolio.
     missing_dates = frame.loc[frame.qlike.isna(), "date"].unique()
     daily = daily.loc[~daily.index.isin(missing_dates)].dropna()
     n = len(daily)
-    result = {"complete_dates": n, "means": daily.mean().to_dict(), "comparisons": {}}
-    if n < 2:
+    result = {**metadata, "complete_dates": n,
+              "means": daily.mean().to_dict() if n else {}, "comparisons": {},
+              "inference_status": "available" if n >= 2 * block else "insufficient_date_blocks"}
+    if not n:
+        result["inference_status"] = "no_complete_dates"
+        return result
+    targets = [m for m in model_ids if m != control]
+    # Keep the frozen block length. Capping it at n makes every draw identical
+    # when n <= block, creating a misleading point-width confidence interval.
+    if n < 2 * block:
+        result["comparisons"] = {
+            model: {"mean_delta": float((daily[model] - daily[control]).mean()),
+                    "simultaneous_95_interval": None, "historical_improvement": False}
+            for model in targets
+        }
         return result
     rng = np.random.default_rng(seed)
-    width = min(block, n)
+    width = block
     starts = rng.integers(0, n - width + 1, size=(replications, int(np.ceil(n / width))))
     indices = (starts[..., None] + np.arange(width)).reshape(replications, -1)[:, :n]
-    targets = [m for m in model_ids if m != control]
     alpha = 0.05 / max(len(targets), 1)
     for model in targets:
         delta = (daily[model] - daily[control]).to_numpy()

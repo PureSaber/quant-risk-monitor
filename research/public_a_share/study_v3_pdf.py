@@ -196,11 +196,18 @@ def run(root, target, font):
             "六组冻结模型负责生成组合，全部 22 个风险配置对相同连续、整数和实际收盘持仓交叉预测。不可行、风险输入缺失及整手修复失败不会自动放宽约束或切换等权。"
         )
     )
-    story.append(
-        p(
-            "完整期间为“否”的行仅是安全区间诊断，不能与其他终点收益排序。全部调仓失败而留在现金的场景也不是成功组合。预测 TE 约束与表中的未来实际 TE 是两种量，不能相互替代。"
-        )
-    )
+    cross_path = root / "optimizer-cross-inference.json"
+    if cross_path.exists():
+        cross = read(cross_path)
+        absolute_dates = cross.get("absolute", {}).get("actual_close", {}).get("complete_dates", 0)
+        active_dates = cross.get("active", {}).get("actual_close", {}).get("complete_dates", 0)
+        story.append(p(
+            f"实际收盘持仓的共同完整日期：绝对风险 {absolute_dates} 个、主动风险 {active_dates} 个。"
+            "固定 10 日期区块需要至少 20 个共同日期才给出区间；不足时仅保留点估计，不判定改善。80 个独立窗口的推广要求仍然适用。"
+        ))
+    story.append(p(
+        "完整期间为“否”的行仅是安全区间诊断，不能与其他终点收益排序。全部调仓失败而留在现金的场景也不是成功组合。预测 TE 约束与表中的未来实际 TE 是两种量，不能相互替代。"
+    ))
     with (root / "portfolio-comparison.csv").open(encoding="utf-8-sig", newline="") as stream:
         accounts = list(csv.DictReader(stream))
     methods = {
