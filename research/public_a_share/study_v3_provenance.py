@@ -10,7 +10,7 @@ from study_v3_archive import checked_copy, digest, write_json
 
 def run(out):
     rows, packages = {}, {}
-    for name in ("quant-risk-monitor", "quant-portfolio", "a-share-multifactor", "quant-data-kit", "quant-execution", "quant-lab", "quant-factors"):
+    for name in ("quant-risk-monitor", "quant-portfolio", "a-share-multifactor", "quant-data-kit", "quant-execution", "quant-lab", "quant-factors", "quant-report-hub"):
         distribution = metadata.distribution(name)
         packages[name] = distribution.version
         for item in distribution.files or ():

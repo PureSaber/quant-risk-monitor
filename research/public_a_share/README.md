@@ -197,13 +197,29 @@ local budgets are 25 GiB for data, 20 GiB for the same-machine recovery copy and
 ```text
 python research/public_a_share/study_v3_archive.py --old OLD --exposure V2 --out DATA --backup BACKUP
 python research/public_a_share/study_v3_inputs.py --old OLD --exposure V2 --out RUN
-python research/public_a_share/study_v3_quality.py --help
+python research/public_a_share/study_v3_quality.py --old OLD --exposure V2 --out RUN
 python research/public_a_share/study_v3_risk.py --out RUN
-python research/public_a_share/study_v3_execution_inputs.py --help
+python research/public_a_share/study_v3_execution_inputs.py --old OLD --exposure V2 --root DATA --out RUN
 python research/public_a_share/study_v3_batch.py --out RUN --workers 4 --batch-id unique-run-id
 python research/public_a_share/study_v3_recompute.py --old DATA/inputs/old --exposure DATA/inputs/exposure --reference RUN --out EMPTY_RECOMPUTATION
 python research/public_a_share/study_v3_recovery.py --data DATA --backup BACKUP --code CODE_ENVIRONMENT_ROOT
+python research/public_a_share/study_v3_report.py --out RUN --independent EMPTY_RECOMPUTATION --batch-id unique-run-id
 ```
+
+Install `requirements-v3.lock` with `python -m pip install --no-deps -r`
+and run `python -m pip check`. It pins all distributions and the eight related
+repositories to immutable revisions. The frozen-runtime workflow validates
+ordinary installs on Windows/Linux and Python 3.10–3.12, including native solvers
+and the public-source parser runtime. Record the workflow result separately from
+study completion. `study_v3_provenance.py --out RUN/producer-source` preserves the
+exact installed source bytes; later implementation-only speed improvements are
+explicit producer versions, not changes to frozen scientific parameters.
+
+The optional `study_v3_pdf.py --root RUN --pdf OUTPUT.pdf --font FONT.ttf`
+renders the report directly from its structured evidence using ReportLab.
+The renderer is a separate presentation dependency; it is not required to
+recompute the research. Generate the final report only after all 62 processes
+finish. `--allow-partial` is for clearly marked interim reports only.
 
 Run `--help` on the evidence collectors and execution-input builder for their
 explicit archive paths. Public responses, issuer PDFs, their actual capture
