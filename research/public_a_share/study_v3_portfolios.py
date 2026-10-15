@@ -384,6 +384,14 @@ def execution_metrics(replay, models, bundle, destination):
 
 
 def run(out, scenario_index, *, limit_dates=None):
+    from study_v3_process_lock import process_lock
+
+    suffix = "full" if limit_dates is None else f"pilot-{limit_dates}"
+    with process_lock(out / "scenario-locks" / f"{scenario_index:03d}-{suffix}.lock"):
+        return _run_owned(out, scenario_index, limit_dates=limit_dates)
+
+
+def _run_owned(out, scenario_index, *, limit_dates=None):
     from a_share_multifactor.config import AppConfig, CostsConfig
     from a_share_multifactor.run_contract import ReplayInputError, _replay
     from quant_data_kit import StatusEvent
