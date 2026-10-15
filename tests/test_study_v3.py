@@ -102,12 +102,18 @@ def test_date_block_inference_preserves_within_date_correlation_and_missingness(
 
 @pytest.mark.parametrize("dates", [1, 6, 7, 10, 19])
 def test_small_date_samples_cannot_claim_degenerate_block_certainty(dates):
-    frame = pd.DataFrame([
-        {"date": day, "model": model, "family": "equal",
-         "qlike": 0.0 if model == "control" else -float(i + 1)}
-        for i, day in enumerate(pd.bdate_range("2023-01-01", periods=dates))
-        for model in ("control", "candidate")
-    ])
+    frame = pd.DataFrame(
+        [
+            {
+                "date": day,
+                "model": model,
+                "family": "equal",
+                "qlike": 0.0 if model == "control" else -float(i + 1),
+            }
+            for i, day in enumerate(pd.bdate_range("2023-01-01", periods=dates))
+            for model in ("control", "candidate")
+        ]
+    )
     result = paired_summary(frame, ["control", "candidate"], "control")
     comparison = result["comparisons"]["candidate"]
     assert result["inference_status"] == "insufficient_date_blocks"
@@ -119,12 +125,18 @@ def test_small_date_samples_cannot_claim_degenerate_block_certainty(dates):
 
 
 def test_two_complete_date_blocks_produce_nontrivial_uncertainty():
-    frame = pd.DataFrame([
-        {"date": day, "model": model, "family": "equal",
-         "qlike": 0.0 if model == "control" else float(i - 10)}
-        for i, day in enumerate(pd.bdate_range("2023-01-01", periods=20))
-        for model in ("control", "candidate")
-    ])
+    frame = pd.DataFrame(
+        [
+            {
+                "date": day,
+                "model": model,
+                "family": "equal",
+                "qlike": 0.0 if model == "control" else float(i - 10),
+            }
+            for i, day in enumerate(pd.bdate_range("2023-01-01", periods=20))
+            for model in ("control", "candidate")
+        ]
+    )
     result = paired_summary(frame, ["control", "candidate"], "control")
     assert result["inference_status"] == "available"
     lo, hi = result["comparisons"]["candidate"]["simultaneous_95_interval"]
