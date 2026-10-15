@@ -36,9 +36,11 @@ def inputs(tmp_path):
 
 def test_final_evidence_is_exact_and_does_not_rewrite_base_manifest(tmp_path):
     code, report, backup = inputs(tmp_path)
+    (report / "html-qa-v2.json").write_bytes((report / "html-qa.json").read_bytes())
     before = (backup / "manifest.json").read_bytes()
     result = finalize(code, report, backup)
     assert result["status"] == "passed" and len(result["files"]) == 7
+    assert "html-qa-v2.json" in result["files"] and "html-qa.json" not in result["files"]
     assert (backup / "manifest.json").read_bytes() == before
     for name, meta in result["files"].items():
         assert digest(backup / "final-evidence" / name) == meta["sha256"]

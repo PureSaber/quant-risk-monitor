@@ -35,14 +35,15 @@ def finalize(code, report, backup):
         raise ValueError("research acceptance is incomplete")
     if release["engineering_acceptance"] != "passed":
         raise ValueError("engineering acceptance is incomplete")
-    qa = json.loads((report / "html-qa.json").read_text(encoding="utf8"))
+    qa_name = "html-qa-v2.json" if (report / "html-qa-v2.json").exists() else "html-qa.json"
+    qa = json.loads((report / qa_name).read_text(encoding="utf8"))
     if qa["status"] != "passed" or qa["report_sha256"] != digest(report / "report.html"):
         raise ValueError("report QA does not match the completed report")
     sources = {name: code / name for name in (
         "recovery-receipt.json", "recovery-account-checks.json", "release-evidence.json",
         "IMPLEMENTATION.md", "RECOVERY.md",
     )}
-    sources.update({name: report / name for name in ("acceptance.json", "html-qa.json")})
+    sources.update({name: report / name for name in ("acceptance.json", qa_name)})
     target = manifest.parent / "final-evidence"
     if (target / "manifest.json").exists():
         raise ValueError("final evidence is immutable")
