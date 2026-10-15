@@ -224,7 +224,7 @@ def run(root, target, font):
                 pct(row["实际净收益"]),
                 pct(row["最大回撤"]),
                 pct(row["实际年化TE"]),
-                "-" if not row["调仓P95秒"] else f"{float(row['调仓P95秒']):.2f}",
+                "-" if not row["成功调仓P95秒"] else f"{float(row['成功调仓P95秒']):.2f}",
             ]
         )
     grid(
@@ -240,7 +240,7 @@ def run(root, target, font):
             "净收益",
             "回撤",
             "实际TE",
-            "P95秒",
+            "成功P95秒",
         ],
         rows,
         [24, 68, 120, 45, 44, 67, 32, 40, 59, 55, 55, 51],

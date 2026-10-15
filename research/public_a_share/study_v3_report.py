@@ -231,7 +231,7 @@ def run(out, independent, batch_id, *, allow_partial=False):
             "TE完整窗口": row.get("actual_te_complete_windows"),
             "费用": row.get("total_fees"),
             "成交额/初始资金": row.get("gross_traded_notional_over_initial_capital"),
-            "调仓P95秒": row.get("rebalance_p95_seconds"),
+            "成功调仓P95秒": row.get("rebalance_p95_seconds"),
             "全回放秒": row.get("wall_seconds"),
             "进程峰值MiB": row.get("process_peak_bytes", 0) / 1024**2,
         }
@@ -264,6 +264,11 @@ def run(out, independent, batch_id, *, allow_partial=False):
             .size().rename("forecasts").reset_index()
         )
         coverage.to_csv(out / "portfolio-cross-coverage.csv", index=False)
+        gaps = merged[merged.status.eq("risk_union_incomplete")][
+            ["date", "scenario", "target_kind", "missing_risk_assets"]
+        ].drop_duplicates()
+        gaps = gaps.assign(asset=gaps.missing_risk_assets.str.split(",")).explode("asset")
+        gaps.to_csv(out / "portfolio-risk-union-gaps.csv", index=False)
         # Shared portfolio identifiers ensure each predictor sees the same return.
         finite = merged.dropna(subset=["qlike"]).copy()
         consistency = merged.groupby("portfolio_id").actual_frozen_weight_return.nunique()
@@ -316,7 +321,8 @@ def run(out, independent, batch_id, *, allow_partial=False):
 <h2>原生账户比较</h2><div class="scroll">{table(account_frame)}</div>
 <p><a href="portfolio-comparison.csv">完整比较表</a> · <a href="account-independent-checks.json">精确账本、现金、股份与连续约束独立复核</a> · <a href="portfolios/">每个账户的原生订单、成交、费用、持仓和失败证据</a></p>
 <h2>相同组合的交叉风险预测</h2><p>六组冻结模型负责生成组合，全部 22 个风险配置对相同连续、整数及实际收盘持仓交叉预测；组合身份绑定日期与完整权重。同一组合的实际收益已逐项检查一致。平方标准化收益高于 1 提示低估方向，不能仅凭这个均值认定模型失效；需结合日期区块区间、覆盖率和样本量。</p>
-<p><a href="optimizer-risk-underestimation.csv">生成模型 × 预测模型的低估诊断</a> · <a href="optimizer-cross-inference.json">联合日期区块比较</a> · <a href="portfolio-cross-predictions.parquet">全部交叉预测</a></p>
+<p><a href="optimizer-risk-underestimation.csv">生成模型 × 预测模型的低估诊断</a> · <a href="optimizer-cross-inference.json">联合日期区块比较</a> · <a href="portfolio-cross-predictions.parquet">全部交叉预测</a> · <a href="portfolio-cross-coverage.csv">包括失败调仓日的风险覆盖</a> · <a href="portfolio-risk-union-gaps.csv">持仓风险缺口逐项清单</a></p>
+<p class="note">估计比较采用 252 日残差完整的共同资产集合。停牌等缺样会使已持仓证券退出风险可用集合；全账户缺少必要风险输入时停止发布新目标。随后持仓的收益和低换手不能解释为优化器持续正常运行。表中调仓 P95 仅统计成功发布目标的完整优化与整手修复，完整账户回放耗时和失败数另列，未记录的失败输入校验耗时不作估算。</p>
 <h2>约束与实际执行的边界</h2><p>连续目标残差验收上限为 1e-7；整数修复采用原执行层的现金、费用、可卖数量与整手规则，不声称整数全局最优。真实成交后，持仓可能偏离目标，实际收盘持仓的风险另行预测。原生账本逐笔复式记账复核，实际持仓是整数股、现金非负。未解释的错误使工程验收保持未完成。</p>"""
     (out / "portfolio-report.html").write_text(
         page("200 家样本：优化组合、风险交叉预测与执行", portfolio_body), encoding="utf8"

@@ -267,3 +267,11 @@ restore and SHA-256 verification. Never replace an old manifest or a changed
 output; start a new run. Restore the fixed environment and archived inputs into
 fresh paths and rerun the commands with the recorded specification. No service
 or account rollback is needed for this isolated research workflow.
+
+After all scenario and engineering checks have passed, freeze and restore the
+final report/source evidence with `study_v3_delivery.py --data DATA --backup
+BACKUP --code CODE_ENVIRONMENT_ROOT --version delivery-v1`. The immutable
+manifest excludes only the reproducible daily exposure cache. Original raw
+inputs have their separate original/supplemental manifests. Restoring the
+environment from the lock still needs package sources; the same-machine copy
+does not claim an offline environment or an independent hardware backup.
