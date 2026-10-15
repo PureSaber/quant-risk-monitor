@@ -253,7 +253,7 @@ def run(out, independent, batch_id, *, allow_partial=False):
             "成交额/初始资金": row.get("gross_traded_notional_over_initial_capital"),
             "成功调仓P95秒": row.get("rebalance_p95_seconds"),
             "全回放秒": row.get("wall_seconds"),
-            "进程峰值MiB": row.get("process_peak_bytes", 0) / 1024**2,
+            "峰值工作集MiB": row.get("process_peak_bytes", 0) / 1024**2,
         }
         accounts.append(record)
         if "outputs" not in row:
@@ -358,7 +358,7 @@ def run(out, independent, batch_id, *, allow_partial=False):
         diagnosis += f"""<h2>紧跟踪误差限制的原因诊断</h2><p>这是事后解释，不参与参数选择或账户交易。研究样本基准最大单股权重介于 {low:.2%} 和 {high:.2%}；组合单股上限为 5%。先保留确切仓位预算与单股上限，暂不加换手、费用和整数约束，计算连续最小主动风险。这个乐观下界超过 TE 上限时，更严格的账户问题也无法通过；下界低于上限不等于账户可执行。</p>
 <p>诊断共 {floor['problems']} 个问题，失败 {floor['failure_count']} 个；实际账户配置和失败记录没有因此改变。</p><div class="scroll">{table(pd.DataFrame(floor['results']))}</div><p><a href="tracking-error-floor-diagnostic.csv">逐日下界</a> · <a href="tracking-error-floor-diagnostic.json">诊断摘要与模型绑定</a></p>"""
     if (out / "resource-incident.json").exists():
-        diagnosis += """<h2>共享机器的资源限制</h2><p class="note">增加补充工作进程后曾触发 Windows 内存提交压力，出现 MemoryError 和进程崩溃。空闲物理内存不能单独证明可以继续扩大并行。补充批次已停止，主批次恢复四个工作进程；原始失败和取消现场保留，再从初始账户重做未完成场景。部分耗时包含临时额外进程竞争，因此不构成专用机器性能承诺。</p><p><a href="resource-incident.json">资源故障、处理及原始证据摘要</a> · <a href="failed-attempts/memory-pressure-01/receipt.json">重试前保存的失败现场</a></p>"""
+        diagnosis += """<h2>共享机器的资源限制</h2><p class="note">增加补充工作进程后曾触发 Windows 内存提交压力，出现 MemoryError 和进程崩溃。空闲物理内存不能单独证明可以继续扩大并行。补充批次已停止，主批次恢复四个工作进程；原始失败和取消现场保留，再从初始账户重做未完成场景。表中的峰值内存为工作集；Windows 私有提交内存可能显著更高，不能据工作集推算并发容量。部分耗时包含临时额外进程竞争，因此不构成专用机器性能承诺。</p><p><a href="resource-incident.json">资源故障、处理及原始证据摘要</a> · <a href="failed-attempts/memory-pressure-01/receipt.json">重试前保存的失败现场</a></p>"""
     portfolio_body = f"""<p class="note">完成 {len(results)}/62 个进程。状态统计：{html.escape(str(status_counts))}。不同终点的诊断前缀不能用来排序完整期间收益；全部目标失败而留在现金的场景也不是成功投资组合。</p>
 <p>每 5 个交易日调仓，初始资金 100 万元，预算 95%/80%，单股上限 5%，首次建仓完整计费，其后 L1 换手上限 20%。3%/6% 是模型预测的年化跟踪误差上限；表中实际 TE 来自账户与完整研究样本基准的五日复合收益差，二者不能互相替代。基准端点缺失的窗口不填零、不重新归一化。</p>
 <h2>原生账户比较</h2><div class="scroll">{table(account_frame)}</div>

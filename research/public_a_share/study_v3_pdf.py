@@ -272,7 +272,7 @@ def run(root, target, font):
     section("可复现边界")
     if (root / "resource-incident.json").exists():
         story.append(p(
-            "资源限制：补充批次扩大并行后曾触发 Windows 内存提交压力，出现 MemoryError 和进程崩溃。已停止补充批次，恢复四个主工作进程，保留失败现场并重做未完成账户。空闲物理内存不能单独作为增加并发的依据；部分耗时包含临时额外进程竞争，不构成专用机器性能承诺。详见 resource-incident.json。"
+            "资源限制：补充批次扩大并行后曾触发 Windows 内存提交压力，出现 MemoryError 和进程崩溃。已停止补充批次，恢复四个主工作进程，保留失败现场并重做未完成账户。峰值工作集与 Windows 私有提交内存分别解释，空闲物理内存不能单独作为增加并发的依据；部分耗时包含临时额外进程竞争，不构成专用机器性能承诺。详见 resource-incident.json。"
         ))
     story.append(
         p(
