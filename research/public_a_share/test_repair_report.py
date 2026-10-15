@@ -1,6 +1,8 @@
+import json
+
 import pandas as pd
 import pytest
-from repair_report import cross_metrics
+from repair_report import compare_branch_prefixes, cross_metrics
 
 
 def forecast_rows():
@@ -34,3 +36,27 @@ def test_cross_risk_retains_missing_date_and_minimum_block_gate():
         assert result["complete_dates"] == 19
         assert result["comparisons"]["repaired_ols"]["simultaneous_95_interval"] is None
         assert not result["comparisons"]["repaired_ols"]["historical_improvement"]
+
+
+def test_branch_check_exposes_differences_before_rights_without_seeing_later_outcomes(tmp_path):
+    folders = [tmp_path / label for label in ("strict", "sensitivity_floor")]
+    for folder in folders:
+        folder.mkdir()
+        pd.DataFrame({"event_time": [pd.Timestamp("2024-07-04", tz="UTC")],
+                      "nav_units": [1000000], "nav_scale": [0]}).to_parquet(
+            folder / "portfolio_snapshots.parquet", index=False
+        )
+        (folder / "allocation-decisions.json").write_text(json.dumps([
+            {"session": "2024-07-04", "targets": {"600763": 100}},
+            {"session": "2024-07-05", "targets": {"600763": 200 if folder == folders[0] else 500}},
+        ]))
+    accounts = pd.DataFrame({"branch": [p.name for p in folders], "scenario": [16, 16],
+                             "folder": [str(p) for p in folders]})
+    assert compare_branch_prefixes(accounts).iloc[0].pre_rights_economic_prefix_equal
+    path = folders[1] / "allocation-decisions.json"
+    rows = json.loads(path.read_text())
+    rows[0]["targets"]["600763"] = 0
+    path.write_text(json.dumps(rows))
+    checked = compare_branch_prefixes(accounts).iloc[0]
+    assert not checked.pre_rights_economic_prefix_equal
+    assert checked.first_difference == "2024-07-04"

@@ -98,6 +98,42 @@ def old_integer_audit(source, audit, out, models, bars, statuses):
     return summary
 
 
+def compare_branch_prefixes(accounts):
+    """Do not attribute differences predating the rights event to rounding."""
+    results = []
+    strict = accounts[accounts.branch.eq("strict")].set_index("scenario")
+    for row in accounts[~accounts.branch.eq("strict")].itertuples():
+        original = Path(strict.loc[row.scenario, "folder"])
+        candidate = Path(row.folder)
+        a, b = [
+            {r["session"]: r for r in read(folder / "allocation-decisions.json")
+             if r["session"] < "2024-07-05"}
+            for folder in (original, candidate)
+        ]
+        assert set(a) == set(b), "branch omits a pre-entitlement decision"
+        differences = []
+        for day in a:
+            left, right = a[day], b[day]
+            if left.get("status") != right.get("status") or left.get("targets") != right.get("targets"):
+                differences.append(day)
+        navs = []
+        for folder in (original, candidate):
+            frame = pd.read_parquet(folder / "portfolio_snapshots.parquet")
+            dates = pd.to_datetime(frame.event_time, utc=True).dt.tz_convert("Asia/Shanghai")
+            frame = frame[dates.dt.strftime("%Y-%m-%d").lt("2024-07-05")]
+            navs.append(frame[["event_time", "nav_units", "nav_scale"]].reset_index(drop=True))
+        equal_nav = navs[0].equals(navs[1])
+        results.append({
+            "branch": row.branch, "scenario": row.scenario, "cutoff_exclusive": "2024-07-05",
+            "decisions": len(a), "decision_differences": len(differences),
+            "first_difference": differences[0] if differences else None,
+            "exact_nav_prefix_equal": equal_nav,
+            "pre_rights_economic_prefix_equal": not differences and equal_nav,
+            "scope": "earliest rights event; later timed-search differences still require inspection",
+        })
+    return pd.DataFrame(results)
+
+
 def run(args):
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
@@ -200,6 +236,8 @@ def run(args):
         }
     accounts = pd.DataFrame(records)
     accounts.to_csv(out / "portfolio-before-after.csv", index=False, encoding="utf-8-sig")
+    prefixes = compare_branch_prefixes(accounts)
+    prefixes.to_csv(out / "branch-prefix-comparison.csv", index=False)
     pd.DataFrame(failures).to_csv(out / "new-failure-inventory.csv", index=False, encoding="utf-8-sig")
     write_json(out / "account-independent-checks.json", checks)
     required_sensitive = {r["scenario"] for r in old_results if not r.get("full_horizon_completed")}
@@ -216,6 +254,9 @@ def run(args):
         else "complete_with_explicit_unresolved_cases",
         "branches": branches, "required_sensitivity_scenarios": sorted(required_sensitive),
         "sensitivity_coverage_complete": sensitivities_complete,
+        "pre_entitlement_branch_differences": (
+            int((~prefixes.pre_rights_economic_prefix_equal).sum()) if len(prefixes) else None
+        ),
         "original_integer_failures": integer_summary["counts"],
         "data_failures": evidence, "constraint_certificates": certificates,
         "all_published_targets_independently_verified": True,
@@ -248,6 +289,8 @@ def run(args):
 <p>严格主线遇到无法唯一确定的账户权益继续停止。600763 的零碎股分配依赖登记机构全体账户排序；
 敏感性分支分别取公告规则允许的下、上整数结果。603007 最终方案明确舍去小数，但公告比例近似，
 虚拟账户最终登记数量及实际到账仍不能凭空确认；两个敏感性分支均按该规则取下整数，到账日是假设。</p>
+<p>另核对最早权益事件之前的目标与原生净值，见 <a href="branch-prefix-comparison.csv">分支前缀一致性</a>。
+若权益事件前已有调仓搜索或执行路径差异，后续分支收益差不能仅归因于零碎权益；受时间上限约束的搜索不承诺跨负载逐笔一致。</p>
 <h2>逐场景实施结果</h2><div class="scroll">{table(display)}</div>
 <p>仅终点相同的账户可以比较同区间净收益。3%/6% 限制是预测 TE，实际 TE 是随后已实现收益的统计量。
 首次目标计算全部成本，此后换手上限 20%；独立核验现金、最低佣金、印花税、整手、零股卖出及 T+1。
