@@ -22,7 +22,7 @@ jobs:
       - name: Install research test dependencies
         run: >-
           python -m pip install numpy==2.5.4 pandas==3.0.6 requests==2.34.2
-          beautifulsoup4==4.15.0 pypdf==6.20.1 pymupdf==1.28.2
+          beautifulsoup4==4.15.0 pypdf==6.20.1 pymupdf==1.28.2 pyarrow==25.0.1
           pytest==9.1.1 ruff==0.16.10
       - name: Offline original-document and PIT tests
         run: python -m pytest research/public_a_share -q

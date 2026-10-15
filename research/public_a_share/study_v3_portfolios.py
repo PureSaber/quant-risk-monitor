@@ -632,3 +632,6 @@ if __name__ == "__main__":
     result = run(args.out, args.scenario, limit_dates=args.limit_dates)
     if result["status"] == "failed":
         raise SystemExit(1)
+    # Resumed verified artifacts need a log identity just like newly run accounts.
+    print(json.dumps({"scenario": args.scenario, "identity": result["identity"],
+                      "status": result["status"], "artifact_receipt": "complete.json"}), flush=True)
