@@ -77,6 +77,11 @@ def old_integer_audit(source, audit, out, models, bars, statuses):
         else:
             diagnostic = row.get("diagnostics", {})
             result["failure_stage"] = diagnostic.get("failure_stage", "integer_repair")
+            attempts = diagnostic.get("repair_attempts", [])
+            result["search_termination"] = [a.get("termination") for a in attempts]
+            result["best_unverified_residual"] = min(
+                (a["residual"] for a in attempts if "residual" in a), default=None
+            )
             result["explanation"] = (
                 "time budget exhausted; no integer infeasibility proof"
                 if row["status"] == "timeout" else
@@ -114,7 +119,7 @@ def run(args):
     statuses = pd.read_parquet(args.source / "source-trading-status.parquet")
     old_results = batch_results(args.source, "cadence-03", allow_partial=False)
     old_by_id = {r["scenario"]: r for r in old_results}
-    checks, records, failures, branches = {}, [], [], {}
+    checks, records, failures, branches, cross_readouts = {}, [], [], {}, []
     for label, root, batch in args.branch:
         rows = batch_results(Path(root), batch, allow_partial=label != "strict" or args.partial)
         if not args.partial and any("outputs" not in r for r in rows):
@@ -172,6 +177,16 @@ def run(args):
             inference, calibration = cross_metrics(merged)
             write_json(out / f"{label}-cross-inference.json", inference)
             calibration.to_csv(out / f"{label}-risk-underestimation.csv", index=False)
+            for objective, kinds in inference.items():
+                for kind, result in kinds.items():
+                    selected = result.get("comparisons", {}).get("enhanced_s0.1_f90_d60_p10", {})
+                    cross_readouts.append({
+                        "分支": label, "风险": objective, "组合": kind,
+                        "共同完整日期": result.get("complete_dates", 0),
+                        "冻结增强模型相对旧OLS平均损失差": selected.get("mean_delta"),
+                        "多重校正95%区间": str(selected.get("simultaneous_95_interval")),
+                        "推断状态": result.get("inference_status", "unavailable"),
+                    })
         branches[label] = {
             "scenarios": sorted(row["scenario"] for row in rows),
             "status_counts": dict(Counter(row["status"] for row in rows)),
@@ -213,6 +228,13 @@ def run(args):
                         "old_published", "published", "decisions", "effective_rebalance_rate",
                         "longest_no_target_rebalances", "evaluated_through", "net_return",
                         "actual_annualized_tracking_error", "total_fees", "rebalance_p95_seconds"]]
+    cross_links = "".join(
+        f'<li>{html.escape(label)}：<a href="{label}-cross-predictions.parquet">逐期预测</a> · '
+        f'<a href="{label}-cross-coverage.csv">覆盖与缺失</a> · '
+        f'<a href="{label}-cross-inference.json">区块推断</a> · '
+        f'<a href="{label}-risk-underestimation.csv">生成模型×预测模型校准</a></li>'
+        for label in branches if (out / f"{label}-cross-predictions.parquet").exists()
+    )
     body = f"""<p class="note">工程研究状态：{html.escape(acceptance['engineering_research_delivery'])}。
 模型推广未通过，新增独立窗口为 0；默认 v1、旧账户、基准和全部投资约束保持原样。
 目标生成率与成交完成率分开；净收益含目标失败后的原持仓延续，不代表持续正常调仓。</p>
@@ -231,6 +253,7 @@ P95 为成功发布目标的端到端调仓时间；所有失败及超时留在�
 同一组合的实际五日收益保持一致。缺报价或风险输入保留缺失，不补零、不重新归一化。
 推断按日期联合区块重采样 5,000 次、每块十日并校正多重比较；少于 20 个共同日期不输出区间。
 绝对风险为零的全现金组合仍保留相对完整基准的主动风险。该固定权重风险评价与含费用的真实账户收益分别展示。</p>
+<div class="scroll">{table(pd.DataFrame(cross_readouts))}</div><ul>{cross_links}</ul>
 <p>风险覆盖使用单独版本的 252 日历窗口、至少 126 个观测和有效样本量 20；完整历史原计算保持不变。
 停牌估值及旧暴露明确标记，不当作真实成交或零收益。缺可靠当前暴露的资产继续拒绝；不以覆盖改善宣称模型更准确。</p>
 <h2>可复算证据</h2><ul>
