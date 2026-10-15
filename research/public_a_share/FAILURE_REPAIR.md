@@ -54,6 +54,16 @@ Strict runs preserve unresolved rights. Sensitivity runs explicitly assume the
 announced delivery/listing day and permitted fractional result. Later annual-report
 confirmation is audit evidence only. Exact registered amounts are not invented.
 
+Longer sensitivity replays exposed another fractional distribution: 001210 on
+2026-06-05. Its 2025 and 2026 implementation notices confirm additional ratios
+0.2 and 0.4, with largest-tail allocation and random ties, credited and tradable
+on 2025-06-09 and 2026-06-05 respectively. The separately identified `extended`
+configurations retain every earlier rule and add only these evidenced endpoints.
+They do not overwrite the base branch's safe stop or infer registrar facts.
+Document hashes, availability times and collection time are in
+`failure_repair_configs/001210-evidence-v1.json`. Final report acceptance requires
+an extended receipt for every base sensitivity account stopped on this asset.
+
 ## Replays and restoration
 
 Use `study_v3_batch.py --source OLD --out NEW --coverage NEW_COVERAGE

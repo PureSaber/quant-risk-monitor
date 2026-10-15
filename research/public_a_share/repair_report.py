@@ -18,6 +18,28 @@ from study_v3_report import batch_results, facts_table, page, read, table
 from study_v3_risk import paired_summary
 
 
+def supplemental_coverage(accounts, stops):
+    """Newly exposed rights need their own replay, never an edited prior receipt."""
+    required = {}
+    for endpoint in ("floor", "ceil"):
+        base = f"sensitivity_{endpoint}"
+        extended = base + "_extended"
+        scenarios = sorted({row["scenario"] for row in stops
+                            if row["branch"] == base and row["asset"] == "001210"})
+        observed = set(accounts.loc[accounts.branch.eq(extended), "scenario"])
+        unresolved = {row["scenario"] for row in stops
+                      if row["branch"] == extended and row["asset"] == "001210"}
+        required[extended] = {
+            "required_scenarios": scenarios,
+            "verified_scenarios": sorted(observed),
+            "missing_scenarios": sorted(set(scenarios) - observed),
+            "unexpected_same_asset_stops": sorted(unresolved),
+        }
+    complete = all(not row["missing_scenarios"] and not row["unexpected_same_asset_stops"]
+                   for row in required.values())
+    return complete, required
+
+
 def cross_metrics(frame):
     """Keep missing forecasts in the paired date filter, not just finite rows."""
     if frame.empty:
@@ -157,7 +179,7 @@ def run(args):
     old_results = batch_results(args.source, "cadence-03", allow_partial=False)
     old_by_id = {r["scenario"]: r for r in old_results}
     checks, records, failures, branches, cross_readouts = {}, [], [], {}, []
-    stale_rows, unchanged_rows = [], []
+    stale_rows, unchanged_rows, stop_records = [], [], []
     for label, root, batch in args.branch:
         rows = batch_results(Path(root), batch, allow_partial=label != "strict" or args.partial)
         if not args.partial and any("outputs" not in r for r in rows):
@@ -190,6 +212,8 @@ def run(args):
                     })
             if (folder / "full-horizon-stop.json").exists():
                 stop = read(folder / "full-horizon-stop.json")
+                stop_records.append({"branch": label, "scenario": row["scenario"],
+                                     "asset": stop.get("asset"), "at": stop.get("at")})
                 checked["entitlement_stop_context"] = entitlement_stop_context(stop, positions)
                 failures.append({"branch": label, "scenario": row["scenario"],
                                  "date": stop["at"], "status": "execution_input_stop",
@@ -257,14 +281,18 @@ def run(args):
     ].tolist())
     sensitivities_complete = all(required_sensitive <= set(branches.get(label, {}).get("scenarios", []))
                                  for label in ("sensitivity_floor", "sensitivity_ceil"))
+    supplements_complete, supplements = supplemental_coverage(accounts, stop_records)
     integer_summary = old_integer_audit(args.source, args.integer_audit, out, old_models, bars, statuses)
     evidence = read(args.evidence / "data-failure-evidence.json")
     certificates = read(args.certificates / "constraint-certificates.json")
     acceptance = {
-        "engineering_research_delivery": "partial" if args.partial or not sensitivities_complete
+        "engineering_research_delivery": "partial" if (
+            args.partial or not sensitivities_complete or not supplements_complete)
         else "complete_with_explicit_unresolved_cases",
         "branches": branches, "required_sensitivity_scenarios": sorted(required_sensitive),
         "sensitivity_coverage_complete": sensitivities_complete,
+        "supplemental_entitlement_coverage_complete": supplements_complete,
+        "supplemental_entitlement_cases": supplements,
         "pre_entitlement_branch_differences": (
             int((~prefixes.pre_rights_economic_prefix_equal).sum()) if len(prefixes) else None
         ),
@@ -301,6 +329,11 @@ def run(args):
 <p>严格主线遇到无法唯一确定的账户权益继续停止。600763 的零碎股分配依赖登记机构全体账户排序；
 敏感性分支分别取公告规则允许的下、上整数结果。603007 最终方案明确舍去小数，但公告比例近似，
 虚拟账户最终登记数量及实际到账仍不能凭空确认；两个敏感性分支均按该规则取下整数，到账日是假设。</p>
+<p>延长回放另暴露了 001210 的零碎转增权益。其
+<a href="https://disc.static.szse.cn/disc/disk03/finalpage/2025-05-29/c5d0692e-b7ca-4679-b4f0-d7f22158e977.PDF">2025 年实施公告</a>与
+<a href="https://static.cninfo.com.cn/finalpage/2026-05-28/1225333207.PDF">2026 年实施公告</a>
+规定按尾数排序、相同尾数随机分配。新增 extended 分支采用同样规则允许的整数端点，
+保留原分支的安全中止；它们不是登记事实，也不改变严格主线。新旧分支分别绑定规则摘要。</p>
 <p>另核对最早权益事件之前的目标与原生净值，见 <a href="branch-prefix-comparison.csv">分支前缀一致性</a>。
 若权益事件前已有调仓搜索或执行路径差异，后续分支收益差不能仅归因于零碎权益；受时间上限约束的搜索不承诺跨负载逐笔一致。</p>
 <h2>逐场景实施结果</h2><div class="scroll">{table(display)}</div>

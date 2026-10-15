@@ -91,9 +91,14 @@ def run(args):
     ):
         collect_tree(entries, label, root)
     for name in ("environment-verification.json", "release-evidence.json", "runtime-pins.lock",
-                 "share-rules-strict.json", "share-rules-sensitivity_floor.json",
-                 "share-rules-sensitivity_ceil.json", "RECOVERY.md", "IMPLEMENTATION.md"):
+                 "RECOVERY.md", "IMPLEMENTATION.md"):
         entries["environment/" + name] = args.code / name
+    for path in args.code.glob("share-rules-*.json"):
+        entries["environment/" + path.name] = path
+    for name in ("prepare_001210_sensitivity.py", "run_extended_sensitivity.py"):
+        path = args.code / name
+        if path.exists():
+            entries["environment/" + name] = path
     for path in args.code.glob("*.log"):
         entries["engineering-logs/" + path.name] = path
     source = args.data / "runs/main"

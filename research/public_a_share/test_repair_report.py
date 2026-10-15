@@ -2,7 +2,7 @@ import json
 
 import pandas as pd
 import pytest
-from repair_report import compare_branch_prefixes, cross_metrics
+from repair_report import compare_branch_prefixes, cross_metrics, supplemental_coverage
 
 
 def forecast_rows():
@@ -16,6 +16,18 @@ def forecast_rows():
         for day in pd.date_range("2024-01-01", periods=21)
         for model, loss in (("legacy_ols", 2), ("repaired_ols", 1))
     ]
+
+
+def test_newly_exposed_entitlement_requires_separate_evidenced_replay():
+    accounts = pd.DataFrame({"branch": ["strict", "sensitivity_floor"], "scenario": [0, 0]})
+    stops = [{"branch": "sensitivity_floor", "scenario": 0, "asset": "001210"}]
+    complete, evidence = supplemental_coverage(accounts, stops)
+    assert not complete
+    assert evidence["sensitivity_floor_extended"]["missing_scenarios"] == [0]
+    accounts.loc[len(accounts)] = ["sensitivity_floor_extended", 0]
+    assert supplemental_coverage(accounts, stops)[0]
+    stops.append({"branch": "sensitivity_floor_extended", "scenario": 0, "asset": "001210"})
+    assert not supplemental_coverage(accounts, stops)[0]
 
 
 def test_cross_risk_rejects_different_actual_returns_for_same_portfolio():
