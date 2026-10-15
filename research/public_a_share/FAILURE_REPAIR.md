@@ -71,3 +71,34 @@ overwrite new ledgers or replay corrected actions into an already credited accou
 restore a checkpoint before the event and create a separately identified replay.
 Keep raw input hashes and a same-machine cross-drive recovery copy. Such a copy
 is not an independent-hardware backup. D/F/C storage budgets remain 25/20/5 GiB.
+
+## Repaired ordinary environment
+
+Install `requirements-failure-repair.lock` in a new Python 3.10–3.12 environment;
+never modify the original v3 environment. Verify `pip check`, installed Git commit
+IDs, and that imports come from that environment's `site-packages` (no editables).
+Set `QUANT_RISK_SOURCE` to the installed `quant_risk_monitor` directory when using
+the standalone research scripts: their legacy bootstrap otherwise seeks an old
+checkout. Set OPENBLAS/OMP/MKL thread counts to one before launching Python.
+
+The fixed 102 historical accounts now yield 65 independently verified executable
+targets and 37 bounded-search failures. Both 2024-01-05 witnesses (41/46) pass.
+These are isolated original-account cases, not a new strategy performance path.
+The unchanged input certificates confirm 5,551 structural and 14 turnover
+conflicts; 26 scenarios remain infeasible across every original decision date.
+
+`repair_evidence.py` checks all 2,893 original missing-union cases and the 19
+corporate-action stops. New partial histories fully cover 1,549 original unions;
+1,344 still lack reliable current exposures. Missing fields and unknown trading
+states are retained by asset/date; coverage improvement is not model promotion.
+All 19 original corporate-action accounts still have unresolved exact rights in
+the strict evidence policy. Public final-plan rounding rules inform only the
+labelled sensitivity assumptions when actual registry quantities are absent.
+
+`repair_report.py` verifies native exact journals, independently recalculates
+fee quotes, shares, T+1, cash, post-fee weights and factor-form risk. It produces
+per-branch full account comparisons and cross predictions; it refuses to mark
+delivery complete until all 62 strict scenarios and the required sensitivity
+scenarios have receipts. Use a new output directory for every report version.
+The current source contains the report pipeline; final full replay acceptance
+must be read from its generated `acceptance.json`, not inferred from unit tests.

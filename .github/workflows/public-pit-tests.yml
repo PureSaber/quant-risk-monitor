@@ -21,7 +21,7 @@ jobs:
           python-version: "3.12"
       - name: Install research test dependencies
         run: >-
-          python -m pip install numpy==2.5.4 pandas==3.0.6 requests==2.34.2
+          python -m pip install numpy==2.2.6 pandas==2.3.3 requests==2.34.2
           beautifulsoup4==4.15.0 pypdf==6.20.1 pymupdf==1.28.2 pyarrow==25.0.1
           cvxpy==1.7.5 clarabel==0.11.1 osqp==1.0.5
           pytest==9.1.1 ruff==0.16.10

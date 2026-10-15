@@ -8,8 +8,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
-
 from repair_failure_audit import date_rows, decimal_column, frozen_accounts
+
 from study_v3_archive import digest, write_json
 
 
@@ -25,6 +25,7 @@ def run(source, coverage, config_dir, out):
     with (coverage / "portfolio-risk-models.pkl").open("rb") as stream:
         expanded = pickle.load(stream)
     rules = json.loads((config_dir / "share-rules-strict.json").read_text())["rules"]
+    quality = pd.read_parquet(source / "daily-quality.parquet").set_index(["date", "asset"])
     gap_rows, asset_rows, actions = [], [], []
     for scenario, folder in frozen_accounts(source):
         positions = pd.read_parquet(folder / "positions.parquet")
@@ -54,6 +55,8 @@ def run(source, coverage, config_dir, out):
                 }
             )
             for asset in old_missing:
+                observation = quality.loc[(day, asset)]
+                missing_fields = str(observation.price_descriptor_missing).split(",")
                 asset_rows.append(
                     {
                         "scenario": scenario,
@@ -62,6 +65,15 @@ def run(source, coverage, config_dir, out):
                         "asset": asset,
                         "now_covered": asset not in new_missing,
                         **new["coverage"].get(asset, {"status": "missing_coverage_record"}),
+                        "missing_price_descriptors": [s for s in missing_fields if s],
+                        "capitalization_available": bool(observation.capitalization_available),
+                        "trading_status_unknown": bool(observation.trading_status_unknown),
+                        "recovery_conditions": (
+                            [] if asset not in new_missing else
+                            ["reliable point-in-time current exposure with required price descriptors",
+                             "known tradability, or evidenced suspension with dated valuation",
+                             "126 observed residuals and effective sample size 20 within 252 sessions"]
+                        ),
                     }
                 )
         stop_path = folder / "full-horizon-stop.json"
@@ -139,6 +151,15 @@ def run(source, coverage, config_dir, out):
             "fully_covered_by_new_model": sum(row["risk_union_covered"] for row in gap_rows),
             "still_uncovered": sum(not row["risk_union_covered"] for row in gap_rows),
             "asset_coverage_status": dict(Counter(row["status"] for row in asset_rows)),
+            "uncovered_asset_observations": sum(not row["now_covered"] for row in asset_rows),
+            "uncovered_unknown_trading_status": sum(
+                not row["now_covered"] and row["trading_status_unknown"] for row in asset_rows
+            ),
+            "uncovered_missing_field_counts": dict(Counter(
+                field for row in asset_rows if not row["now_covered"]
+                for field in row["missing_price_descriptors"]
+            )),
+            "field_quality_source_sha256": digest(source / "daily-quality.parquet"),
             "corporate_action_stops": len(actions),
             "corporate_action_assets": dict(Counter(row["asset"] for row in actions)),
             "strict_entitlement_status": dict(Counter(row["strict_status"] for row in actions)),

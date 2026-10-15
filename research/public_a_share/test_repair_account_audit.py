@@ -1,7 +1,6 @@
 from decimal import Decimal
 
 import pandas as pd
-
 from repair_account_audit import exact_quote
 
 

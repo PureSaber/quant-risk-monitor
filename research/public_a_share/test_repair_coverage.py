@@ -2,9 +2,9 @@ from copy import deepcopy
 
 import numpy as np
 import pandas as pd
+from repair_risk_coverage import extend_day
 
 from quant_risk_monitor.factor_model import ExposureSnapshot, FactorModelConfig
-from repair_risk_coverage import extend_day
 
 
 def test_risk_union_extension_keeps_candidates_benchmark_and_complete_assets_unchanged():

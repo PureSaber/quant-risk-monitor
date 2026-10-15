@@ -4,8 +4,8 @@ from decimal import ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_UP, Decimal
 
 import numpy as np
 import pandas as pd
-
 from repair_failure_audit import date_rows, decimal_column
+
 from study_v3_report import read, verify_account
 
 
@@ -28,7 +28,7 @@ def exact_quote(quantity, mark, day):
     return cash_change, -cash_change - quantity * mark
 
 
-def verify(folder, models, bars, statuses):
+def verify(folder, models, bars, statuses, *, replacement=None):
     spec = read(folder / "specification.json")
     result = verify_account(folder, models, spec)
     positions = pd.read_parquet(folder / "positions.parquet")
@@ -36,6 +36,13 @@ def verify(folder, models, bars, statuses):
     fills = pd.read_parquet(folder / "fills.parquet")
     decisions = read(folder / "allocation-decisions.json")
     published, maximum, trace = 0, 0.0, []
+    if replacement is not None:
+        # Each frozen failure is an isolated counterfactual, not a replacement
+        # account path. Its turnover policy depends on the ORIGINAL past.
+        published = sum(
+            "weights" in row and row["session"] < replacement["session"] for row in decisions
+        )
+        decisions = [replacement]
     for row in decisions:
         if "weights" not in row:
             continue
@@ -87,7 +94,7 @@ def verify(folder, models, bars, statuses):
                 )
             if statuses.at[day, asset] != 1:
                 assert delta == 0, "trade changes holding with unavailable trading status"
-            movement, friction = exact_quote(delta, marks[asset], day)
+            movement, friction = exact_quote(delta, marks[asset], day) if delta else (0, 0)
             change += movement
             cost += friction
         execution = row["diagnostics"]["execution"]
@@ -97,10 +104,20 @@ def verify(folder, models, bars, statuses):
         assert abs(post_nav - Decimal(execution["post_fee_nav"])) <= Decimal(".00000001")
         assert cash + change >= 0
         actual = pd.Series(
-            {a: float(q * marks[a] / post_nav) for a, q in targets.items()}, dtype=float
+            {a: float(q * marks[a] / post_nav) for a, q in targets.items() if q}, dtype=float
         ).reindex(union, fill_value=0)
         claimed = pd.Series(execution["integer_weights"], dtype=float).reindex(union, fill_value=0)
         assert np.max(np.abs(actual - claimed)) <= 1e-10
+        risk = models[day]["models"][spec["model"]]
+        x = risk["exposures"]
+        benchmark = models[day]["benchmark"].reindex(x.index, fill_value=0).to_numpy()
+        for candidate in (w, actual):
+            active = candidate.reindex(x.index, fill_value=0).to_numpy() - benchmark
+            factor = x.to_numpy().T @ active
+            variance = factor @ risk["F_daily_rate"] @ factor
+            variance += (active * active) @ risk["D_daily_rate"]
+            if spec.get("te") is not None:
+                residual = max(residual, float(np.sqrt(max(variance, 0) * 252) - spec["te"]))
         residual = max(
             residual,
             float(actual.sum() - spec["budget"]),
