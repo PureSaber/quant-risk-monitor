@@ -178,3 +178,76 @@ selection bindings, producer-code snapshots, and an independent forecast audit i
 validator is retained as `verify_confirmation.py` in the same archive. The original
 study's producer hashes remain intact: later parser-validation hardening did not
 change its actual descriptor values, as recorded in `independent-model-validation.json`.
+
+## Fixed 200-company study v3
+
+The v3 experiment integrates the v2 exposure candidate with the current optimizer
+and native A-share execution bridge. It does not change the default exposure
+definition, promote a strategy, or modify frozen accounts. The cutoff is
+2026-09-30; 2023 is development and every observed 2024–2026 outcome is explicitly
+retrospective. Eighty genuinely independent five-session windows remain required
+for any later promotion decision.
+
+Use an ordinary installed environment, the exact repository revisions and the
+frozen dependency manifest. `OLD` and `V2` below are read-only input archives;
+`DATA`, `BACKUP` and `RUN` must be separate dedicated directories. The approved
+local budgets are 25 GiB for data, 20 GiB for the same-machine recovery copy and
+5 GiB for code/environment, retaining 40 GiB free on the system drive.
+
+```text
+python research/public_a_share/study_v3_archive.py --old OLD --exposure V2 --out DATA --backup BACKUP
+python research/public_a_share/study_v3_inputs.py --old OLD --exposure V2 --out RUN
+python research/public_a_share/study_v3_quality.py --help
+python research/public_a_share/study_v3_risk.py --out RUN
+python research/public_a_share/study_v3_execution_inputs.py --help
+python research/public_a_share/study_v3_batch.py --out RUN --workers 4 --batch-id unique-run-id
+python research/public_a_share/study_v3_recompute.py --old DATA/inputs/old --exposure DATA/inputs/exposure --reference RUN --out EMPTY_RECOMPUTATION
+python research/public_a_share/study_v3_recovery.py --data DATA --backup BACKUP --code CODE_ENVIRONMENT_ROOT
+```
+
+Run `--help` on the evidence collectors and execution-input builder for their
+explicit archive paths. Public responses, issuer PDFs, their actual capture
+times and source hashes are retained; failed captures require a new capture root
+when retried. Financial disclosure availability and actual collection time are
+separate. Revised financial facts are not overwritten. The ten old incomplete
+2026 windows are audited against original suspension records, without inserting
+zero returns or renormalizing surviving positions.
+
+The risk experiment fixes three exposure variants, the original twelve estimator
+configurations and five ablations. It uses joint date-block resampling (5,000
+draws, ten forecast dates per block), family-level aggregation and Bonferroni
+simultaneous intervals. Selection uses 2023 only. Independent recomputation uses
+an empty exposure cache and compares every forecast; dense covariance arithmetic
+is confined to explicit validation checks.
+
+There are 62 native-account scenarios: each investment budget (95% and 80%) has
+one equal-weight reference and six frozen model combinations with minimum
+variance, minimum active risk at 3%/6% TE, and IC-vol cost-aware momentum at
+3%/6% TE. All 22 risk configurations cross-predict the same continuous, integer
+and actual-close portfolios. Each account starts with CNY 1,000,000, a 5%
+single-name cap and a 20% subsequent L1 turnover cap. The full initial build pays
+actual native fees. The benchmark is the research-sample capitalization portfolio,
+not a market index. Prediction windows use linear five-session returns for risk
+loss; actual account returns and sample-benchmark returns compound independently.
+
+`complete.json` means the scenario process produced verified artifacts; inspect
+`full_horizon_completed`, `published`, failure statuses and the optional
+`full-horizon-stop.json` before interpreting performance. An unsupported exact
+entitlement rolls back the full replay. A separately rebuilt safe prefix is only
+diagnostic and never supplies post-failure NAV. An infeasible target retains the
+existing account and publishes no fallback. A pilot's `limit_dates` is part of
+its identity and must never be reported as a full-period result. Raw failed
+attempts and superseded run identities remain available.
+
+Use `tests/test_study_v3.py` and `tests/test_price_availability_index.py` in
+addition to the existing exposure/PIT/cache regressions. The execution bridge
+also tests exact daily/event parity, cached/uncached account parity, distinct
+exchange references and shareholder entitlements, fractional-share failure and
+guard rollback. These synthetic edge tests are separate from evidence actually
+encountered in the fixed historical sample.
+
+Recovery is a read-only source-to-object-store copy followed by a separate
+restore and SHA-256 verification. Never replace an old manifest or a changed
+output; start a new run. Restore the fixed environment and archived inputs into
+fresh paths and rerun the commands with the recorded specification. No service
+or account rollback is needed for this isolated research workflow.

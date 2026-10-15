@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from bisect import bisect_right
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -461,6 +462,7 @@ class CrossAssetRiskPolicy:
     limits: CrossAssetRiskLimits
     inputs: PITRiskInputs
     stress_scenarios: tuple[StressScenario, ...]
+    _price_index: Mapping = field(repr=False, compare=False)
 
     def __init__(
         self,
@@ -490,6 +492,7 @@ class CrossAssetRiskPolicy:
         object.__setattr__(self, "limits", limits)
         object.__setattr__(self, "inputs", inputs)
         object.__setattr__(self, "stress_scenarios", scenarios)
+        object.__setattr__(self, "_price_index", _price_availability_index(inputs.prices))
 
     def check_order(
         self,
@@ -694,16 +697,14 @@ class CrossAssetRiskPolicy:
         return None
 
     def _price(self, instrument_id: str, as_of: datetime) -> PriceObservation | RiskDecision:
-        value, status = _latest(
-            self.inputs.prices,
-            lambda item: item.instrument_id == instrument_id,
-            as_of,
-        )
-        if status == "missing":
+        indexed = self._price_index.get(instrument_id)
+        if indexed is None:
             return _reject("MISSING_PIT_PRICE", f"price is missing for {instrument_id}")
-        if status == "future":
+        available, winners = indexed
+        position = bisect_right(available, as_of) - 1
+        if position < 0:
             return _reject("PIT_PRICE_NOT_AVAILABLE", f"price is not available for {instrument_id}")
-        return value
+        return winners[position]
 
     def _fx(
         self,
@@ -1093,6 +1094,26 @@ class CrossAssetRiskPolicy:
                 if abs(snapshot.factor_drift_z[factor].to_decimal()) > limits.max_factor_drift_z:
                     return _reject("FACTOR_DRIFT_LIMIT", f"factor drift exceeds limit for {factor}")
         return None
+
+
+def _price_availability_index(prices):
+    """Immutable prefix maxima preserve observed-time priority and late revisions."""
+    grouped = {}
+    for value in prices:
+        grouped.setdefault(value.instrument_id, []).append(value)
+    index = {}
+    for instrument, values in grouped.items():
+        ordered = sorted(values, key=lambda value: (value.available_at, value.observed_at))
+        winner, winners = None, []
+        for value in ordered:
+            if winner is None or (value.observed_at, value.available_at) > (
+                winner.observed_at,
+                winner.available_at,
+            ):
+                winner = value
+            winners.append(winner)
+        index[instrument] = (tuple(value.available_at for value in ordered), tuple(winners))
+    return MappingProxyType(index)
 
 
 def _latest(
