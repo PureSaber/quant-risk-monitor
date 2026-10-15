@@ -19,7 +19,6 @@ import pandas as pd  # noqa: E402
 
 from repair_failure_audit import date_rows, decimal_column, frozen_accounts  # noqa: E402
 from study_v3_archive import digest, write_json  # noqa: E402
-from study_v3_portfolios import scenarios  # noqa: E402
 
 
 def linear_minimum(gradient, budget, cap):
@@ -135,6 +134,8 @@ def solve_bound(data, benchmark, budget, *, current=None, limit=None):
 
 
 def run(source, out):
+    from study_v3_portfolios import scenarios
+
     out.mkdir(parents=True, exist_ok=True)
     with (source / "portfolio-risk-models.pkl").open("rb") as stream:
         models = pickle.load(stream)

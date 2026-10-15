@@ -13,14 +13,8 @@ for variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
     os.environ[variable] = "1"
 
 import pandas as pd  # noqa: E402
-from a_share_multifactor.allocation_execution import executable_allocation  # noqa: E402
-from a_share_multifactor.config import CostsConfig  # noqa: E402
-from a_share_multifactor.run_contract import build_instrument_master  # noqa: E402
-from quant_data_kit import FixedPoint  # noqa: E402
-from quant_portfolio.solver import OptimizationError  # noqa: E402
 
 from study_v3_archive import digest, write_json  # noqa: E402
-from study_v3_portfolios import scenarios, schedule  # noqa: E402
 
 
 def frozen_accounts(source):
@@ -45,6 +39,14 @@ def date_rows(frame, day):
 
 
 def run(source, out):
+    from a_share_multifactor.allocation_execution import executable_allocation
+    from a_share_multifactor.config import CostsConfig
+    from a_share_multifactor.run_contract import build_instrument_master
+    from quant_data_kit import FixedPoint
+    from quant_portfolio.solver import OptimizationError
+
+    from study_v3_portfolios import scenarios, schedule
+
     out.mkdir(parents=True, exist_ok=True)
     modules = [
         importlib.import_module(name)
