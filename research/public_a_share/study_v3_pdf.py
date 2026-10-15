@@ -38,7 +38,8 @@ def run(root, target, font):
     )
     title = ParagraphStyle("Title", parent=body, fontSize=24, leading=32, spaceAfter=18)
     heading = ParagraphStyle(
-        "Heading", parent=body, fontSize=15, leading=21, spaceBefore=14, spaceAfter=10
+        "Heading", parent=body, fontSize=15, leading=21, spaceBefore=14, spaceAfter=10,
+        keepWithNext=True,
     )
     small = ParagraphStyle(
         "Small", parent=body, fontSize=8, leading=12, spaceAfter=0, alignment=TA_LEFT
@@ -246,6 +247,15 @@ def run(root, target, font):
         [24, 68, 120, 45, 44, 67, 32, 40, 59, 55, 55, 51],
     )
     section("执行限制与失败证据")
+    if (root / "tracking-error-floor-diagnostic.json").exists():
+        floor = read(root / "tracking-error-floor-diagnostic.json")
+        low, high = floor["benchmark_max_weight_range"]
+        above = sum(row["above_3pct"] for row in floor["results"])
+        story.append(p(
+            f"事后可行性诊断：样本基准最大单股权重为 {low:.2%}-{high:.2%}，而组合单股上限为 5%。"
+            f"在确切仓位预算下、尚未加入换手/费用/整数限制时，{above}/{floor['problems']} 个模型与日期组合的连续最小 TE 已超过 3%；诊断失败 {floor['failure_count']} 个。"
+            "这用于解释约束冲突，不改变账户参数；低于上限的乐观下界也不能保证实际可执行。详见 tracking-error-floor-diagnostic.json。"
+        ))
     story.append(
         p(
             "除权参考价与股东实际权益分开。无法精确确认的股份配送、零碎股份或其他执行输入会使完整回放回滚，另行重建的此前区间只用于诊断。不得据此虚构后续净值、股份或现金。整数修复不声称全局最优。"
@@ -260,6 +270,10 @@ def run(root, target, font):
     story.append(PageBreak())
     story.append(p("工程、存储与恢复", title))
     section("可复现边界")
+    if (root / "resource-incident.json").exists():
+        story.append(p(
+            "资源限制：补充批次扩大并行后曾触发 Windows 内存提交压力，出现 MemoryError 和进程崩溃。已停止补充批次，恢复四个主工作进程，保留失败现场并重做未完成账户。空闲物理内存不能单独作为增加并发的依据；部分耗时包含临时额外进程竞争，不构成专用机器性能承诺。详见 resource-incident.json。"
+        ))
     story.append(
         p(
             "代码 PR、固定环境、实际导入路径和 CI 证据记录在 release-evidence.json。每个场景身份绑定输入摘要、配置和运行源码。源代码的精确字节保存在 producer-source 内容寻址副本中，性能改动不会隐藏为同一版本。"
