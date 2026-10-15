@@ -199,7 +199,7 @@ python research/public_a_share/study_v3_archive.py --old OLD --exposure V2 --out
 python research/public_a_share/study_v3_inputs.py --old OLD --exposure V2 --out RUN
 python research/public_a_share/study_v3_quality.py --old OLD --exposure V2 --out RUN
 python research/public_a_share/study_v3_risk.py --out RUN
-python research/public_a_share/study_v3_execution_inputs.py --old OLD --exposure V2 --root DATA --out RUN
+python research/public_a_share/study_v3_execution_inputs.py --old OLD --exposure V2 --root DATA/inputs --out RUN
 python research/public_a_share/study_v3_batch.py --out RUN --workers 4 --batch-id unique-run-id
 python research/public_a_share/study_v3_recompute.py --old DATA/inputs/old --exposure DATA/inputs/exposure --reference RUN --out EMPTY_RECOMPUTATION
 python research/public_a_share/study_v3_recovery.py --data DATA --backup BACKUP --code CODE_ENVIRONMENT_ROOT

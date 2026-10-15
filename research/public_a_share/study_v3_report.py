@@ -5,13 +5,16 @@ from __future__ import annotations
 import argparse
 import html
 import json
+import pickle
 from collections import Counter
+from decimal import Decimal
 from pathlib import Path
 
 import pandas as pd
 
 from study_v3_archive import digest, write_json
-from study_v3_risk import paired_summary
+from study_v3_cross_audit import recompute_cross
+from study_v3_risk import factor_variance, paired_summary
 
 
 def read(path):
@@ -66,7 +69,7 @@ def batch_results(out, batch_id, *, allow_partial):
     return results
 
 
-def verify_account(folder):
+def verify_account(folder, models=None, specification=None):
     journal = pd.read_parquet(folder / "cash_ledger.parquet")
     if len(journal):
         # The certified bridge exports every posting at one exact money scale.
@@ -82,17 +85,42 @@ def verify_account(folder):
     if snapshots.cash_value_units.lt(0).any():
         raise ValueError("negative native cash")
     decisions = read(folder / "allocation-decisions.json")
-    maximum, durations, statuses = 0.0, [], Counter()
+    maximum, integer_maximum, durations, statuses, errors = 0.0, 0.0, [], Counter(), Counter()
     residuals = []
     for row in decisions:
         diagnostic = row.get("diagnostics", {})
         if "weights" not in row:
             statuses[row.get("status", "unknown")] += 1
+            errors[row.get("error", row.get("reason", "unspecified"))] += 1
             continue
         value = float(diagnostic["max_constraint_residual"])
         if value > 1e-7:
             raise ValueError("published continuous target violates normalized tolerance")
         maximum = max(maximum, value)
+        execution = diagnostic["execution"]
+        integer_residual = max(execution["constraint_residuals"].values(), default=0.0)
+        if integer_residual > 1e-7 or Decimal(execution["cash"]) < 0:
+            raise ValueError("published integer target violates constraints or cash")
+        integer_maximum = max(integer_maximum, integer_residual)
+        post_nav = Decimal(execution["post_fee_nav"])
+        if abs(Decimal(str(row["nav"])) - Decimal(execution["costs"]) - post_nav) > Decimal("0.0001"):
+            raise ValueError("integer fee and NAV accounting disagree")
+        integer_weights = pd.Series(execution["integer_weights"], dtype=float)
+        cash_weight = float((Decimal(execution["cash"]) + Decimal(execution["non_cash_assets"])) / post_nav)
+        if abs(float(integer_weights.sum()) + cash_weight - 1) > 1e-10:
+            raise ValueError("integer holdings, cash and receivables do not reconcile")
+        if models is not None:
+            entry = models[pd.Timestamp(row["session"])]
+            model = entry["models"][specification["model"]]
+            x = model["exposures"]
+            w = integer_weights.reindex(x.index, fill_value=0).to_numpy()
+            wb = entry["benchmark"].reindex(x.index, fill_value=0).to_numpy()
+            active, _, _ = factor_variance(x.to_numpy(), model["F_daily_rate"], model["D_daily_rate"], w - wb)
+            predicted_te = (max(active, 0) * 252) ** 0.5
+            if abs(predicted_te - diagnostic["integer_annualized_tracking_error"]) > 1e-9:
+                raise ValueError("integer TE differs from independent factor calculation")
+            if specification.get("te") is not None and predicted_te > specification["te"] + 1e-7:
+                raise ValueError("integer target exceeds declared TE limit")
         durations.append(diagnostic["rebalance_seconds"])
         residuals.append(
             {
@@ -109,15 +137,26 @@ def verify_account(folder):
         "long_only_integer_shares": True,
         "nonnegative_cash": True,
         "maximum_continuous_residual": maximum,
+        "maximum_integer_residual": integer_maximum,
+        "integer_fee_cash_reconciliation": True,
         "published_targets": len(durations),
         "rebalance_seconds": durations,
         "failure_status_counts": dict(statuses),
+        "failure_reason_counts": dict(errors),
         "constraints": residuals,
     }
 
 
 def run(out, independent, batch_id, *, allow_partial=False):
     results = batch_results(out, batch_id, allow_partial=allow_partial)
+    binding = read(out / "risk-models-binding.json")
+    if digest(out / "risk-models.pkl") != binding["models"]:
+        raise ValueError("risk model source changed before independent cross prediction")
+    # Trusted, archived local research inputs, verified against the producer receipt.
+    with (out / "risk-models.pkl").open("rb") as stream:
+        models = pickle.load(stream)
+    with (out / "panel.pkl").open("rb") as stream:
+        panel = pickle.load(stream)["panel"]
     quality, financial = (
         read(out / "quality-summary.json"),
         read(out / "financial-quality-summary.json"),
@@ -200,8 +239,14 @@ def run(out, independent, batch_id, *, allow_partial=False):
         if "outputs" not in row:
             continue
         folder = Path(row["folder"])
-        checks[str(row["scenario"])] = verify_account(folder)
-        frame = pd.read_parquet(folder / "cross-predictions.parquet")
+        checks[str(row["scenario"])] = verify_account(folder, models, spec)
+        frame = recompute_cross(
+            read(folder / "allocation-decisions.json"),
+            pd.read_parquet(folder / "positions.parquet"),
+            pd.read_parquet(folder / "portfolio_snapshots.parquet"),
+            models,
+            panel,
+        )
         if len(frame):
             frame["generator"] = spec["model"]
             frame["method"] = spec["method"]
@@ -214,9 +259,14 @@ def run(out, independent, batch_id, *, allow_partial=False):
     if cross:
         merged = pd.concat(cross, ignore_index=True)
         merged.to_parquet(out / "portfolio-cross-predictions.parquet", index=False)
+        coverage = (
+            merged.groupby(["scenario", "predictor", "target_kind", "status"])
+            .size().rename("forecasts").reset_index()
+        )
+        coverage.to_csv(out / "portfolio-cross-coverage.csv", index=False)
         # Shared portfolio identifiers ensure each predictor sees the same return.
         finite = merged.dropna(subset=["qlike"]).copy()
-        consistency = finite.groupby("portfolio_id").actual_frozen_weight_return.nunique()
+        consistency = merged.groupby("portfolio_id").actual_frozen_weight_return.nunique()
         if (consistency > 1).any():
             raise ValueError("models were evaluated against different actual returns")
         finite["variance_ratio"] = finite.actual_frozen_weight_return**2 / finite.variance
