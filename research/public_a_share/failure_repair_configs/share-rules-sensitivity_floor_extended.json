@@ -1,0 +1,74 @@
+{
+  "branch": "sensitivity_floor_extended",
+  "rules": {
+    "cninfo:fd0e95dcb47d8f9be2a355ca": {
+      "entitlement_id": "600763-2024-share",
+      "record_date": "2024-07-04",
+      "ordinary_additional_ratio": "0.400595",
+      "known_at": "2024-07-01T23:59:59+08:00",
+      "credit_at": "2024-07-05T09:00:00+08:00",
+      "sellable_date": "2024-07-05",
+      "evidence_source": "https://static.cninfo.com.cn/finalpage/2024-07-01/1220505721.PDF",
+      "evidence_sha256": "d48bdde979d56fa83a370efc1e1dcd56b0003772352001e87601769b550eeff3",
+      "fractional_rule": "largest_fraction",
+      "evidence_status": "sensitivity_floor"
+    },
+    "repair-603007-share-credit": {
+      "entitlement_id": "603007-2024-reorganisation",
+      "record_date": "2024-12-25",
+      "ordinary_additional_ratio": "0.155346",
+      "known_at": "2024-12-25T23:59:59+08:00",
+      "credit_at": "2024-12-26T09:00:00+08:00",
+      "sellable_date": "2024-12-26",
+      "evidence_source": "https://static.cninfo.com.cn/finalpage/2024-11-16/1221743709.PDF",
+      "evidence_sha256": "0b8397e15a113a61cc5891e0fb55aea9a9f3739a43cb36d34cc7e6742d848d62",
+      "fractional_rule": "floor",
+      "reference_price": "8.28",
+      "evidence_status": "sensitivity_floor"
+    },
+    "cninfo:2f7ca1157217a1cce53386dd": {
+      "record_date": "2025-06-06",
+      "known_at": "2025-05-30T23:59:59+08:00",
+      "credit_at": "2025-06-09T09:00:00+08:00",
+      "sellable_date": "2025-06-09",
+      "ordinary_additional_ratio": "0.2",
+      "entitlement_id": "001210-2025-share",
+      "evidence_source": "https://disc.static.szse.cn/disc/disk03/finalpage/2025-05-29/c5d0692e-b7ca-4679-b4f0-d7f22158e977.PDF",
+      "evidence_sha256": "19544d8acc41040f2b4172fc02e919e10534ad7ed1783196985aa53daca4303d",
+      "fractional_rule": "largest_fraction",
+      "evidence_status": "sensitivity_floor"
+    },
+    "cninfo:636017ac930ccfb213882fdf": {
+      "record_date": "2026-06-04",
+      "known_at": "2026-05-28T23:59:59+08:00",
+      "credit_at": "2026-06-05T09:00:00+08:00",
+      "sellable_date": "2026-06-05",
+      "ordinary_additional_ratio": "0.4",
+      "entitlement_id": "001210-2026-share",
+      "evidence_source": "https://static.cninfo.com.cn/finalpage/2026-05-28/1225333207.PDF",
+      "evidence_sha256": "4cd0bd44055dc1b0c5eef8cbe1b82ed1cad2086ad2ca6f8e3f67665fd241cb3b",
+      "fractional_rule": "largest_fraction",
+      "evidence_status": "sensitivity_floor"
+    }
+  },
+  "add_events": [
+    {
+      "event_id": "repair-603007-share-credit",
+      "asset": "603007",
+      "available_at": "2024-12-26T09:00:00+08:00",
+      "source": "https://static.cninfo.com.cn/finalpage/2024-11-16/1221743709.PDF",
+      "record_date": "2024-12-25"
+    }
+  ],
+  "assumptions": [
+    "600763: permitted fractional allocation endpoint; not an actual registrar record",
+    "603007: approximate announced ordinary-holder ratio, final-plan floor rule, credited and sellable on announced listing day; later annual report is validation only",
+    "001210 2025/2026: largest fractional tails, random ties. Lower/upper integer endpoints are permitted sensitivity outcomes, not known virtual-account registrar allocations. Original cash distributions remain unchanged; later completion announcements are not features."
+  ],
+  "formal_plan_pages": [
+    13,
+    26
+  ],
+  "later_confirmation_not_a_feature": "2024 annual report published 2025-04-30",
+  "parent_configuration_sha256": "e47e63243a42c7320a5f41fc5f945c8b6de795d958c83eee0900c9359641b473"
+}

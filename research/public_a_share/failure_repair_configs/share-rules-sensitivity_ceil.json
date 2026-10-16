@@ -1,0 +1,48 @@
+{
+  "branch": "sensitivity_ceil",
+  "rules": {
+    "cninfo:fd0e95dcb47d8f9be2a355ca": {
+      "entitlement_id": "600763-2024-share",
+      "record_date": "2024-07-04",
+      "ordinary_additional_ratio": "0.400595",
+      "known_at": "2024-07-01T23:59:59+08:00",
+      "credit_at": "2024-07-05T09:00:00+08:00",
+      "sellable_date": "2024-07-05",
+      "evidence_source": "https://static.cninfo.com.cn/finalpage/2024-07-01/1220505721.PDF",
+      "evidence_sha256": "d48bdde979d56fa83a370efc1e1dcd56b0003772352001e87601769b550eeff3",
+      "fractional_rule": "largest_fraction",
+      "evidence_status": "sensitivity_ceil"
+    },
+    "repair-603007-share-credit": {
+      "entitlement_id": "603007-2024-reorganisation",
+      "record_date": "2024-12-25",
+      "ordinary_additional_ratio": "0.155346",
+      "known_at": "2024-12-25T23:59:59+08:00",
+      "credit_at": "2024-12-26T09:00:00+08:00",
+      "sellable_date": "2024-12-26",
+      "evidence_source": "https://static.cninfo.com.cn/finalpage/2024-11-16/1221743709.PDF",
+      "evidence_sha256": "0b8397e15a113a61cc5891e0fb55aea9a9f3739a43cb36d34cc7e6742d848d62",
+      "fractional_rule": "floor",
+      "reference_price": "8.28",
+      "evidence_status": "sensitivity_floor"
+    }
+  },
+  "add_events": [
+    {
+      "event_id": "repair-603007-share-credit",
+      "asset": "603007",
+      "available_at": "2024-12-26T09:00:00+08:00",
+      "source": "https://static.cninfo.com.cn/finalpage/2024-11-16/1221743709.PDF",
+      "record_date": "2024-12-25"
+    }
+  ],
+  "assumptions": [
+    "600763: permitted fractional allocation endpoint; not an actual registrar record",
+    "603007: approximate announced ordinary-holder ratio, final-plan floor rule, credited and sellable on announced listing day; later annual report is validation only"
+  ],
+  "formal_plan_pages": [
+    13,
+    26
+  ],
+  "later_confirmation_not_a_feature": "2024 annual report published 2025-04-30"
+}

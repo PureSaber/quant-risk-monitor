@@ -10,7 +10,9 @@ from pathlib import Path
 from study_v3_archive import write_json
 
 
-def run(out, indices, workers, limit_dates, batch_id=""):
+def run(
+    out, indices, workers, limit_dates, batch_id="", *, source=None, coverage=None, share_rules=None
+):
     if not 1 <= workers <= 4:
         raise ValueError("workers must be between one and four")
     script = Path(__file__).with_name("study_v3_portfolios.py")
@@ -19,12 +21,19 @@ def run(out, indices, workers, limit_dates, batch_id=""):
     logs = out / (
         ("pilot-logs" if limit_dates else "portfolio-logs") + ("-" + batch_id if batch_id else "")
     )
-    logs.mkdir(exist_ok=True)
+    logs.mkdir(parents=True, exist_ok=True)
 
     def one(index):
         args = [sys.executable, str(script), "--out", str(out), "--scenario", str(index)]
         if limit_dates:
             args += ["--limit-dates", str(limit_dates)]
+        for name, value in (
+            ("--source", source),
+            ("--coverage", coverage),
+            ("--share-rules", share_rules),
+        ):
+            if value is not None:
+                args += [name, str(value)]
         log = logs / f"scenario-{index:03d}.log"
         if log.exists():
             raise ValueError("batch logs are immutable; use a new explicit log directory/version")
@@ -51,6 +60,9 @@ if __name__ == "__main__":
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--limit-dates", type=int)
     parser.add_argument("--batch-id", default="")
+    parser.add_argument("--source", type=Path)
+    parser.add_argument("--coverage", type=Path)
+    parser.add_argument("--share-rules", type=Path)
     args = parser.parse_args()
     run(
         args.out,
@@ -58,4 +70,7 @@ if __name__ == "__main__":
         args.workers,
         args.limit_dates,
         args.batch_id,
+        source=args.source,
+        coverage=args.coverage,
+        share_rules=args.share_rules,
     )

@@ -1,0 +1,40 @@
+{
+  "collected_at": "2026-10-15T15:49:48.705754+00:00",
+  "documents": [
+    {
+      "event_id": "cninfo:2f7ca1157217a1cce53386dd",
+      "file": "001210-2025-implementation.pdf",
+      "sha256": "19544d8acc41040f2b4172fc02e919e10534ad7ed1783196985aa53daca4303d",
+      "source": "https://disc.static.szse.cn/disc/disk03/finalpage/2025-05-29/c5d0692e-b7ca-4679-b4f0-d7f22158e977.PDF",
+      "record_date": "2025-06-06",
+      "known_at": "2025-05-30T23:59:59+08:00",
+      "credit_at": "2025-06-09T09:00:00+08:00",
+      "sellable_date": "2025-06-09",
+      "ordinary_additional_ratio": "0.2",
+      "source_pages_one_based": [
+        2,
+        3
+      ]
+    },
+    {
+      "event_id": "cninfo:636017ac930ccfb213882fdf",
+      "file": "001210-2026-1225333207.pdf",
+      "sha256": "4cd0bd44055dc1b0c5eef8cbe1b82ed1cad2086ad2ca6f8e3f67665fd241cb3b",
+      "source": "https://static.cninfo.com.cn/finalpage/2026-05-28/1225333207.PDF",
+      "record_date": "2026-06-04",
+      "known_at": "2026-05-28T23:59:59+08:00",
+      "credit_at": "2026-06-05T09:00:00+08:00",
+      "sellable_date": "2026-06-05",
+      "ordinary_additional_ratio": "0.4",
+      "source_pages_one_based": [
+        2,
+        3
+      ]
+    }
+  ],
+  "allocation_rule": "largest_fraction_random_ties",
+  "strict_result": "exact virtual-account allocation unresolved",
+  "sensitivity_result": "floor and ceil of additional shares, never fractional trading",
+  "discovered_by": "sensitivity_floor scenario 0 stopped on 2026-06-05",
+  "original_runs_modified": false
+}

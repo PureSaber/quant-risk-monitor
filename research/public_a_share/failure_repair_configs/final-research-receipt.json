@@ -1,0 +1,344 @@
+{
+  "status": "complete_with_explicit_unresolved_cases",
+  "study": "200-company frozen sample; 2023-2026-09-30 retrospective failure repair",
+  "run": "failure-repair-03",
+  "report_version": "reports-v2",
+  "account_runs": 132,
+  "published_targets": 5431,
+  "branches": {
+    "strict": {
+      "status_counts": {
+        "stopped_on_execution_input": 31,
+        "completed": 31
+      },
+      "complete_horizon": 31,
+      "zero_targets": 26,
+      "published_targets": 1548,
+      "scheduled_attempts": 8227,
+      "accounts": 62,
+      "failure_status_counts": {
+        "input_unavailable": 1116,
+        "repair_failed": 59,
+        "infeasible": 5504
+      },
+      "maximum_normalized_constraint_residual": 9.6886906560123e-08,
+      "published_target_p95_seconds": 4.25605101499677,
+      "published_target_maximum_seconds": 26.084952399978647
+    },
+    "sensitivity_floor": {
+      "status_counts": {
+        "stopped_on_execution_input": 2,
+        "completed": 31
+      },
+      "complete_horizon": 31,
+      "zero_targets": 0,
+      "published_targets": 1879,
+      "scheduled_attempts": 5974,
+      "accounts": 33,
+      "failure_status_counts": {
+        "input_unavailable": 2677,
+        "repair_failed": 152,
+        "infeasible": 1266
+      },
+      "maximum_normalized_constraint_residual": 9.94326844749871e-08,
+      "published_target_p95_seconds": 4.174346059991506,
+      "published_target_maximum_seconds": 28.405709599988768
+    },
+    "sensitivity_ceil": {
+      "status_counts": {
+        "stopped_on_execution_input": 2,
+        "completed": 31
+      },
+      "complete_horizon": 31,
+      "zero_targets": 0,
+      "published_targets": 1880,
+      "scheduled_attempts": 5974,
+      "accounts": 33,
+      "failure_status_counts": {
+        "input_unavailable": 2677,
+        "repair_failed": 151,
+        "infeasible": 1266
+      },
+      "maximum_normalized_constraint_residual": 9.94326844749871e-08,
+      "published_target_p95_seconds": 4.237396230017475,
+      "published_target_maximum_seconds": 29.95386020001024
+    },
+    "sensitivity_floor_extended": {
+      "status_counts": {
+        "completed": 2
+      },
+      "complete_horizon": 2,
+      "zero_targets": 0,
+      "published_targets": 62,
+      "scheduled_attempts": 364,
+      "accounts": 2,
+      "failure_status_counts": {
+        "input_unavailable": 302
+      },
+      "maximum_normalized_constraint_residual": 4.971090206140616e-11,
+      "published_target_p95_seconds": 1.4112652149909988,
+      "published_target_maximum_seconds": 2.2995945000147913
+    },
+    "sensitivity_ceil_extended": {
+      "status_counts": {
+        "completed": 2
+      },
+      "complete_horizon": 2,
+      "zero_targets": 0,
+      "published_targets": 62,
+      "scheduled_attempts": 364,
+      "accounts": 2,
+      "failure_status_counts": {
+        "input_unavailable": 302
+      },
+      "maximum_normalized_constraint_residual": 4.971090206140616e-11,
+      "published_target_p95_seconds": 1.4410314849767014,
+      "published_target_maximum_seconds": 2.1486230000155047
+    }
+  },
+  "fixed_original_failures": {
+    "continuous_structural": 5551,
+    "continuous_turnover": 14,
+    "all_period_infeasible_scenarios": 26,
+    "integer_repaired": 65,
+    "integer_search_unresolved": 37,
+    "missing_risk_union_covered": 1549,
+    "missing_risk_union_unavailable": 1344,
+    "original_strict_entitlements_unresolved": 19
+  },
+  "branch_prefix_differences": 4,
+  "comparison_caveat": "Scenarios 29/30 differ before rights events in both sensitivity branches; timed-search differences prevent attributing all return changes to fractional shares.",
+  "frozen_estimator_cross_prediction": {
+    "strict": {
+      "absolute": {
+        "continuous": {
+          "complete_dates": 52,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.19805968070532728,
+            "simultaneous_95_interval": [
+              -0.5276518188995891,
+              0.038982354822887914
+            ],
+            "historical_improvement": false
+          }
+        },
+        "integer": {
+          "complete_dates": 56,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.17051833515454615,
+            "simultaneous_95_interval": [
+              -0.5337855182404987,
+              0.058617353930695906
+            ],
+            "historical_improvement": false
+          }
+        },
+        "actual_close": {
+          "complete_dates": 14,
+          "inference_status": "insufficient_date_blocks",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.239172678231792,
+            "simultaneous_95_interval": null,
+            "historical_improvement": false
+          }
+        }
+      },
+      "active": {
+        "continuous": {
+          "complete_dates": 52,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": 0.12086517609724388,
+            "simultaneous_95_interval": [
+              -0.04884904184596059,
+              0.4543643668039662
+            ],
+            "historical_improvement": false
+          }
+        },
+        "integer": {
+          "complete_dates": 52,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": 0.11964770272974584,
+            "simultaneous_95_interval": [
+              -0.052226604920214005,
+              0.45838682168383854
+            ],
+            "historical_improvement": false
+          }
+        },
+        "actual_close": {
+          "complete_dates": 15,
+          "inference_status": "insufficient_date_blocks",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.2682101406943623,
+            "simultaneous_95_interval": null,
+            "historical_improvement": false
+          }
+        }
+      }
+    },
+    "sensitivity_floor": {
+      "absolute": {
+        "continuous": {
+          "complete_dates": 98,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.17836500305189928,
+            "simultaneous_95_interval": [
+              -0.3502382570175074,
+              0.009143196692414058
+            ],
+            "historical_improvement": false
+          }
+        },
+        "integer": {
+          "complete_dates": 114,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.16917498562490402,
+            "simultaneous_95_interval": [
+              -0.3417881744331021,
+              0.01523276078213554
+            ],
+            "historical_improvement": false
+          }
+        },
+        "actual_close": {
+          "complete_dates": 14,
+          "inference_status": "insufficient_date_blocks",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.24164146492569463,
+            "simultaneous_95_interval": null,
+            "historical_improvement": false
+          }
+        }
+      },
+      "active": {
+        "continuous": {
+          "complete_dates": 98,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": 0.02503059646553408,
+            "simultaneous_95_interval": [
+              -0.16589982642075413,
+              0.2769617040244636
+            ],
+            "historical_improvement": false
+          }
+        },
+        "integer": {
+          "complete_dates": 98,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": 0.024271981770243443,
+            "simultaneous_95_interval": [
+              -0.16630523122480922,
+              0.27741868329948405
+            ],
+            "historical_improvement": false
+          }
+        },
+        "actual_close": {
+          "complete_dates": 15,
+          "inference_status": "insufficient_date_blocks",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.2601200543452466,
+            "simultaneous_95_interval": null,
+            "historical_improvement": false
+          }
+        }
+      }
+    },
+    "sensitivity_ceil": {
+      "absolute": {
+        "continuous": {
+          "complete_dates": 98,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.1783807306606932,
+            "simultaneous_95_interval": [
+              -0.35025822182031646,
+              0.009152251477001673
+            ],
+            "historical_improvement": false
+          }
+        },
+        "integer": {
+          "complete_dates": 114,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.16914824287240068,
+            "simultaneous_95_interval": [
+              -0.34171796473088295,
+              0.015238201181788553
+            ],
+            "historical_improvement": false
+          }
+        },
+        "actual_close": {
+          "complete_dates": 14,
+          "inference_status": "insufficient_date_blocks",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.24163484209568034,
+            "simultaneous_95_interval": null,
+            "historical_improvement": false
+          }
+        }
+      },
+      "active": {
+        "continuous": {
+          "complete_dates": 98,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": 0.02516660903876423,
+            "simultaneous_95_interval": [
+              -0.16554079330422455,
+              0.27696302244809545
+            ],
+            "historical_improvement": false
+          }
+        },
+        "integer": {
+          "complete_dates": 98,
+          "inference_status": "available",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": 0.024387663563982854,
+            "simultaneous_95_interval": [
+              -0.16590932682792628,
+              0.277380611609697
+            ],
+            "historical_improvement": false
+          }
+        },
+        "actual_close": {
+          "complete_dates": 15,
+          "inference_status": "insufficient_date_blocks",
+          "frozen_enhanced_vs_legacy_ols": {
+            "mean_delta": -0.26013301301838543,
+            "simultaneous_95_interval": null,
+            "historical_improvement": false
+          }
+        }
+      }
+    }
+  },
+  "model_promotion": "not_passed",
+  "new_independent_mature_windows": 0,
+  "required_new_independent_mature_windows": 80,
+  "defaults_and_frozen_accounts_unchanged": true,
+  "investment_constraints_relaxed": false,
+  "timing_scope": "published targets only; missing-input timings are not invented",
+  "evidence_sha256": {
+    "acceptance.json": "065584b15cb0abbcc7fc01a3e6693896db567c39b82eed8c88225634df8b53b2",
+    "report.html": "bf06a619882a1ae0c5558b6b0c0684dac5a3af8ee663fa55951dcd069d8f0df7",
+    "account-independent-checks.json": "86ec698919e1a4c3c9e1e624202a819185c5f06c6e6c698c1112b8b73ffffe5f",
+    "102-integer-independent-checks.json": "f8c5ef9161efbef54a58d1b32703b9acef5a7e32a105a9a2c8ceefe178dcb140",
+    "portfolio-before-after.csv": "5655a78762e0ddb233d21d3518e29157a1a2b67d92319d76d169bc4433fc883e",
+    "new-failure-inventory.csv": "cf785f3598caa67e838bdc02cd0a9b9549989689b9394c3e4bf540a87bb89479"
+  },
+  "ordinary_environment_verification_sha256": "f4e7ac4c0663455a812d0257cd325a8dd67a26991a85493948a8e8b477e22867"
+}

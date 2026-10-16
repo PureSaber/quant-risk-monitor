@@ -18,6 +18,14 @@ from study_v3_risk import factor_variance, paired_summary
 
 
 def read(path):
+    import gzip
+
+    compressed = path.with_suffix(path.suffix + ".gz")
+    if path.exists() and compressed.exists():
+        raise ValueError("ambiguous plain and compressed artifact: " + str(path))
+    if not path.exists() and compressed.exists():
+        with gzip.open(compressed, "rt", encoding="utf8") as stream:
+            return json.load(stream)
     return json.loads(path.read_text(encoding="utf8"))
 
 
