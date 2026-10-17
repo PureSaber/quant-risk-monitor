@@ -97,8 +97,9 @@ def normalize(text):
     return re.sub(r"\s+", " ", text).replace("，", ",").replace("−", "-")
 
 
-def amount_row(text, field, p, *, normalized=False, summary_only=False):
+def amount_row(text, field, p, *, normalized=False, summary_only=False, aliases=None):
     """Return a current-period figure from a labeled financial table, with its evidence."""
+    aliases = ALIASES if aliases is None else aliases
     if not normalized:
         text = normalize(text)
     regions = []
@@ -172,14 +173,14 @@ def amount_row(text, field, p, *, normalized=False, summary_only=False):
     else:
         regions.append((fallback, False))
     for region, statement in regions:
-        for match in re.finditer(ALIASES[field], region):
+        for match in re.finditer(aliases[field], region):
             prefix = region[max(0, match.start() - 8000) : match.start()]
             tail = region[match.end() : match.end() + 650]
             if field == "shares":
                 tail = re.split(r"股份变动|股东|其他说明|\[\[PAGE", tail)[0]
             # Restrict to the row, stopping at the next financial label.
             boundaries = []
-            for label in list(ALIASES.values()) + [
+            for label in list(aliases.values()) + [
                 r"扣除非经常性",
                 r"经营活动",
                 r"基本每股",

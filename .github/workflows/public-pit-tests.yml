@@ -11,22 +11,30 @@ permissions:
 
 jobs:
   public-pit:
-    runs-on: ubuntu-24.04
+    name: ${{ matrix.os == 'ubuntu-24.04' && matrix.python-version == '3.12' && 'public-pit' || format('public-pit ({0}, {1})', matrix.os, matrix.python-version) }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+        python-version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
       - name: Install research test dependencies
         run: >-
           python -m pip install numpy==2.2.6 pandas==2.3.3 requests==2.34.2
           beautifulsoup4==4.15.0 pypdf==6.20.1 pymupdf==1.28.2 pyarrow==25.0.1
-          cvxpy==1.7.5 clarabel==0.11.1 osqp==1.0.5
+          cvxpy==1.7.5 clarabel==0.11.1 osqp==1.0.5 scipy==1.15.3
           pytest==9.1.1 ruff==0.16.10
           quant-data-kit@git+https://github.com/PureSaber/quant-data-kit.git@a84c7306a2f3ad6d2f2c90901d6525d091ab49d6
       - name: Offline original-document and PIT tests
         run: python -m pytest research/public_a_share -q
+      - name: Installed dependency consistency
+        run: python -m pip check
       - name: Research source lint
         run: python -m ruff check --config research/public_a_share/ruff.toml research/public_a_share/*.py

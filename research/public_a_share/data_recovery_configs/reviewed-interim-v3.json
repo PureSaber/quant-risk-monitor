@@ -1,0 +1,340 @@
+{
+  "manual_facts": [
+    {
+      "asset": "001201",
+      "announcement_id": "1211400033",
+      "title": "2021年第三季度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\001201\\1211400033.pdf",
+      "source_sha256": "fb1fcb9b19ded18f9a99c08c2f14da3bd9328c6d164ce77b60e6f76cc00a22c4",
+      "url": "https://static.cninfo.com.cn/finalpage/2021-10-28/1211400033.PDF",
+      "available_at": "2021-10-29T00:00:00+08:00",
+      "source_available_at": "2021-10-29T00:00:00+08:00",
+      "published": "2021-10-28",
+      "report_period": "20210930",
+      "field": "profit_ytd",
+      "value": 236375158.19,
+      "scale": 1,
+      "page": 3,
+      "checks": {
+        "3": [
+          "年初至报告期末",
+          "归属于上市公司股东的净利润（元）",
+          "4,596,250.43",
+          "236,375,158.19"
+        ]
+      },
+      "scope": "third_numeric_column_YTD_not_current_quarter",
+      "audit_status": "interim_unaudited_reviewed",
+      "raw_cell": "236,375,158.19",
+      "review_basis": "Original PDF table visually reviewed; exact headers and columns rechecked using two independent PDF engines."
+    },
+    {
+      "asset": "600212",
+      "announcement_id": "1211430945",
+      "title": "山东江泉实业股份有限公司2021年第三季度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600212\\1211430945.pdf",
+      "source_sha256": "dbbc35f1afdc1a9d1c1776abc2fb0a70d913398dd0faf11ef9f264d32032918a",
+      "url": "https://static.cninfo.com.cn/finalpage/2021-10-30/1211430945.PDF",
+      "available_at": "2021-10-31T00:00:00+08:00",
+      "source_available_at": "2021-10-31T00:00:00+08:00",
+      "published": "2021-10-30",
+      "report_period": "20210930",
+      "field": "profit_ytd",
+      "value": -151829.29,
+      "scale": 1,
+      "page": 1,
+      "checks": {
+        "1": [
+          "年初至报告期末",
+          "单位：元",
+          "归属于上市公司股东的净利润",
+          "-3,601,020.82",
+          "-151,829.29"
+        ]
+      },
+      "scope": "third_numeric_column_YTD_not_current_quarter",
+      "audit_status": "interim_unaudited_reviewed",
+      "raw_cell": "-151,829.29",
+      "review_basis": "Original PDF table visually reviewed; exact headers and columns rechecked using two independent PDF engines."
+    },
+    {
+      "asset": "601113",
+      "announcement_id": "1219890657",
+      "title": "义乌华鼎锦纶股份有限公司2024年第一季度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601113\\1219890657.pdf",
+      "source_sha256": "d7cd8ec469cfab17f4777db7a036076ccd008a2f3f288fcb0fd72bdb97a770e3",
+      "url": "https://static.cninfo.com.cn/finalpage/2024-04-29/1219890657.PDF",
+      "available_at": "2024-04-30T00:00:00+08:00",
+      "source_available_at": "2024-04-30T00:00:00+08:00",
+      "published": "2024-04-29",
+      "report_period": "20230331",
+      "field": "profit_ytd",
+      "value": 4978963.5,
+      "scale": 1,
+      "page": 1,
+      "checks": {
+        "1": [
+          "上年同期",
+          "调整前",
+          "调整后",
+          "归属于上市公司股东的净利润",
+          "80,575,777.84",
+          "5,398,001.79",
+          "4,978,963.50"
+        ]
+      },
+      "scope": "restated_prior_year_third_amount_available_only_in_2024",
+      "audit_status": "interim_unaudited_reviewed",
+      "raw_cell": "4,978,963.50",
+      "review_basis": "Original PDF table visually reviewed; exact headers and columns rechecked using two independent PDF engines."
+    },
+    {
+      "asset": "601968",
+      "announcement_id": "1216665122",
+      "title": "2023年第一季度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601968\\1216665122.pdf",
+      "source_sha256": "922a7471072d5d49c4eeb6c410cdb37b0c98a7440c1aa83f16e740f4dbae1081",
+      "url": "https://static.cninfo.com.cn/finalpage/2023-04-28/1216665122.PDF",
+      "available_at": "2023-04-29T00:00:00+08:00",
+      "source_available_at": "2023-04-29T00:00:00+08:00",
+      "published": "2023-04-28",
+      "report_period": "20220331",
+      "field": "profit_ytd",
+      "value": 64158822.93,
+      "scale": 1,
+      "page": 9,
+      "checks": {
+        "7": [
+          "合并利润表",
+          "2023年第一季度",
+          "2022年第一季度",
+          "单位：元"
+        ],
+        "9": [
+          "归属于母公司股东的净利润",
+          "61,333,401.66",
+          "64,158,822.93"
+        ]
+      },
+      "scope": "prior_year_second_amount_available_only_in_2023",
+      "audit_status": "interim_unaudited_reviewed",
+      "raw_cell": "64,158,822.93",
+      "review_basis": "Original PDF table visually reviewed; exact headers and columns rechecked using two independent PDF engines."
+    },
+    {
+      "asset": "600323",
+      "announcement_id": "1221531167",
+      "url": "https://static.cninfo.com.cn/finalpage/2024-10-28/1221531167.PDF",
+      "available_at": "2024-10-29T00:00:00+08:00",
+      "title": "2024年第三季度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600323\\1221531167.pdf",
+      "source_sha256": "3f8ec00b913000f714cfdeca75be52c4c0e7f383afdc6b7c5888e06347695618",
+      "source_available_at": "2024-10-29T00:00:00+08:00",
+      "report_period": "20230930",
+      "field": "profit_ytd",
+      "value": 1165913121.53,
+      "scale": 1,
+      "raw_cell": "1,165,913,121.53",
+      "page": 15,
+      "scope": "prior_year_second_amount_available_only_in_2024",
+      "audit_status": "interim_unaudited_reviewed",
+      "review_basis": "Visually verified the second monetary column and matching 2023 first-three-quarter header; later availability retained.",
+      "checks": {
+        "13": [
+          "合并利润表",
+          "2024年前三季度",
+          "2023年前三季度",
+          "单位：元"
+        ],
+        "15": [
+          "归属于母公司股东的净利润",
+          "1,385,280,521.78",
+          "1,165,913,121.53"
+        ]
+      }
+    },
+    {
+      "asset": "603359",
+      "announcement_id": "1221553887",
+      "url": "https://static.cninfo.com.cn/finalpage/2024-10-30/1221553887.PDF",
+      "available_at": "2024-10-31T00:00:00+08:00",
+      "title": "东珠生态环保股份有限公司2024年第三季度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603359\\1221553887.pdf",
+      "source_sha256": "374aa4ece4ed091f5b55c3b6ca21130679b2e7708ac95a28fb9eb687a7e8817a",
+      "source_available_at": "2024-10-31T00:00:00+08:00",
+      "report_period": "20230930",
+      "field": "profit_ytd",
+      "value": 36660821.6,
+      "scale": 1,
+      "raw_cell": "36,660,821.60",
+      "page": 10,
+      "scope": "prior_year_second_amount_available_only_in_2024",
+      "audit_status": "interim_unaudited_reviewed",
+      "review_basis": "Visually verified the second monetary column and matching 2023 first-three-quarter header; later availability retained.",
+      "checks": {
+        "9": [
+          "合并利润表",
+          "2024年前三季度",
+          "2023年前三季度",
+          "单位：元"
+        ],
+        "10": [
+          "归属于母公司股东的净利润",
+          "13,091,619.44",
+          "36,660,821.60"
+        ]
+      }
+    }
+  ],
+  "entity_scope": [
+    {
+      "asset": "600992",
+      "announcement_id": "1207668683",
+      "title": "2019年年度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1207668683.pdf",
+      "source_sha256": "66f0fa848ade887ee1d8a84ed66d0cb38afb7f722c36d4a6a0c6ee5e38bdf712",
+      "url": "https://static.cninfo.com.cn/finalpage/2020-04-29/1207668683.PDF",
+      "available_at": "2020-04-30T00:00:00+08:00",
+      "source_available_at": "2020-04-30T00:00:00+08:00",
+      "published": "2020-04-29",
+      "report_period": "20191231",
+      "checks": {
+        "75": [
+          "合并财务报表的编制方法□适用√不适用"
+        ]
+      },
+      "review_basis": "Issuer has no consolidated group; annual accounting policy explicitly marks consolidated statements not applicable."
+    },
+    {
+      "asset": "600992",
+      "announcement_id": "1209464735",
+      "title": "贵州钢绳股份有限公司2020年年度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1209464735.pdf",
+      "source_sha256": "9c723bb9bef508c3a8d842894efcb0017787616aa106c6c49f16d9a075b6bf60",
+      "url": "https://static.cninfo.com.cn/finalpage/2021-03-27/1209464735.PDF",
+      "available_at": "2021-03-28T00:00:00+08:00",
+      "source_available_at": "2021-03-28T00:00:00+08:00",
+      "published": "2021-03-27",
+      "report_period": "20201231",
+      "checks": {
+        "74": [
+          "合并财务报表的编制方法□适用√不适用"
+        ]
+      },
+      "review_basis": "Issuer has no consolidated group; annual accounting policy explicitly marks consolidated statements not applicable."
+    },
+    {
+      "asset": "600992",
+      "announcement_id": "1212540935",
+      "title": "贵州钢绳股份有限公司2021年年度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1212540935.pdf",
+      "source_sha256": "d47f0ab88a288b70a4c8345907055b424b4e9ed123e8228c6652c44d6faac534",
+      "url": "https://static.cninfo.com.cn/finalpage/2022-03-11/1212540935.PDF",
+      "available_at": "2022-03-12T00:00:00+08:00",
+      "source_available_at": "2022-03-12T00:00:00+08:00",
+      "published": "2022-03-11",
+      "report_period": "20211231",
+      "checks": {
+        "74": [
+          "合并财务报表的编制方法□适用√不适用"
+        ]
+      },
+      "review_basis": "Issuer has no consolidated group; annual accounting policy explicitly marks consolidated statements not applicable."
+    },
+    {
+      "asset": "600992",
+      "announcement_id": "1216245602",
+      "title": "贵州钢绳股份有限公司2022年年度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1216245602.pdf",
+      "source_sha256": "3c895537e0bdc68c6e6c3af1d3ba275e0274af6ea2bd13f71dcbda2fafa47d35",
+      "url": "https://static.cninfo.com.cn/finalpage/2023-03-29/1216245602.PDF",
+      "available_at": "2023-03-30T00:00:00+08:00",
+      "source_available_at": "2023-03-30T00:00:00+08:00",
+      "published": "2023-03-29",
+      "report_period": "20221231",
+      "checks": {
+        "75": [
+          "合并财务报表的编制方法□适用√不适用"
+        ]
+      },
+      "review_basis": "Issuer has no consolidated group; annual accounting policy explicitly marks consolidated statements not applicable."
+    },
+    {
+      "asset": "600992",
+      "announcement_id": "1219467403",
+      "title": "贵州钢绳股份有限公司2023年年度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1219467403.pdf",
+      "source_sha256": "c66e009bd14ccc929a5a7b7601cb42113ed01512babfc12a9306b7e4b56f8d0a",
+      "url": "https://static.cninfo.com.cn/finalpage/2024-03-30/1219467403.PDF",
+      "available_at": "2024-03-31T00:00:00+08:00",
+      "source_available_at": "2024-03-31T00:00:00+08:00",
+      "published": "2024-03-30",
+      "report_period": "20231231",
+      "checks": {
+        "79": [
+          "合并财务报表的编制方法□适用√不适用"
+        ]
+      },
+      "review_basis": "Issuer has no consolidated group; annual accounting policy explicitly marks consolidated statements not applicable."
+    },
+    {
+      "asset": "600992",
+      "announcement_id": "1219482304",
+      "title": "贵州钢绳股份有限公司2023年年度报告（更正后）",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1219482304.pdf",
+      "source_sha256": "c9d5b047fd1c9c4050451722b97d069377d36a09c6a13de92399eb41dd7009c4",
+      "url": "https://static.cninfo.com.cn/finalpage/2024-04-01/1219482304.PDF",
+      "available_at": "2024-04-02T00:00:00+08:00",
+      "source_available_at": "2024-04-02T00:00:00+08:00",
+      "published": "2024-04-01",
+      "report_period": "20231231",
+      "checks": {
+        "79": [
+          "合并财务报表的编制方法□适用√不适用"
+        ]
+      },
+      "review_basis": "Issuer has no consolidated group; annual accounting policy explicitly marks consolidated statements not applicable."
+    },
+    {
+      "asset": "600992",
+      "announcement_id": "1222952407",
+      "title": "贵州钢绳股份有限公司2024年年度报告",
+      "source_pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1222952407.pdf",
+      "source_sha256": "17d1133e66819c90bd47d33c79b8b0b2b7eb3179821a9b27a48ebc0ff56797af",
+      "url": "https://static.cninfo.com.cn/finalpage/2025-03-29/1222952407.pdf",
+      "available_at": "2025-03-30T00:00:00+08:00",
+      "source_available_at": "2025-03-30T00:00:00+08:00",
+      "published": "2025-03-29",
+      "report_period": "20241231",
+      "checks": {
+        "85": [
+          "合并财务报表的编制方法□适用√不适用"
+        ]
+      },
+      "review_basis": "Issuer has no consolidated group; annual accounting policy explicitly marks consolidated statements not applicable."
+    }
+  ],
+  "cover_exceptions": [
+    {
+      "announcement_id": "1211400033",
+      "source_sha256": "fb1fcb9b19ded18f9a99c08c2f14da3bd9328c6d164ce77b60e6f76cc00a22c4",
+      "report_period": "20210930",
+      "review_basis": "Large cover title, publication date and financial statement dates agree; running header contains an incorrect prior period. Original cover visually reviewed."
+    },
+    {
+      "announcement_id": "1217712952",
+      "source_sha256": "cdbc8739084555684c1d1e6a13d7090bd3ae2fef8b2444bd7a1f31a76cc0da1b",
+      "report_period": "20230630",
+      "review_basis": "Large cover title, publication date and financial statement dates agree; running header contains an incorrect prior period. Original cover visually reviewed."
+    },
+    {
+      "announcement_id": "1214409820",
+      "source_sha256": "bad7a0f23f8db87988a7c2d93def59ec9d24c086389f7fdbeb7841e58e3b57c0",
+      "report_period": "20220630",
+      "review_basis": "Large cover title, publication date and financial statement dates agree; running header contains an incorrect prior period. Original cover visually reviewed."
+    }
+  ],
+  "disputed_sources": [
+    "1216686699"
+  ]
+}
