@@ -3,7 +3,6 @@
 import numpy as np
 import pandas as pd
 import pytest
-
 from recovery_account_inputs import FIELDS, apply_overlay
 
 

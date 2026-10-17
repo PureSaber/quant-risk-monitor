@@ -17,7 +17,6 @@ from urllib.parse import urljoin, urlparse
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-
 from recovery_inventory import digest, write_json
 from report_discovery import is_full_report, title_period
 

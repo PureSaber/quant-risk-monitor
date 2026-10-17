@@ -19,9 +19,9 @@ for variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
     os.environ[variable] = "1"
 
 import pandas as pd  # noqa: E402
+from recovery_inventory import digest, write_json  # noqa: E402
 
 import exposure_v2_study as study  # noqa: E402
-from recovery_inventory import digest, write_json  # noqa: E402
 from run_study import risk_components  # noqa: E402
 from study_v3_portfolios import GENERATORS  # noqa: E402
 from study_v3_risk import model_definitions  # noqa: E402

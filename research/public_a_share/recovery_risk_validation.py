@@ -19,14 +19,6 @@ for variable in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
 
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
-
-from build_panel import snapshot  # noqa: E402
-from exposure_v2_study import subset  # noqa: E402
-from model_bootstrap import (  # noqa: E402
-    FactorModelConfig,
-    public_equity_style_config,
-    solve_factor_returns,
-)
 from recovery_imputation import (  # noqa: E402
     FIELDS,
     METHODS,
@@ -35,6 +27,14 @@ from recovery_imputation import (  # noqa: E402
     foundation_eligibility,
 )
 from recovery_inventory import digest, write_json  # noqa: E402
+
+from build_panel import snapshot  # noqa: E402
+from exposure_v2_study import subset  # noqa: E402
+from model_bootstrap import (  # noqa: E402
+    FactorModelConfig,
+    public_equity_style_config,
+    solve_factor_returns,
+)
 from study_v3_risk import factor_variance, paired_summary  # noqa: E402
 
 

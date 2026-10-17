@@ -2,7 +2,6 @@ import json
 
 import pandas as pd
 import pytest
-
 from financial_table_recovery import agree, audit_opinion, field_name, number, table_facts
 from report_discovery import is_full_report, original_period, title_period
 
@@ -243,7 +242,6 @@ def test_reconciliation_with_year_below_financial_rows_is_rejected():
 
 def test_reviewed_restated_columns_require_order_and_unit():
     import pytest
-
     from recovery_rebuild import comparative_values
 
     text = "2024年度合并利润表\n金额单位为人民币百万元\n2024年度 2023年度 2022年度\n营业收入 528,567 405,040 388,895\n"

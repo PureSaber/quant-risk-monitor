@@ -14,7 +14,6 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 from recovery_inventory import digest, write_json
 
 FIELDS = ("revenue_growth_3y", "profit_growth_3y")

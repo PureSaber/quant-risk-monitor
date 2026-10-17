@@ -9,7 +9,6 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import pandas as pd
-
 from financial_table_recovery import agree, compact, extract_tables
 from recovery_inventory import digest, write_json
 from report_discovery import original_period
