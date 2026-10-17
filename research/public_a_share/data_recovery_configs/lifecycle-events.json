@@ -1,0 +1,83 @@
+[
+  {
+    "asset": "000150",
+    "effective_date": "2023-06-09",
+    "available_at": "2023-06-10T00:00:00+08:00",
+    "source_sha256": "d1d1cff9e22975d69f1adfdf737c0ccf290449c2733620d35f32a5aba7172c83",
+    "source_url": "https://static.cninfo.com.cn/finalpage/2023-06-09/1217022522.PDF",
+    "announcement_id": "1217022522",
+    "review_basis": "Read issuer delisting notice archived from CNInfo; date explicitly printed in the delisting section. Next-calendar-day availability retained."
+  },
+  {
+    "asset": "000613",
+    "effective_date": "2022-06-29",
+    "available_at": "2022-06-30T00:00:00+08:00",
+    "source_sha256": "687aab16ecc0534bca74041003c95cb70718bad4e8c3808d6f2265a1d33f7676",
+    "source_url": "https://static.cninfo.com.cn/finalpage/2022-06-29/1213855268.PDF",
+    "announcement_id": "1213855268",
+    "review_basis": "Read issuer delisting notice archived from CNInfo; date explicitly printed in the delisting section. Next-calendar-day availability retained."
+  },
+  {
+    "asset": "000666",
+    "effective_date": "2023-10-26",
+    "available_at": "2023-10-26T00:00:00+08:00",
+    "source_sha256": "b5e66ded52d27454c054ce74952cbbfe14100cc560b3502c8359b181e4a6d4d1",
+    "source_url": "https://static.cninfo.com.cn/finalpage/2023-10-25/1218139465.PDF",
+    "announcement_id": "1218139465",
+    "review_basis": "Read issuer delisting notice archived from CNInfo; date explicitly printed in the delisting section. Next-calendar-day availability retained."
+  },
+  {
+    "asset": "002621",
+    "effective_date": "2024-08-05",
+    "available_at": "2024-08-06T00:00:00+08:00",
+    "source_sha256": "4c2c673daf060e2b22d0f206f2d7921d76b79a9902bb25c9a37241d97574821d",
+    "source_url": "https://static.cninfo.com.cn/finalpage/2024-08-05/1220789549.PDF",
+    "announcement_id": "1220789549",
+    "review_basis": "Read issuer delisting notice archived from CNInfo; date explicitly printed in the delisting section. Next-calendar-day availability retained."
+  },
+  {
+    "asset": "002699",
+    "effective_date": "2024-06-05",
+    "available_at": "2024-06-05T00:00:00+08:00",
+    "source_sha256": "0f97bae26bfc610bd48a0b515c7ae74a4cdc35177971332137e6f013d3fc9963",
+    "source_url": "https://static.cninfo.com.cn/finalpage/2024-06-04/1220246894.PDF",
+    "announcement_id": "1220246894",
+    "review_basis": "Read issuer delisting notice archived from CNInfo; date explicitly printed in the delisting section. Next-calendar-day availability retained."
+  },
+  {
+    "asset": "600190",
+    "effective_date": "2025-07-25",
+    "available_at": "2025-07-20T00:00:00+08:00",
+    "source_sha256": "56087fc65f0a9aeb254365479b273da9896733038700400a5205d22aa18d8aa4",
+    "source_url": "https://static.cninfo.com.cn/finalpage/2025-07-19/1224216580.PDF",
+    "announcement_id": "1224216580",
+    "review_basis": "Read issuer delisting notice archived from CNInfo; date explicitly printed in the delisting section. Next-calendar-day availability retained."
+  },
+  {
+    "asset": "600636",
+    "effective_date": "2026-06-29",
+    "available_at": "2026-06-24T00:00:00+08:00",
+    "source_sha256": "be69e8207f8534a7f6d53d6c49eff719f871a8d1453602ece2e0087413271e70",
+    "source_url": "https://static.cninfo.com.cn/finalpage/2026-06-23/1225381763.PDF",
+    "announcement_id": "1225381763",
+    "review_basis": "Read issuer delisting notice archived from CNInfo; date explicitly printed in the delisting section. Next-calendar-day availability retained."
+  },
+  {
+    "asset": "600766",
+    "effective_date": "2024-07-03",
+    "available_at": "2024-06-28T00:00:00+08:00",
+    "source_sha256": "74b28cf04f01343683cfeeabb96183c6f7bf0d6a090832f5ff239dada4bb7925",
+    "source_url": "https://static.cninfo.com.cn/finalpage/2024-06-27/1220467284.PDF",
+    "announcement_id": "1220467284",
+    "review_basis": "Read issuer delisting notice archived from CNInfo; date explicitly printed in the delisting section. Next-calendar-day availability retained."
+  },
+  {
+    "asset": "600896",
+    "effective_date": "2022-07-25",
+    "available_at": "2022-07-20T00:00:00+08:00",
+    "source_sha256": "f861b054917ec8eb345d4af7905fdcf3b5273a1941e4bc606b7efead17238929",
+    "source_url": "https://static.cninfo.com.cn/finalpage/2022-07-19/1214065138.PDF",
+    "announcement_id": "1214065138",
+    "review_basis": "Read issuer delisting notice archived from CNInfo; date explicitly printed in the delisting section. Next-calendar-day availability retained."
+  }
+]

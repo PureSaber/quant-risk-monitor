@@ -1,0 +1,62 @@
+[
+  {
+    "asset": "000833",
+    "field": "assets",
+    "report_period": "20211231",
+    "available_at": "2025-01-25 16:00:00+00:00",
+    "source_sha256": "f3ad932e1f32e76f94e8b3254ad00a3060cca4e36dd8da9704712f075b70e7ce",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-01-25/1222431120.PDF",
+    "page": 9,
+    "old_value": 5183597236.94,
+    "new_value": 5185210899.0,
+    "review_basis": "Two PDF readers plus rendered 2023 amended annual report page 9; retain the 2021 value until this later publication. Verified comparative amounts differ from the frozen warmup vintage."
+  },
+  {
+    "asset": "000833",
+    "field": "book_equity",
+    "report_period": "20211231",
+    "available_at": "2025-01-25 16:00:00+00:00",
+    "source_sha256": "f3ad932e1f32e76f94e8b3254ad00a3060cca4e36dd8da9704712f075b70e7ce",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-01-25/1222431120.PDF",
+    "page": 9,
+    "old_value": 3103405219.53,
+    "new_value": 3103528462.47,
+    "review_basis": "Two PDF readers plus rendered 2023 amended annual report page 9; retain the 2021 value until this later publication. Verified comparative amounts differ from the frozen warmup vintage."
+  },
+  {
+    "asset": "000833",
+    "field": "profit_ytd",
+    "report_period": "20211231",
+    "available_at": "2025-01-25 16:00:00+00:00",
+    "source_sha256": "f3ad932e1f32e76f94e8b3254ad00a3060cca4e36dd8da9704712f075b70e7ce",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-01-25/1222431120.PDF",
+    "page": 9,
+    "old_value": 259778298.27,
+    "new_value": 259824395.97,
+    "review_basis": "Two PDF readers plus rendered 2023 amended annual report page 9; retain the 2021 value until this later publication. Verified comparative amounts differ from the frozen warmup vintage."
+  },
+  {
+    "asset": "600054",
+    "field": "book_equity",
+    "report_period": "20231231",
+    "available_at": "2024-04-20 16:00:00+00:00",
+    "source_sha256": "3db9a3b97c3cd688c4eefb213414c45e1ddd414721a944ad2d2f6ffcf32a4303",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-04-20/1219701780.PDF",
+    "page": 7,
+    "old_value": 448648.0,
+    "new_value": 4486489092.52,
+    "review_basis": "Two independent PDF readers plus rendered source page inspection, 2026-10-17. Correct the displayed line-wrapped amount."
+  },
+  {
+    "asset": "600853",
+    "field": "book_equity",
+    "report_period": "20231231",
+    "available_at": "2024-04-20 16:00:00+00:00",
+    "source_sha256": "c7137b4163a418af804496afaf87e1317afb49fc614ad15f9af36cb005656846",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-04-20/1219698527.PDF",
+    "page": 7,
+    "old_value": 273636.0,
+    "new_value": 2736360849.31,
+    "review_basis": "Two independent PDF readers plus rendered source page inspection, 2026-10-17. Correct the displayed line-wrapped amount."
+  }
+]

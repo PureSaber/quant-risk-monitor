@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-import re
 import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import pymupdf
+from report_discovery import is_full_report
 
 from public_sources import ROOT, fetch
 
@@ -30,6 +30,9 @@ def announcements(code, org, *, start="2019-01-01", end="2025-12-31"):
         "sortType": "asc",
         "isHLtitle": "false",
     }
+    expected_total = None
+    seen = set()
+    received = 0
     for page in range(1, 41):
         payload["pageNum"] = page
         result = json.loads(
@@ -39,9 +42,24 @@ def announcements(code, org, *, start="2019-01-01", end="2025-12-31"):
                 data=payload,
             )
         )
+        total = result.get("totalAnnouncement")
+        if not isinstance(total, int) or total < 0:
+            raise ValueError("Missing/invalid announcement total; archive completeness unknown")
+        if expected_total is not None and total != expected_total:
+            raise ValueError("Announcement result changed during pagination; retry a fresh archive")
+        expected_total = total
         batch = result.get("announcements") or []
-        rows.extend(r for r in batch if r["secCode"] == code)
-        if page * 30 >= result.get("totalAnnouncement", 0):
+        if not batch and received < total:
+            raise ValueError("Empty announcement page before declared total")
+        for row in batch:
+            key = (row["secCode"], str(row["announcementId"]))
+            if key in seen:
+                raise ValueError("Repeated announcement across pages; incomplete pagination")
+            seen.add(key)
+            if row["secCode"] == code:
+                rows.append(row)
+        received += len(batch)
+        if received >= total:
             break
     else:
         raise ValueError("Announcement pagination limit exceeded; cannot silently truncate")
@@ -91,18 +109,7 @@ def extract_pdf(row):
 
 def one(code, org, pdfs=False):
     rows = announcements(code, org)
-    selected = [
-        r
-        for r in rows
-        if re.search(
-            r"(?:19|20|21|22|23|24|25)年.*(?:年度报告|半年度报告|季度报告)",
-            r["announcementTitle"],
-        )
-        and not re.search(
-            r"取消|英文|摘要|提示|董事|监事|核查|审核|专项|独立|审计|更正.*公告|修订.*公告",
-            r["announcementTitle"],
-        )
-    ]
+    selected = [r for r in rows if is_full_report(r["announcementTitle"])]
     selected = [
         r
         for r in selected
