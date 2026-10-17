@@ -2,6 +2,7 @@ import json
 
 import pandas as pd
 import pytest
+
 from financial_table_recovery import agree, audit_opinion, field_name, number, table_facts
 from report_discovery import is_full_report, original_period, title_period
 
@@ -217,3 +218,35 @@ def test_repeated_statement_headers_do_not_mutate_heading_pattern():
     found = list(statement_sections(text, "利润表", "20231231"))
     assert len(found) == 2
     assert "20 19" not in found[0] and "10 9" not in found[1]
+
+
+def test_statement_unit_above_continuation_survives_signed_footer():
+    from recovery_extract import statement_fallback
+
+    text = ("[[PAGE 50]]\n（金额单位为人民币百万元）\n2020年6月30日合并资产负债表\n"
+            "项目\n2020年6月30日 2019年12月31日\n资产总计 4000000 3000000\n"
+            "后附财务报表附注为组成部分。\n法定代表人：甲\n[[PAGE 51]]\n"
+            "（金额单位为人民币百万元）\n2020年6月30日合并资产负债表（续）\n"
+            "负债：\n负债合计 3,543,856 3,317,392\n2020年6月30日公司资产负债表\n"
+            "负债合计 3,000,000 2,000,000")
+    second = text.replace("2020年6月", "2020年 6月")
+    rows = statement_fallback(text, second, "20200630")
+    assert next(r for r in rows if r["field"] == "liabilities")["value"] == 3543856e6
+
+
+def test_reconciliation_with_year_below_financial_rows_is_rejected():
+    from recovery_extract import statement_sections
+
+    text = "[[PAGE 176]]\n合并利润表\n营业收入 837859 -432819 405040\n2024年政策解释"
+    assert list(statement_sections(text, "利润表", "20241231")) == []
+
+
+def test_reviewed_restated_columns_require_order_and_unit():
+    import pytest
+
+    from recovery_rebuild import comparative_values
+
+    text = "2024年度合并利润表\n金额单位为人民币百万元\n2024年度 2023年度 2022年度\n营业收入 528,567 405,040 388,895\n"
+    assert comparative_values(text, "营业收入", [2024, 2023, 2022]) == [528567e6, 405040e6, 388895e6]
+    with pytest.raises(ValueError):
+        comparative_values(text, "营业收入", [2024, 2022, 2023])

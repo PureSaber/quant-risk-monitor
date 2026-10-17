@@ -52,7 +52,7 @@ def normalize_facts(frame):
     frame = frame.copy()
     frame["asset"] = frame.asset.astype(str).str.zfill(6)
     frame["report_period"] = frame.report_period.astype(str)
-    frame["available_at"] = pd.to_datetime(frame.available_at, utc=True)
+    frame["available_at"] = pd.to_datetime(frame.available_at, utc=True, format="mixed")
     frame["value"] = pd.to_numeric(frame.value, errors="raise")
     if not np.isfinite(frame.value).all():
         raise ValueError("nonfinite_financial_fact")
@@ -83,7 +83,7 @@ def merge_evidence(original, additions, *, reviewed_corrections=()):
         if key in corrections or not record.get("review_basis"):
             raise ValueError("ambiguous_or_unsupported_correction")
         corrections[key] = record
-    accepted, decisions = [], []
+    accepted, decisions, applied = [], [], set()
     for key, group in additions.groupby(KEY, sort=True):
         rows = group.to_dict("records")
         eligible = [r for r in rows if r["admission_reason"] == "eligible"]
@@ -111,6 +111,7 @@ def merge_evidence(original, additions, *, reviewed_corrections=()):
                         "value",
                     ] = chosen["value"]
                     reason = "reviewed_correction_in_new_overlay"
+                    applied.add(key)
                 else:
                     reason = (
                         "agrees_with_original"
@@ -124,6 +125,8 @@ def merge_evidence(original, additions, *, reviewed_corrections=()):
         for row in rows:
             decision = row["admission_reason"] if row["admission_reason"] != "eligible" else reason
             decisions.append({**row, "decision": decision, "selected": row is chosen})
+    if applied != set(corrections):
+        raise ValueError("unapplied_reviewed_correction")
     if accepted:
         merged = pd.concat([original, pd.DataFrame(accepted)], ignore_index=True)
     else:

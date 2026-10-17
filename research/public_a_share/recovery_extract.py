@@ -9,6 +9,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import pandas as pd
+
 from financial_table_recovery import agree, compact, extract_tables
 from recovery_inventory import digest, write_json
 from report_discovery import original_period
@@ -17,24 +18,42 @@ from report_discovery import original_period
 def statement_sections(text, heading, period):
     """Only actual statement headings, not narrative references or old restatements."""
     prefix = (
-        r"(?:\d+[、.．]\s*|[（(][一二三四五六七八九十]+[）)]\s*)?(?:20\d{2}年(?:度|12月31日)?\s*)?"
+        r"(?:\d+[、.．]\s*|[（(][一二三四五六七八九十]+[）)]\s*)?"
+        r"(?:20\d{2}\s*年\s*(?:度|\d{1,2}\s*月\s*\d{1,2}\s*日)?\s*)?"
     )
     pattern = r"(?m)^\s*" + prefix + r"合并(?:及公司)?" + heading + r"\s*$"
     for match in re.finditer(pattern, text):
         tail = text[match.end() :]
-        first_year = re.search(r"20\d{2}", match[0] + tail[:500])
+        header = re.split(r"营业收入|资产总计|利润总额|负债合计", tail[:500])[0]
+        first_year = re.search(r"20\d{2}", match[0] + header)
         if not first_year or first_year[0] != period[:4]:
             continue
         stop = re.search(
             r"(?m)^\s*"
             + prefix
-            + r"(?:母公司|合并)(?:利润表|资产负债表|现金流量表|所有者权益变动表)\s*$",
+            + r"(?:母公司|公司|合并)(?:利润表|资产负债表|现金流量表|所有者权益变动表)\s*$",
             tail,
         )
         end = match.end() + (stop.start() if stop else min(len(tail), 26000))
         pages = list(re.finditer(r"\[\[PAGE (\d+)\]\]", text[: match.start()]))
         page_marker = pages[-1][0] + "\n" if pages else ""
-        yield page_marker + text[match.start() : end]
+        section = text[match.start() : end]
+        page_start = pages[-1].end() if pages else max(0, match.start() - 300)
+        units_above = re.findall(
+            r"单位\s*[为:：]?\s*(?:人民币)?\s*(?:百万元|千元|万元|亿元|元)",
+            text[page_start:match.start()],
+        )
+        if units_above:
+            section = match[0] + "\n" + units_above[-1] + "\n" + text[match.end():end]
+        # A continuation heading may follow the currency unit on the page.
+        # Keep the original statement's unit context instead of starting a new
+        # amount_row region after that unit and silently interpreting yuan.
+        section = re.sub(r"合并(?:及公司)?" + heading + r"[（(]续[）)]", "本表续页", section)
+        # These are repeated footers inside our already bounded issuer table;
+        # the legacy parser otherwise stops before its continuation page.
+        section = section.replace("后附财务报表附注", "本表附注")
+        section = re.sub(r"企业负责人|法定代表人", "本表签署人", section)
+        yield page_marker + section
 
 
 def statement_fallback(first_text, second_text, period):

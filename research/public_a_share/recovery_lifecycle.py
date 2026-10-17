@@ -10,6 +10,7 @@ from pathlib import Path
 import pandas as pd
 import pymupdf
 import requests
+
 from recovery_inventory import digest, write_json
 
 CODES = ("000150", "000613", "000666", "002621", "002699", "600190", "600636", "600766", "600896")

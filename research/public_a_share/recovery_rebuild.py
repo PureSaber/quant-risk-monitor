@@ -9,11 +9,11 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from recovery_admission import FINANCIAL_FIELDS, merge_evidence, opinion_evidence
-from recovery_inventory import digest, write_json
 
 import model_bootstrap  # noqa: F401
 from quant_risk_monitor.style_descriptors import annual_growth_descriptors
+from recovery_admission import FINANCIAL_FIELDS, merge_evidence, opinion_evidence
+from recovery_inventory import digest, write_json
 
 
 def recovered_rows(cache):
@@ -92,7 +92,92 @@ def coverage(old, new, label, dates):
     }
 
 
-def rebuild(base, run, cache, audit, target=None, corrections=None):
+def reviewed_source_rows(facts, corrections):
+    """Re-read explicitly reviewed non-annual sources without changing discovery."""
+    import re
+
+    import pymupdf
+    from pypdf import PdfReader
+
+    rows = []
+    for correction in corrections:
+        if not correction.get("reverify_document"):
+            continue
+        path = correction["source_pdf"]
+        if digest(path) != correction["source_sha256"]:
+            raise ValueError("reviewed_document_changed")
+        page = correction["page"]
+        period = correction["report_period"]
+        with pymupdf.open(path) as document:
+            text = document[page - 1].get_text()
+        reader = PdfReader(path)
+        other = reader.pages[page - 1].extract_text()
+        for content in (text, other):
+            compact = re.sub(r"\s+", "", content)
+            row = re.search(r"负债合计\s*(\d{1,3}(?:,\d{3})+)", content)
+            if (correction["field"] != "liabilities" or "合并资产负债表" not in compact
+                    or "金额单位为人民币百万元" not in compact or not row
+                    or float(row[1].replace(",", "")) * 1e6 != correction["new_value"]):
+                raise ValueError("reviewed_source_failed_independent_recheck")
+        verified = {"field": "liabilities", "report_period": period,
+                    "value": correction["new_value"], "scale": 1e6, "page": page,
+                    "label": "负债合计", "scope": "reviewed_consolidated_continuation"}
+        original = facts[(facts.asset == correction["asset"])
+                         & (facts.field == correction["field"])
+                         & (facts.report_period == period)
+                         & (pd.to_datetime(facts.available_at, utc=True)
+                            == pd.Timestamp(correction["available_at"]))]
+        if len(original) != 1:
+            raise ValueError("reviewed_original_not_unique")
+        rows.append({**original.iloc[0].to_dict(), **verified,
+                     "admission_reason": "eligible", "audit_status": "reviewed_legacy",
+                     "source_pdf": path, "source_sha256": correction["source_sha256"],
+                     "url": correction["url"], "parser_sha256": digest(__file__),
+                     "verification": "explicit_review_and_two_reader_recheck"})
+    return rows
+
+
+def comparative_values(text, label, years):
+    import re
+
+    compact = re.sub(r"\s+", "", text)
+    header = compact.split("营业收入", 1)[0]
+    seen = list(dict.fromkeys(int(y) for y in re.findall(r"(20\d{2})年度", header)))
+    if seen != years or "金额单位为人民币百万元" not in header or "合并利润表" not in header:
+        raise ValueError("reviewed_comparative_header_changed")
+    row = re.search(re.escape(label) + r"\s*((?:\d{1,3}(?:,\d{3})+\s*){3})", text)
+    if not row:
+        raise ValueError("reviewed_comparative_row_changed")
+    return [float(v.replace(",", "")) * 1e6 for v in re.findall(r"\d{1,3}(?:,\d{3})+", row[1])]
+
+
+def reviewed_comparatives(path):
+    import pymupdf
+    from pypdf import PdfReader
+
+    rows = []
+    for item in json.loads(path.read_text(encoding="utf-8")):
+        source = item["source_pdf"]
+        if digest(source) != item["source_sha256"]:
+            raise ValueError("reviewed_comparative_source_changed")
+        with pymupdf.open(source) as document:
+            text = document[item["page"] - 1].get_text()
+        other = PdfReader(source).pages[item["page"] - 1].extract_text()
+        for field, label in (("revenue_ytd", "营业收入"), ("profit_ytd", "归属于母公司股东的净利润")):
+            for content in (text, other):
+                if comparative_values(content, label, item["column_years"]) != item[field]:
+                    raise ValueError("reviewed_comparative_value_changed")
+            for year, value in zip(item["column_years"], item[field], strict=True):
+                rows.append({**{k: item[k] for k in ("asset", "announcement_id", "source_pdf", "source_sha256", "available_at", "url", "page")},
+                             "field": field, "report_period": str(year) + "1231", "value": value,
+                             "label": label, "scale": 1e6, "scope": "reviewed_restated_comparative",
+                             "admission_reason": "eligible", "audit_status": "unqualified",
+                             "verification": "explicit_comparative_columns_two_pdf_readers",
+                             "parser_sha256": digest(__file__)})
+    return rows
+
+
+def rebuild(base, run, cache, audit, target=None, corrections=None, comparatives=None):
     protocol = json.loads((run / "protocol.json").read_text(encoding="utf-8"))
     for item in protocol["inputs"]:
         if digest(item["path"]) != item["sha256"]:
@@ -107,6 +192,11 @@ def rebuild(base, run, cache, audit, target=None, corrections=None):
     facts = pd.read_parquet(base / "runs/main/financial-vintages.parquet")
     additions, documents = recovered_rows(cache)
     reviewed = json.loads(corrections.read_text(encoding="utf-8")) if corrections else []
+    extra = reviewed_source_rows(facts, reviewed)
+    if comparatives:
+        extra.extend(reviewed_comparatives(comparatives))
+    if extra:
+        additions = pd.concat([additions, pd.DataFrame(extra)], ignore_index=True)
     merged, decisions = merge_evidence(facts, additions, reviewed_corrections=reviewed)
     target = target or run / "rebuilt"
     target.mkdir(parents=True, exist_ok=True)
@@ -235,5 +325,6 @@ if __name__ == "__main__":
         parser.add_argument("--" + name, type=Path, required=True)
     parser.add_argument("--target", type=Path)
     parser.add_argument("--corrections", type=Path)
+    parser.add_argument("--comparatives", type=Path)
     args = parser.parse_args()
-    rebuild(args.base, args.run, args.cache, args.audit, args.target, args.corrections)
+    rebuild(args.base, args.run, args.cache, args.audit, args.target, args.corrections, args.comparatives)

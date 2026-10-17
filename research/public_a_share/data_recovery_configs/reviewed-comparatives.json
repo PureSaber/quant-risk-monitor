@@ -1,0 +1,15 @@
+[
+  {
+    "asset": "601628",
+    "announcement_id": "1222910598",
+    "source_pdf": "D:/QuantData/barra-200-v3/inputs/old/raw/filings/601628/1222910598.pdf",
+    "source_sha256": "3cc6db9bbd9c3c754548b6be288bcebae7187e5264eba59025237f5aa8c667e0",
+    "available_at": "2025-03-27 16:00:00+00:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-03-27/1222910598.PDF",
+    "page": 100,
+    "column_years": [2024, 2023, 2022],
+    "revenue_ytd": [528567000000, 405040000000, 388895000000],
+    "profit_ytd": [106935000000, 51184000000, 66680000000],
+    "basis": "2024 consolidated income statement, page 100, explicitly restated 2023/2022 columns. Preserve original vintages until publication; do not mix old insurance-accounting revenue with the new basis."
+  }
+]
