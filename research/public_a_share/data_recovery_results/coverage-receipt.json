@@ -1,0 +1,14 @@
+{
+  "all_fields_company_days_before": 141465,
+  "all_fields_company_days_after": 161212,
+  "company_days": 181600,
+  "companies_with_any_gap_before": 103,
+  "companies_with_any_gap_after": 59,
+  "fact_changes": 1062,
+  "new_vintages": 1044,
+  "corrected_vintages": 18,
+  "matrix_rows": 8000,
+  "input_sha256": "60c716b0351f0f853f5a83d4fdfb69759fd27450f5d0759679034ea32f4a6b6a",
+  "original_retained": true,
+  "default_model_changed": false
+}

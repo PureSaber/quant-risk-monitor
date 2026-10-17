@@ -104,6 +104,10 @@ replay and does not calculate a return improvement between unequal stopping date
 Imputation candidates are excluded from account decisions because they did not
 pass development validation.
 
+## Final supplemental recovery
+
+Final data and imputation evidence is in `data_recovery_results/README.md`, with an executed independent audit notebook. The checkpoint below remains preserved for provenance and is not the final result.
+
 ## Initial annual recovery checkpoint (superseded by supplemental validation)
 
 For the unchanged 200 companies and 908 evaluation sessions (181,600 company-days

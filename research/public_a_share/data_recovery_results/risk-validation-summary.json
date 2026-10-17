@@ -1,0 +1,92 @@
+{
+  "comparisons": {
+    "development": {
+      "block_dates": 10,
+      "replications": 5000,
+      "minimum_dates_for_interval": 20,
+      "complete_dates": 40,
+      "means": {
+        "old_input": -7.689514903749469,
+        "restored_input": -7.6904915371757285,
+        "industry_median": -7.685364814438526,
+        "industry_size_ridge": -7.685362966987372
+      },
+      "comparisons": {
+        "old_input": {
+          "mean_delta": 0.0009766334262587106,
+          "simultaneous_95_interval": [
+            -2.151790998569547e-05,
+            0.00202717174325618
+          ],
+          "historical_improvement": false
+        },
+        "industry_median": {
+          "mean_delta": 0.005126722737201628,
+          "simultaneous_95_interval": [
+            0.0032422573908031187,
+            0.0066626406349602815
+          ],
+          "historical_improvement": false
+        },
+        "industry_size_ridge": {
+          "mean_delta": 0.005128570188354642,
+          "simultaneous_95_interval": [
+            0.0032429379344040003,
+            0.006666804081479545
+          ],
+          "historical_improvement": false
+        }
+      },
+      "inference_status": "available"
+    },
+    "retrospective": {
+      "block_dates": 10,
+      "replications": 5000,
+      "minimum_dates_for_interval": 20,
+      "complete_dates": 83,
+      "means": {
+        "old_input": -6.902018897459879,
+        "restored_input": -6.89913339819387,
+        "industry_median": -6.899686119135044,
+        "industry_size_ridge": -6.899686119135044
+      },
+      "comparisons": {
+        "old_input": {
+          "mean_delta": -0.0028854992660095414,
+          "simultaneous_95_interval": [
+            -0.005410544286197848,
+            -8.70797139526139e-05
+          ],
+          "historical_improvement": true
+        },
+        "industry_median": {
+          "mean_delta": -0.0005527209411739867,
+          "simultaneous_95_interval": [
+            -0.003991240185372926,
+            0.003040409763442341
+          ],
+          "historical_improvement": false
+        },
+        "industry_size_ridge": {
+          "mean_delta": -0.0005527209411739867,
+          "simultaneous_95_interval": [
+            -0.003991240185372926,
+            0.003040409763442341
+          ],
+          "historical_improvement": false
+        }
+      },
+      "inference_status": "available"
+    }
+  },
+  "wall_seconds": 258.50046529999236,
+  "process_peak_bytes": 309981184,
+  "forecast_rows": 2912,
+  "failure_records": 0,
+  "promoted": false,
+  "limitations": [
+    "Matched estimation/forecast sample; coverage loss is reported separately.",
+    "Growth-composite candidates change a style definition and remain sensitivity experiments.",
+    "These are fixed-portfolio risk forecasts, not a full account/strategy replay."
+  ]
+}
