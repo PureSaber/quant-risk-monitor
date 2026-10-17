@@ -23,8 +23,11 @@ artifacts; neither is automatically promoted to a production model.
   alternative accounting standards are not silently substituted for the target.
 * `recovery_admission.py` preserves every vintage. Same-time conflicts require an
   explicit reviewed correction bound to the source hash and old/new values.
-  `data_recovery_configs/reviewed-corrections.json` records five source-page
-  checks. Nonstandard financial audit opinions are not automatically admitted;
+  `data_recovery_configs/reviewed-corrections.json` records 18 reviewed vintage
+  corrections, including 13 liability-unit corrections. Each additionally loaded
+  original is checked with both PDF readers. `reviewed-comparatives.json` binds
+  the China Life restated comparative figures to the later report and its actual
+  availability date. Nonstandard financial audit opinions are not automatically admitted;
   historical audit discussions and internal-control opinions are distinguished.
 * `recovery_rebuild.py` writes an independent fact table and six descriptor
   matrices. It checks frozen inputs before deserializing the trusted local panel.
@@ -33,6 +36,17 @@ artifacts; neither is automatically promoted to a production model.
 * `recovery_lifecycle.py` verifies nine issuer delisting notices. Its overlay
   starts after both publication availability and the effective delisting date.
   It changes neither prices, return labels, holdings nor account cash.
+* `interim_table_recovery.py` separately verifies quarterly/YTD columns and
+  insurance equity labels. Issuer-only statements require dated evidence that
+  consolidation is not applicable; this is not a general parent-company fallback.
+  `recovery_supplemental.py` binds manual comparative-column reviews to original
+  hashes, both PDF readers and source availability. Cover-header exceptions and
+  an issuer's disputed assurance remain explicit. Later comparatives never use
+  the older report's availability. Unaudited interim reports are not described
+  as carrying an annual audit opinion.
+* `recovery_gap_reasons.py` explains every remaining descriptor cell using the
+  underlying formula and information available on its date. A missing component
+  is not proof that the original announcement does not exist.
 
 An audit-opinion classification is a gate, not a new audit of the issuer. Existing
 unreviewed financial observations retain their legacy status. Full-report PDF
@@ -70,12 +84,58 @@ explicit paths to the preserved archive and prior audit:
 python recovery_inventory.py --base BASE --audit AUDIT --out NEW_RUN
 python recovery_collect.py --base BASE --out NEW_RUN
 python recovery_extract.py --inventory NEW_RUN/recovery-inventory.csv --cache NEW_RUN/extract
-python recovery_rebuild.py --base BASE --run NEW_RUN --cache NEW_RUN/extract --audit AUDIT --target NEW_RUN/rebuilt --corrections data_recovery_configs/reviewed-corrections.json
+python interim_table_recovery.py --inventory data_recovery_configs/interim-inventory.json --out NEW_RUN/interim-geometry.json
+python recovery_supplemental.py --geometry NEW_RUN/interim-geometry.json --reviews data_recovery_configs/reviewed-interim-v3.json --target NEW_RUN/supplemental.json
+python recovery_rebuild.py --base BASE --run NEW_RUN --cache NEW_RUN/extract --audit AUDIT --target NEW_RUN/rebuilt --corrections data_recovery_configs/reviewed-corrections.json --comparatives data_recovery_configs/reviewed-comparatives.json
 python recovery_lifecycle.py --base BASE --out NEW_RUN/lifecycle
 python recovery_lifecycle.py --base BASE --out NEW_RUN/lifecycle --events data_recovery_configs/lifecycle-events.json
 python recovery_imputation.py --base BASE --recovered NEW_RUN/rebuilt --out NEW_RUN/imputation
 python recovery_risk_validation.py --base BASE --recovered NEW_RUN/rebuilt --out NEW_RUN/risk-validation
 ```
+
+`recovery_account_inputs.py` rebuilds the six frozen generator combinations with
+restored observations. Every original decision date retains the exact original
+candidate set and benchmark weights. Run `repair_risk_coverage.py` on that new
+source, then the existing `study_v3_batch.py` with the strict share rules.
+`recovery_account_report.py` verifies all 62 receipts, exact-money journals,
+fee/cash arithmetic, risk unions, lot rules and continuous/integer constraints
+before producing a final account acceptance. It compares against the prior strict
+replay and does not calculate a return improvement between unequal stopping dates.
+Imputation candidates are excluded from account decisions because they did not
+pass development validation.
+
+## Initial annual recovery checkpoint (superseded by supplemental validation)
+
+For the unchanged 200 companies and 908 evaluation sessions (181,600 company-days
+per field), intermediate `recovered-v3` coverage is:
+
+| Descriptor | Before | Restored | Newly observed cells |
+|---|---:|---:|---:|
+| Three-year revenue growth | 88.9950% | 97.8904% | 16,154 |
+| Three-year profit growth | 90.4752% | 97.7572% | 13,224 |
+| Trailing earnings yield | 92.8684% | 95.4857% | 4,753 |
+| Year-on-year profit growth | 96.9180% | 97.0551% | 249 |
+
+The merged fact table has 944 new unique vintages and 18 reviewed corrections.
+No previously observed descriptor cell was lost. Of 160 company-year-field
+blockers, 137 are restored before their first affected decision and 23 are not
+admitted: 10 post-delisting source-verification cases, eight disclosure-timeline
+cases and five audit-opinion review cases. A source retrieval failure, including
+the recorded HTTP 403, is not evidence of nonpublication. The full inventory and
+remaining-case evidence are in the delivery artifacts.
+
+Both imputation candidates fail to demonstrate stable rank recovery and preserve
+too little of the observed cross-sectional variation. Neither 5%, 10% nor 20%
+masking establishes a safe automatic filling threshold. On the fixed-portfolio
+risk check, restored inputs improve development loss but worsen retrospective
+2024–2026 loss against the old inputs (old minus restored mean −0.003665,
+simultaneous 95% interval [−0.006218, −0.000657]). Data correctness and predictive
+model quality are separate acceptance decisions; default v1 remains unchanged.
+
+These counts describe reviewed recovery overlays, not a new audit of all legacy
+observations or independent forward confirmation. The run preserves exact producer
+hashes; subsequent formatting-only commits do not relabel older artifacts as
+having been produced by the newer source hash.
 
 Use a new run/cache/output version when code or inputs change; do not overwrite
 completed experiments. Downloads stop at the agreed 25 GiB data-root budget and

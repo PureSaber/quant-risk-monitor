@@ -1,0 +1,1342 @@
+[
+  {
+    "asset": "001201",
+    "announcement_id": "1211400033",
+    "title": "2021年第三季度报告",
+    "report_period": "20210930",
+    "published": "2021-10-28",
+    "available_at": "2021-10-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-10-28/1211400033.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\001201\\1211400033.pdf",
+    "sha256": "fb1fcb9b19ded18f9a99c08c2f14da3bd9328c6d164ce77b60e6f76cc00a22c4",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "001201",
+    "announcement_id": "1217712952",
+    "title": "2023年半年度报告",
+    "report_period": "20230630",
+    "published": "2023-08-31",
+    "available_at": "2023-09-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-08-31/1217712952.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\001201\\1217712952.pdf",
+    "sha256": "cdbc8739084555684c1d1e6a13d7090bd3ae2fef8b2444bd7a1f31a76cc0da1b",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "002156",
+    "announcement_id": "1211430858",
+    "title": "2021年第三季度报告",
+    "report_period": "20210930",
+    "published": "2021-10-30",
+    "available_at": "2021-10-31T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-10-30/1211430858.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\002156\\1211430858.pdf",
+    "sha256": "565be01dabf313ce01a4dee4f3ec0efd013dc56631cd7bf900cc7a3136c16ad2",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "002156",
+    "announcement_id": "1221555128",
+    "title": "2024年三季度报告",
+    "report_period": "20240930",
+    "published": "2024-10-30",
+    "available_at": "2024-10-31T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-10-30/1221555128.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\002156\\1221555128.pdf",
+    "sha256": "a6f7b92f04df433599d85703055301e94bb98f33a964f3a0d0f9dddb298a34cd",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600190",
+    "announcement_id": "1223425712",
+    "title": "锦州港股份有限公司2024年年度报告",
+    "report_period": "20241231",
+    "published": "2025-04-30",
+    "available_at": "2025-05-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-04-30/1223425712.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600190\\1223425712.pdf",
+    "sha256": "fcd6534fb0ddcb0946dd96aadb330d7c11c9920dbf445e2e40e7a2426c87f3a2",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600207",
+    "announcement_id": "1214471133",
+    "title": "安彩高科2022年半年报",
+    "report_period": "20220630",
+    "published": "2022-08-31",
+    "available_at": "2022-09-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-08-31/1214471133.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\runs\\data-recovery-01\\interim-originals\\1214471133.pdf",
+    "sha256": "4dd60f8e8702c35c4bd2bb1aa61a61399f291994b89989d7029bafb5bf02cf1a",
+    "requested_fields": [
+      "profit_ytd"
+    ],
+    "retrieved_at": "2026-10-17T07:43:45.974863+00:00"
+  },
+  {
+    "asset": "600212",
+    "announcement_id": "1211430945",
+    "title": "山东江泉实业股份有限公司2021年第三季度报告",
+    "report_period": "20210930",
+    "published": "2021-10-30",
+    "available_at": "2021-10-31T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-10-30/1211430945.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600212\\1211430945.pdf",
+    "sha256": "dbbc35f1afdc1a9d1c1776abc2fb0a70d913398dd0faf11ef9f264d32032918a",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600323",
+    "announcement_id": "1221531167",
+    "title": "2024年第三季度报告",
+    "report_period": "20240930",
+    "published": "2024-10-28",
+    "available_at": "2024-10-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-10-28/1221531167.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600323\\1221531167.pdf",
+    "sha256": "3f8ec00b913000f714cfdeca75be52c4c0e7f383afdc6b7c5888e06347695618",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600535",
+    "announcement_id": "1211384109",
+    "title": "天士力2021年第三季度报告",
+    "report_period": "20210930",
+    "published": "2021-10-27",
+    "available_at": "2021-10-28T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-10-27/1211384109.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600535\\1211384109.pdf",
+    "sha256": "accf0aa65090fad169b6fb8977e0615a7539085ad9e6264a5ce7f5697f35474d",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600661",
+    "announcement_id": "1214968739",
+    "title": "昂立教育2022年第三季度报告",
+    "report_period": "20220930",
+    "published": "2022-10-29",
+    "available_at": "2022-10-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-10-29/1214968739.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600661\\1214968739.pdf",
+    "sha256": "ca4fb6138c8eaf6f1279f869ab320e09acd1328f57eae3491432c2891f9dff74",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600664",
+    "announcement_id": "1221519713",
+    "title": "哈药集团股份有限公司2024年第三季度报告",
+    "report_period": "20240930",
+    "published": "2024-10-26",
+    "available_at": "2024-10-27T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-10-26/1221519713.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600664\\1221519713.pdf",
+    "sha256": "877fbb8b8bf8026563d5a1a2fe0613ee8c17aac04836454198d14e657cfc163e",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600754",
+    "announcement_id": "1221570579",
+    "title": "锦江酒店2024年第三季度报告",
+    "report_period": "20240930",
+    "published": "2024-10-31",
+    "available_at": "2024-11-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-10-31/1221570579.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600754\\1221570579.pdf",
+    "sha256": "4da7d1842dd2055de7b3799e6775ed851ac4fea7ea5c8b54006e84c0a89cb97a",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1207668683",
+    "title": "2019年年度报告",
+    "report_period": "20191231",
+    "published": "2020-04-29",
+    "available_at": "2020-04-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-04-29/1207668683.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1207668683.pdf",
+    "sha256": "66f0fa848ade887ee1d8a84ed66d0cb38afb7f722c36d4a6a0c6ee5e38bdf712",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1207668678",
+    "title": "2020年第一季度报告",
+    "report_period": "20200331",
+    "published": "2020-04-29",
+    "available_at": "2020-04-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-04-29/1207668678.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1207668678.pdf",
+    "sha256": "519ea1f1c1abad57ea2694573ac6990ed4d97b4cfcc98f5afbc755220de207a2",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1207668677",
+    "title": "2020年第一季度报告正文",
+    "report_period": "20200331",
+    "published": "2020-04-29",
+    "available_at": "2020-04-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-04-29/1207668677.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1207668677.pdf",
+    "sha256": "cf2db434e3cba59b7d8beca015795399574ee22edec5b8c033138062715b5da3",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1208246933",
+    "title": "2020年半年度报告",
+    "report_period": "20200630",
+    "published": "2020-08-26",
+    "available_at": "2020-08-27T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-08-26/1208246933.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1208246933.pdf",
+    "sha256": "c417ab0fafb2a96ffb5e240398733890a89261ba6530053229c00aaae3006cd0",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1208624551",
+    "title": "贵州钢绳股份有限公司2020年第三季度报告正文",
+    "report_period": "20200930",
+    "published": "2020-10-28",
+    "available_at": "2020-10-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-10-28/1208624551.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1208624551.pdf",
+    "sha256": "9f4ccf63a88afa8952152c439517138e417a4139c60c94690d18acd94bf92b3f",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1208624552",
+    "title": "贵州钢绳股份有限公司2020年第三季度报告",
+    "report_period": "20200930",
+    "published": "2020-10-28",
+    "available_at": "2020-10-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-10-28/1208624552.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1208624552.pdf",
+    "sha256": "3cdd9da461587de63039a7b3457522ec5a484b4d5a11767e15e998ffaa9e0f3c",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1209464735",
+    "title": "贵州钢绳股份有限公司2020年年度报告",
+    "report_period": "20201231",
+    "published": "2021-03-27",
+    "available_at": "2021-03-28T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-03-27/1209464735.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1209464735.pdf",
+    "sha256": "9c723bb9bef508c3a8d842894efcb0017787616aa106c6c49f16d9a075b6bf60",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1209875309",
+    "title": "贵州钢绳股份有限公司2021年第一季度报告",
+    "report_period": "20210331",
+    "published": "2021-04-30",
+    "available_at": "2021-05-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-04-30/1209875309.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1209875309.pdf",
+    "sha256": "3620399d9c39398a64e4fe90a8488921afa4e2994d5d9c7e7689870295734bbe",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1209875308",
+    "title": "贵州钢绳股份有限公司2021年第一季度报告正文",
+    "report_period": "20210331",
+    "published": "2021-04-30",
+    "available_at": "2021-05-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-04-30/1209875308.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1209875308.pdf",
+    "sha256": "b1f89263e7fbb903a2b3cc58f3423ba4d93c4fd8997aab2052ae678e4bfb6b34",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1210900622",
+    "title": "贵州钢绳股份有限公司2021年半年度报告",
+    "report_period": "20210630",
+    "published": "2021-08-28",
+    "available_at": "2021-08-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-08-28/1210900622.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1210900622.pdf",
+    "sha256": "a366a95d1a5bc8d4870077d8c888e99b8735f35bf20ecfa82faf7e8bad8de5fd",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1211401476",
+    "title": "贵州钢绳股份有限公司2021年第三季度报告",
+    "report_period": "20210930",
+    "published": "2021-10-28",
+    "available_at": "2021-10-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-10-28/1211401476.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1211401476.pdf",
+    "sha256": "b5fdf9808bbbb6de1fe082fe2a71add11f6d33509782fc448a0c74aef8996256",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1212540935",
+    "title": "贵州钢绳股份有限公司2021年年度报告",
+    "report_period": "20211231",
+    "published": "2022-03-11",
+    "available_at": "2022-03-12T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-03-11/1212540935.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1212540935.pdf",
+    "sha256": "d47f0ab88a288b70a4c8345907055b424b4e9ed123e8228c6652c44d6faac534",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1213214351",
+    "title": "贵州钢绳股份有限公司2022年第一季度报告",
+    "report_period": "20220331",
+    "published": "2022-04-29",
+    "available_at": "2022-04-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-04-29/1213214351.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1213214351.pdf",
+    "sha256": "d54a0ecfbcda1f5e44b95bfd348da8ea763d682a10557ca3a2ed085d7aa690aa",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1214471685",
+    "title": "贵州钢绳股份有限公司2022年半年度报告",
+    "report_period": "20220630",
+    "published": "2022-08-31",
+    "available_at": "2022-09-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-08-31/1214471685.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1214471685.pdf",
+    "sha256": "64b4a12aaa33b2a32a04e4309ed921a06b521c370ff472bb667f4e1421707b00",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1214939418",
+    "title": "贵州钢绳股份有限公司2022年第三季度报告",
+    "report_period": "20220930",
+    "published": "2022-10-28",
+    "available_at": "2022-10-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-10-28/1214939418.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1214939418.pdf",
+    "sha256": "de3d36c463ba2b44666c004b55721aca1c1ef1d39a7853f869378d7abcb67f39",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1216245602",
+    "title": "贵州钢绳股份有限公司2022年年度报告",
+    "report_period": "20221231",
+    "published": "2023-03-29",
+    "available_at": "2023-03-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-03-29/1216245602.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1216245602.pdf",
+    "sha256": "3c895537e0bdc68c6e6c3af1d3ba275e0274af6ea2bd13f71dcbda2fafa47d35",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1216706698",
+    "title": "贵州钢绳股份有限公司2023年第一季度报告",
+    "report_period": "20230331",
+    "published": "2023-04-29",
+    "available_at": "2023-04-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-04-29/1216706698.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1216706698.pdf",
+    "sha256": "9ef75d49a8e76cff770a467591966473b18dad20d946dd291ffad65b41fbe45f",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1217694032",
+    "title": "贵州钢绳股份有限公司2023年半年度报告",
+    "report_period": "20230630",
+    "published": "2023-08-30",
+    "available_at": "2023-08-31T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-08-30/1217694032.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1217694032.pdf",
+    "sha256": "b66ea3497616fe7f265dfd69ca4c1abcac009b430a8704abe4650ddf66240e98",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1218184050",
+    "title": "贵州钢绳股份有限公司2023年第三季度报告",
+    "report_period": "20230930",
+    "published": "2023-10-28",
+    "available_at": "2023-10-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-10-28/1218184050.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1218184050.pdf",
+    "sha256": "1e61a7a28820c365e1f6c6b447c6bcee557a1de2d6317b2cbe0418401322742a",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1219467403",
+    "title": "贵州钢绳股份有限公司2023年年度报告",
+    "report_period": "20231231",
+    "published": "2024-03-30",
+    "available_at": "2024-03-31T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-03-30/1219467403.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1219467403.pdf",
+    "sha256": "c66e009bd14ccc929a5a7b7601cb42113ed01512babfc12a9306b7e4b56f8d0a",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1219482304",
+    "title": "贵州钢绳股份有限公司2023年年度报告（更正后）",
+    "report_period": "20231231",
+    "published": "2024-04-01",
+    "available_at": "2024-04-02T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-04-01/1219482304.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1219482304.pdf",
+    "sha256": "c9d5b047fd1c9c4050451722b97d069377d36a09c6a13de92399eb41dd7009c4",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1219905361",
+    "title": "贵州钢绳股份有限公司2024年第一季度报告",
+    "report_period": "20240331",
+    "published": "2024-04-30",
+    "available_at": "2024-05-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-04-30/1219905361.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1219905361.pdf",
+    "sha256": "ac9117a1ca263e3bf459576ed90fbdde2b2051a5bd5635d5d858b31f90360f2d",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1221079576",
+    "title": "贵州钢绳股份有限公司2024年半年度报告",
+    "report_period": "20240630",
+    "published": "2024-08-31",
+    "available_at": "2024-09-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-08-31/1221079576.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1221079576.pdf",
+    "sha256": "6e22865c0a81a14ce0b6e3d1b8e9d901a9a98b33b47f10b17c0999718c7fa141",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1221554535",
+    "title": "贵州钢绳股份有限公司2024年第三季度报告",
+    "report_period": "20240930",
+    "published": "2024-10-30",
+    "available_at": "2024-10-31T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-10-30/1221554535.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1221554535.pdf",
+    "sha256": "08ed663c097d0efe78b03e402ce592c96cda927d8847782e8b4261d3768375c0",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1222952407",
+    "title": "贵州钢绳股份有限公司2024年年度报告",
+    "report_period": "20241231",
+    "published": "2025-03-29",
+    "available_at": "2025-03-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-03-29/1222952407.pdf",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1222952407.pdf",
+    "sha256": "17d1133e66819c90bd47d33c79b8b0b2b7eb3179821a9b27a48ebc0ff56797af",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1223405768",
+    "title": "贵州钢绳股份有限公司2025年第一季度报告",
+    "report_period": "20250331",
+    "published": "2025-04-30",
+    "available_at": "2025-05-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-04-30/1223405768.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1223405768.pdf",
+    "sha256": "b8d0b36d8a7408c50731b73d264087e9150d77a6508005766486b4f28b438087",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1224577219",
+    "title": "贵州钢绳股份有限公司2025年半年度报告",
+    "report_period": "20250630",
+    "published": "2025-08-27",
+    "available_at": "2025-08-28T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-08-27/1224577219.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1224577219.pdf",
+    "sha256": "9e2e442a73dbc3cf7c0fbd117fb6e21814f93bd2a8f6d096325ab2983a7dd2a4",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1224769117",
+    "title": "贵州钢绳股份有限公司2025年第三季度报告",
+    "report_period": "20250930",
+    "published": "2025-10-31",
+    "available_at": "2025-11-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-10-31/1224769117.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\600992\\1224769117.pdf",
+    "sha256": "ab7fc3012f9cdcb179561a24ffab95bee6275632162a561ae0517fc0bf63ba38",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1225176422",
+    "title": "贵州钢绳股份有限公司2025年年度报告",
+    "report_period": "20251231",
+    "published": "2026-04-25",
+    "available_at": "2026-04-26T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2026-04-25/1225176422.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\exposure\\confirmation-inputs\\raw\\filings\\600992\\1225176422.pdf",
+    "sha256": "6f86f59f96438d824af37f5df63fdc9bc45b3de38d4a9988e11f7ea4f79dd652",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1225253835",
+    "title": "贵州钢绳股份有限公司2026年第一季度报告",
+    "report_period": "20260331",
+    "published": "2026-04-30",
+    "available_at": "2026-05-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2026-04-30/1225253835.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\exposure\\confirmation-inputs\\raw\\filings\\600992\\1225253835.pdf",
+    "sha256": "6d994ae7184cc2656645b78b9f3eedde8dbad65414fefc4538ed3b925056e265",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "600992",
+    "announcement_id": "1225505975",
+    "title": "贵州钢绳股份有限公司2026年半年度报告",
+    "report_period": "20260630",
+    "published": "2026-08-26",
+    "available_at": "2026-08-27T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2026-08-26/1225505975.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\exposure\\confirmation-inputs\\raw\\filings\\600992\\1225505975.pdf",
+    "sha256": "faaca410795407968f2e6aa0d976eadb4629cd10f84ac5c5cd76e0f742eb37d9",
+    "requested_fields": [
+      "liabilities",
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "601113",
+    "announcement_id": "1216686699",
+    "title": "义乌华鼎锦纶股份有限公司2023年第一季度报告",
+    "report_period": "20230331",
+    "published": "2023-04-29",
+    "available_at": "2023-04-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-04-29/1216686699.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601113\\1216686699.pdf",
+    "sha256": "09b5d4cd4d7a887235af542a7e349dea6b4a4ee830100adf55b8624d9609632a",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "601158",
+    "announcement_id": "1216299628",
+    "title": "重庆水务集团股份有限公司2022年年报",
+    "report_period": "20221231",
+    "published": "2023-04-01",
+    "available_at": "2023-04-02T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-04-01/1216299628.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\runs\\data-recovery-01\\interim-originals\\1216299628.pdf",
+    "sha256": "d81456ae4d07f34b28293868fc8097680da681fa856381e494cb7ca674b838ef",
+    "requested_fields": [
+      "profit_ytd"
+    ],
+    "retrieved_at": "2026-10-17T07:44:18.605414+00:00"
+  },
+  {
+    "asset": "601158",
+    "announcement_id": "1216967559",
+    "title": "重庆水务2022年年度报告（更正版）",
+    "report_period": "20221231",
+    "published": "2023-06-02",
+    "available_at": "2023-06-03T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-06-02/1216967559.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601158\\1216967559.pdf",
+    "sha256": "09b97c1f6bf71ca1c9973470c6cc4eb299b9c76b019f2f055e9f8bbdda229b1a",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1207404943",
+    "title": "2019年年度报告",
+    "report_period": "20191231",
+    "published": "2020-03-26",
+    "available_at": "2020-03-27T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-03-26/1207404943.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1207404943.pdf",
+    "sha256": "9365eb3aac1912fc15a7e0e60a99f9e441c36882f0634ff9632d7887b3faee1c",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1207583954",
+    "title": "2020年第一季度报告",
+    "report_period": "20200331",
+    "published": "2020-04-24",
+    "available_at": "2020-04-25T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-04-24/1207583954.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1207583954.pdf",
+    "sha256": "4f219f9853e16cd73d1bd58017e0aed81847565c487cf3759f4503e0db9bd034",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1207583955",
+    "title": "2020年第一季度报告",
+    "report_period": "20200331",
+    "published": "2020-04-24",
+    "available_at": "2020-04-25T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-04-24/1207583955.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1207583955.pdf",
+    "sha256": "7703900d51e0442883d769ea492f94560f02ac46bf55dd6615c7a0135c1e21d7",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1208264149",
+    "title": "2020年半年度报告",
+    "report_period": "20200630",
+    "published": "2020-08-27",
+    "available_at": "2020-08-28T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-08-27/1208264149.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1208264149.pdf",
+    "sha256": "5ace1bc99ca62ee0edc511efe78cc7de5cdb26b15e968d6be456b4cbb16d0279",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1208636081",
+    "title": "2020年第三季度报告（正文）",
+    "report_period": "20200930",
+    "published": "2020-10-29",
+    "available_at": "2020-10-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-10-29/1208636081.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\runs\\data-recovery-01\\interim-originals\\1208636081.pdf",
+    "sha256": "bcfeeaac2a5d3b8cc009821dd522d5eb81f3ee356e42b6d73bad05e4c0e4d8ba",
+    "requested_fields": [
+      "book_equity"
+    ],
+    "retrieved_at": "2026-10-17T07:44:30.310232+00:00"
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1208636082",
+    "title": "2020年第三季度报告（全文）",
+    "report_period": "20200930",
+    "published": "2020-10-29",
+    "available_at": "2020-10-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2020-10-29/1208636082.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1208636082.pdf",
+    "sha256": "569264f27aeb804ba62adc77e8106564edb44419c8b155d90ac45b483fa36774",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1209453449",
+    "title": "中国人寿2020年年度报告",
+    "report_period": "20201231",
+    "published": "2021-03-26",
+    "available_at": "2021-03-27T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-03-26/1209453449.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1209453449.pdf",
+    "sha256": "4ab07fed9b14aa939d0397e60e3721728888b36d61ce8550a8eef0b9c9ec013c",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1209858929",
+    "title": "中国人寿2021年第一季度报告（正文）",
+    "report_period": "20210331",
+    "published": "2021-04-29",
+    "available_at": "2021-04-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-04-29/1209858929.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\runs\\data-recovery-01\\interim-originals\\1209858929.pdf",
+    "sha256": "f2b526e2b6dbfaeffb54f720458dbf92ffb42e37bb3b6f6effc950890098cc2a",
+    "requested_fields": [
+      "book_equity"
+    ],
+    "retrieved_at": "2026-10-17T07:44:33.188313+00:00"
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1209858932",
+    "title": "中国人寿2021年第一季度报告（全文）",
+    "report_period": "20210331",
+    "published": "2021-04-29",
+    "available_at": "2021-04-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-04-29/1209858932.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1209858932.pdf",
+    "sha256": "14d3f35df908a516279105f1bd7eff3a0c54356040b48ef73fcc17fc6919dd86",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1210859224",
+    "title": "中国人寿2021年半年度报告",
+    "report_period": "20210630",
+    "published": "2021-08-26",
+    "available_at": "2021-08-27T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-08-26/1210859224.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1210859224.pdf",
+    "sha256": "3063db1bc57e894913afb3fd307f70be85e57144a84a3ff3baf1f550e403fe8f",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1211419194",
+    "title": "中国人寿2021年第三季度报告",
+    "report_period": "20210930",
+    "published": "2021-10-29",
+    "available_at": "2021-10-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-10-29/1211419194.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1211419194.pdf",
+    "sha256": "bb0807700e33a6564185fcd765c39fc253109f8edba7bc8569a8f7b059383181",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1212669927",
+    "title": "中国人寿2021年年度报告",
+    "report_period": "20211231",
+    "published": "2022-03-25",
+    "available_at": "2022-03-26T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-03-25/1212669927.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1212669927.pdf",
+    "sha256": "bf12df8a2946533b2afffa0004b568a1cb27ae8df566b106d70a95d41a118ba8",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1213177258",
+    "title": "中国人寿2022年第一季度报告",
+    "report_period": "20220331",
+    "published": "2022-04-28",
+    "available_at": "2022-04-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-04-28/1213177258.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1213177258.pdf",
+    "sha256": "d7655ce4c65dd55ee00e186e5c209343c1ad0c20c276c41e5d222d6a956bbc97",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1214409395",
+    "title": "中国人寿2022年半年度报告",
+    "report_period": "20220630",
+    "published": "2022-08-26",
+    "available_at": "2022-08-27T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-08-26/1214409395.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1214409395.pdf",
+    "sha256": "1a2ed8d614c5c046e17e873b76a16e73b826b590bfcc3227f4f6a5fe19a3de77",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1214937073",
+    "title": "中国人寿2022年第三季度报告",
+    "report_period": "20220930",
+    "published": "2022-10-28",
+    "available_at": "2022-10-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-10-28/1214937073.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1214937073.pdf",
+    "sha256": "719b1eb6e027257872b5ed1b293e940d14f4dc338585db091e4a74ac2c93fb13",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1216260028",
+    "title": "中国人寿2022年年度报告",
+    "report_period": "20221231",
+    "published": "2023-03-30",
+    "available_at": "2023-03-31T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-03-30/1216260028.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1216260028.pdf",
+    "sha256": "4ad89f8635ad40e6fea39c4d8afae17523c8f9373d60f76f4fb94991429637f1",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1216653426",
+    "title": "中国人寿2023年第一季度报告",
+    "report_period": "20230331",
+    "published": "2023-04-28",
+    "available_at": "2023-04-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-04-28/1216653426.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1216653426.pdf",
+    "sha256": "473fd6790338895fd2257a061a68829ad2fc6d0cff6a43bd3c9f5dca49cceb79",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1217616292",
+    "title": "中国人寿2023年半年度报告",
+    "report_period": "20230630",
+    "published": "2023-08-24",
+    "available_at": "2023-08-25T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-08-24/1217616292.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1217616292.pdf",
+    "sha256": "abf5cd4318b5c383f15b2c37c303c21d6d9bb0e617f47f7f3ffb1fac1127d92b",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1218167379",
+    "title": "中国人寿2023年第三季度报告",
+    "report_period": "20230930",
+    "published": "2023-10-27",
+    "available_at": "2023-10-28T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-10-27/1218167379.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1218167379.pdf",
+    "sha256": "6d1508a2a4c72c2b54ffea472ff1f56419db1bf61f37494c3304ae18c2cc52fe",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1219426152",
+    "title": "中国人寿2023年年度报告",
+    "report_period": "20231231",
+    "published": "2024-03-28",
+    "available_at": "2024-03-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-03-28/1219426152.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1219426152.pdf",
+    "sha256": "5ea1048c3a9323b37b1ad2e870da0fb54d9cfacdfba159aad4b9bec070edc18a",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1219878158",
+    "title": "中国人寿2024年第一季度报告",
+    "report_period": "20240331",
+    "published": "2024-04-27",
+    "available_at": "2024-04-28T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-04-27/1219878158.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1219878158.pdf",
+    "sha256": "3a3772e5f6ee149da68692607f62201558dcfc29f4486c71a91b949c3d29f2bf",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1221054273",
+    "title": "中国人寿2024年半年度报告",
+    "report_period": "20240630",
+    "published": "2024-08-30",
+    "available_at": "2024-08-31T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-08-30/1221054273.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1221054273.pdf",
+    "sha256": "5127e408c211a9127e00eb86ab297026b3a42f248a092365593b9206f6500e86",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1221577046",
+    "title": "中国人寿2024年第三季度报告",
+    "report_period": "20240930",
+    "published": "2024-10-31",
+    "available_at": "2024-11-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-10-31/1221577046.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1221577046.pdf",
+    "sha256": "841eeac6dbc97b33113812fc1285c613adb741774b12b80a0e1237909b87e9f8",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1222910598",
+    "title": "中国人寿2024年年度报告",
+    "report_period": "20241231",
+    "published": "2025-03-27",
+    "available_at": "2025-03-28T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-03-27/1222910598.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1222910598.pdf",
+    "sha256": "3cc6db9bbd9c3c754548b6be288bcebae7187e5264eba59025237f5aa8c667e0",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1223409437",
+    "title": "中国人寿2025年第一季度报告",
+    "report_period": "20250331",
+    "published": "2025-04-30",
+    "available_at": "2025-05-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-04-30/1223409437.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1223409437.pdf",
+    "sha256": "e6fc039c5680a7bce225da0a32e22160bcd91d58f6cb64ed853c90ccd03ef99d",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1224592770",
+    "title": "中国人寿2025年半年度报告",
+    "report_period": "20250630",
+    "published": "2025-08-28",
+    "available_at": "2025-08-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-08-28/1224592770.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1224592770.pdf",
+    "sha256": "45ba4bce18988cf51b2f0c5e05277b374427672a74bb255556c794854dd585db",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1224773689",
+    "title": "中国人寿2025年第三季度报告",
+    "report_period": "20250930",
+    "published": "2025-10-31",
+    "available_at": "2025-11-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2025-10-31/1224773689.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\601628\\1224773689.pdf",
+    "sha256": "a5865cf3651d3922049730e96bca0eaaea6c1d08bf3d7078121c561b4ab2773a",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1225030448",
+    "title": "中国人寿2025年年度报告",
+    "report_period": "20251231",
+    "published": "2026-03-26",
+    "available_at": "2026-03-27T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2026-03-26/1225030448.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\exposure\\confirmation-inputs\\raw\\filings\\601628\\1225030448.pdf",
+    "sha256": "575a833fd7b83ad3568483273645236eddb751a92ab89f7e1c09105d92cedb27",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1225255158",
+    "title": "中国人寿2026年第一季度报告",
+    "report_period": "20260331",
+    "published": "2026-04-30",
+    "available_at": "2026-05-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2026-04-30/1225255158.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\exposure\\confirmation-inputs\\raw\\filings\\601628\\1225255158.pdf",
+    "sha256": "faab8461386c26fcb94f99e8ee0b8d6286c4c5ad65ee324bb03fc3aedda6821b",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "601628",
+    "announcement_id": "1225516873",
+    "title": "中国人寿2026年半年度报告",
+    "report_period": "20260630",
+    "published": "2026-08-28",
+    "available_at": "2026-08-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2026-08-28/1225516873.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\exposure\\confirmation-inputs\\raw\\filings\\601628\\1225516873.pdf",
+    "sha256": "b094bf337309e30564dda86ff4b3c4d66aeeb37ce0357a3568e246569f0e2943",
+    "requested_fields": [
+      "book_equity"
+    ]
+  },
+  {
+    "asset": "603011",
+    "announcement_id": "1214935169",
+    "title": "合肥合锻智能制造股份有限公司2022年第三季度报告",
+    "report_period": "20220930",
+    "published": "2022-10-28",
+    "available_at": "2022-10-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-10-28/1214935169.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603011\\1214935169.pdf",
+    "sha256": "70371b4272597d8d4f17807ccdfd1d961d58a3fe6b8d94914b41b60b774f0816",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603011",
+    "announcement_id": "1218887556",
+    "title": "合肥合锻智能制造股份有限公司2022年第三季度报告（修订版）",
+    "report_period": "20220930",
+    "published": "2024-01-16",
+    "available_at": "2024-01-17T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-01-16/1218887556.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603011\\1218887556.pdf",
+    "sha256": "fcdd9c5f097d6b1ce010feac9315156d779eb195307eb1c1c60644dbcdd184c0",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603115",
+    "announcement_id": "1211419383",
+    "title": "2021年第三季度报告",
+    "report_period": "20210930",
+    "published": "2021-10-29",
+    "available_at": "2021-10-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-10-29/1211419383.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603115\\1211419383.pdf",
+    "sha256": "d86e28c16f4d82f259671d2c0b617dd6c3c8606d334494f7daadc6752c4edca8",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603359",
+    "announcement_id": "1221553887",
+    "title": "东珠生态环保股份有限公司2024年第三季度报告",
+    "report_period": "20240930",
+    "published": "2024-10-30",
+    "available_at": "2024-10-31T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-10-30/1221553887.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603359\\1221553887.pdf",
+    "sha256": "374aa4ece4ed091f5b55c3b6ca21130679b2e7708ac95a28fb9eb687a7e8817a",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603359",
+    "announcement_id": "1225243707",
+    "title": "东珠生态环保股份有限公司2025年度报告",
+    "report_period": "20251231",
+    "published": "2026-04-29",
+    "available_at": "2026-04-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2026-04-29/1225243707.PDF",
+    "pdf": "C:\\Users\\51076\\Documents\\ChatGPT\\SCRATCH\\missing-data-audit-20261017\\verification-documents\\1225243707.pdf",
+    "sha256": "4a3909f17050c9c6b7c9243fe3e46df03fb0284e8cc9cdaeba6c0b5d6cbd99d4",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603359",
+    "announcement_id": "1225264979",
+    "title": "东珠生态环保股份有限公司2025年度报告（更正后）",
+    "report_period": "20251231",
+    "published": "2026-04-30",
+    "available_at": "2026-05-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2026-04-30/1225264979.PDF",
+    "pdf": "C:\\Users\\51076\\Documents\\ChatGPT\\SCRATCH\\missing-data-audit-20261017\\verification-documents\\1225264979.pdf",
+    "sha256": "d7e2e02f5f14600a176759eb894e955aaf8f73eed7738eb6ae89e322b644f9fd",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603506",
+    "announcement_id": "1218187053",
+    "title": "南都物业服务集团股份有限公司2023年第三季度报告",
+    "report_period": "20230930",
+    "published": "2023-10-28",
+    "available_at": "2023-10-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-10-28/1218187053.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603506\\1218187053.pdf",
+    "sha256": "53cfddddb36529d32156554428f91f5a9f6ab1e0b5d233fd45fdafa6cb9bb501",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603558",
+    "announcement_id": "1221488678",
+    "title": " 健盛集团2024年第三季度报告",
+    "report_period": "20240930",
+    "published": "2024-10-24",
+    "available_at": "2024-10-25T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2024-10-24/1221488678.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603558\\1221488678.pdf",
+    "sha256": "0e62c68e678319582c423b8b81e7521daaffbdd03a01ecd89862a8aeb64b53ee",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603679",
+    "announcement_id": "1218134451",
+    "title": "四川华体照明科技股份有限公司2023年第三季度报告",
+    "report_period": "20230930",
+    "published": "2023-10-25",
+    "available_at": "2023-10-26T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-10-25/1218134451.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603679\\1218134451.pdf",
+    "sha256": "5758812c036e1820c6c904a83f56121ac73bd1c9e788293ab5d619120154888f",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603682",
+    "announcement_id": "1211418584",
+    "title": "上海锦和商业经营管理股份有限公司2021年第三季度报告",
+    "report_period": "20210930",
+    "published": "2021-10-29",
+    "available_at": "2021-10-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-10-29/1211418584.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603682\\1211418584.pdf",
+    "sha256": "b05eacb1298c39a9e5a63de0430696581f9505fd59a5364263f427a57cabec86",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603682",
+    "announcement_id": "1218199571",
+    "title": "上海锦和商业经营管理股份有限公司2023年第三季度报告",
+    "report_period": "20230930",
+    "published": "2023-10-31",
+    "available_at": "2023-11-01T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-10-31/1218199571.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603682\\1218199571.pdf",
+    "sha256": "8999f80db0d2a34aaa5b7ea7d178a1d0cdd168f6041b01b255aaf0276f2e195c",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603696",
+    "announcement_id": "1214390223",
+    "title": "安记食品2022年半年报全文",
+    "report_period": "20220630",
+    "published": "2022-08-25",
+    "available_at": "2022-08-26T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-08-25/1214390223.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\runs\\data-recovery-01\\interim-originals\\1214390223.pdf",
+    "sha256": "e380173ebf97a41067bb30c0f0a04011b64447e8cdf167468ec67ba824f1a74a",
+    "requested_fields": [
+      "profit_ytd"
+    ],
+    "retrieved_at": "2026-10-17T07:45:09.483197+00:00"
+  },
+  {
+    "asset": "603776",
+    "announcement_id": "1211421033",
+    "title": "永安行：2021 年第三季度报告",
+    "report_period": "20210930",
+    "published": "2021-10-29",
+    "available_at": "2021-10-30T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-10-29/1211421033.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\runs\\data-recovery-01\\interim-originals\\1211421033.pdf",
+    "sha256": "7295dc1cac0b8bd92b1cffe6fd92a55c1c5093ad2157200e9803e638c8cf8a8f",
+    "requested_fields": [
+      "profit_ytd"
+    ],
+    "retrieved_at": "2026-10-17T07:45:11.333956+00:00"
+  },
+  {
+    "asset": "603855",
+    "announcement_id": "1214409820",
+    "title": "2022年半年度报告",
+    "report_period": "20220630",
+    "published": "2022-08-26",
+    "available_at": "2022-08-27T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-08-26/1214409820.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603855\\1214409820.pdf",
+    "sha256": "bad7a0f23f8db87988a7c2d93def59ec9d24c086389f7fdbeb7841e58e3b57c0",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603855",
+    "announcement_id": "1214409819",
+    "title": "2022年半年度报告",
+    "report_period": "20220630",
+    "published": "2022-08-26",
+    "available_at": "2022-08-27T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2022-08-26/1214409819.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603855\\1214409819.pdf",
+    "sha256": "7c4a8c1473246c7392d14e8ac11bfad4c2b0a2c6f03cfa13330db014b917c09e",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603860",
+    "announcement_id": "1211434691",
+    "title": "中公高科2021年第三季度报告",
+    "report_period": "20210930",
+    "published": "2021-10-30",
+    "available_at": "2021-10-31T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2021-10-30/1211434691.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\inputs\\old\\raw\\filings\\603860\\1211434691.pdf",
+    "sha256": "388369a2e34b00e0b269714a0bcb26e12764a44b941ded7ee579faacdebfb2ea",
+    "requested_fields": [
+      "profit_ytd"
+    ]
+  },
+  {
+    "asset": "603950",
+    "announcement_id": "1217664076",
+    "title": "长源东谷2023年半年度报告",
+    "report_period": "20230630",
+    "published": "2023-08-28",
+    "available_at": "2023-08-29T00:00:00+08:00",
+    "url": "https://static.cninfo.com.cn/finalpage/2023-08-28/1217664076.PDF",
+    "pdf": "D:\\QuantData\\barra-200-v3\\runs\\data-recovery-01\\interim-originals\\1217664076.pdf",
+    "sha256": "794c110c94d5f0b95aa534ea740b47d33664079ef2b458a4e3c9ad6d6c04cb87",
+    "requested_fields": [
+      "profit_ytd"
+    ],
+    "retrieved_at": "2026-10-17T07:45:13.357814+00:00"
+  }
+]

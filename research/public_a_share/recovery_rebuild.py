@@ -177,7 +177,8 @@ def reviewed_comparatives(path):
     return rows
 
 
-def rebuild(base, run, cache, audit, target=None, corrections=None, comparatives=None):
+def rebuild(base, run, cache, audit, target=None, corrections=None, comparatives=None,
+            additional_cache=None, supplemental=None):
     protocol = json.loads((run / "protocol.json").read_text(encoding="utf-8"))
     for item in protocol["inputs"]:
         if digest(item["path"]) != item["sha256"]:
@@ -191,10 +192,21 @@ def rebuild(base, run, cache, audit, target=None, corrections=None, comparatives
     evaluation = evaluation[(evaluation >= protocol["start"]) & (evaluation <= protocol["end"])]
     facts = pd.read_parquet(base / "runs/main/financial-vintages.parquet")
     additions, documents = recovered_rows(cache)
+    if additional_cache:
+        more, extra_documents = recovered_rows(additional_cache)
+        additions = pd.concat([additions, more], ignore_index=True)
+        documents.extend(extra_documents)
     reviewed = json.loads(corrections.read_text(encoding="utf-8")) if corrections else []
     extra = reviewed_source_rows(facts, reviewed)
     if comparatives:
         extra.extend(reviewed_comparatives(comparatives))
+    if supplemental:
+        bundle = json.loads(supplemental.read_text(encoding="utf-8"))
+        for source in bundle["sources"]:
+            if digest(source["path"]) != source["sha256"]:
+                raise ValueError("supplemental_source_changed")
+        extra.extend(bundle["facts"])
+        documents.extend(bundle["documents"])
     if extra:
         additions = pd.concat([additions, pd.DataFrame(extra)], ignore_index=True)
     merged, decisions = merge_evidence(facts, additions, reviewed_corrections=reviewed)
@@ -296,6 +308,9 @@ def rebuild(base, run, cache, audit, target=None, corrections=None, comparatives
     )
     summary = {
         "schema": "recovered-input-overlay/1",
+        "producer_sha256": digest(__file__),
+        "supplemental_input": ({"path": str(supplemental), "sha256": digest(supplemental)}
+                               if supplemental else None),
         "default_model_changed": False,
         "baseline_panel": str(base / "runs/main/panel.pkl"),
         "baseline_sha256": digest(base / "runs/main/panel.pkl"),
@@ -326,5 +341,8 @@ if __name__ == "__main__":
     parser.add_argument("--target", type=Path)
     parser.add_argument("--corrections", type=Path)
     parser.add_argument("--comparatives", type=Path)
+    parser.add_argument("--additional-cache", type=Path)
+    parser.add_argument("--supplemental", type=Path)
     args = parser.parse_args()
-    rebuild(args.base, args.run, args.cache, args.audit, args.target, args.corrections, args.comparatives)
+    rebuild(args.base, args.run, args.cache, args.audit, args.target, args.corrections,
+            args.comparatives, args.additional_cache, args.supplemental)
