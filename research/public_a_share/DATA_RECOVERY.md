@@ -84,14 +84,21 @@ explicit paths to the preserved archive and prior audit:
 python recovery_inventory.py --base BASE --audit AUDIT --out NEW_RUN
 python recovery_collect.py --base BASE --out NEW_RUN
 python recovery_extract.py --inventory NEW_RUN/recovery-inventory.csv --cache NEW_RUN/extract
+python recovery_extract.py --inventory ANNUAL_FOLLOWUP_INVENTORY --cache NEW_RUN/annual-followup
 python interim_table_recovery.py --inventory data_recovery_configs/interim-inventory.json --out NEW_RUN/interim-geometry.json
 python recovery_supplemental.py --geometry NEW_RUN/interim-geometry.json --reviews data_recovery_configs/reviewed-interim-v3.json --target NEW_RUN/supplemental.json
-python recovery_rebuild.py --base BASE --run NEW_RUN --cache NEW_RUN/extract --audit AUDIT --target NEW_RUN/rebuilt --corrections data_recovery_configs/reviewed-corrections.json --comparatives data_recovery_configs/reviewed-comparatives.json
+python recovery_rebuild.py --base BASE --run NEW_RUN --cache NEW_RUN/extract --additional-cache NEW_RUN/annual-followup --supplemental NEW_RUN/supplemental.json --audit AUDIT --target NEW_RUN/rebuilt --corrections data_recovery_configs/reviewed-corrections.json --comparatives data_recovery_configs/reviewed-comparatives.json
 python recovery_lifecycle.py --base BASE --out NEW_RUN/lifecycle
 python recovery_lifecycle.py --base BASE --out NEW_RUN/lifecycle --events data_recovery_configs/lifecycle-events.json
 python recovery_imputation.py --base BASE --recovered NEW_RUN/rebuilt --out NEW_RUN/imputation
 python recovery_risk_validation.py --base BASE --recovered NEW_RUN/rebuilt --out NEW_RUN/risk-validation
 ```
+
+`ANNUAL_FOLLOWUP_INVENTORY` is the archived `annual-followup-inventory.csv`
+covering the reviewed 002255 annual reports. Inventory and reviewed evidence paths
+refer to preserved originals; relocate those paths explicitly when restoring on
+another machine, and require their recorded hashes to match. Do not substitute
+newly downloaded revisions under an old observation date.
 
 `recovery_account_inputs.py` rebuilds the six frozen generator combinations with
 restored observations. Every original decision date retains the exact original

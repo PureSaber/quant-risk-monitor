@@ -97,7 +97,30 @@ commands and admission rules. The production source/default config diff is empty
 
 ## Account acceptance
 
-The final 62-scenario replay uses `account-inputs-v5`, `account-coverage-v5` and
-the strict share rules. Its acceptance is pending in this draft; no incomplete
-replay is labelled a completed account validation. Superseded intermediate
-replays remain preserved and are excluded from final before/after claims.
+All 62 final restored-observation scenarios completed computation, and all 62
+passed independent exact-money, journal, integer-lot and factor-risk checks.
+The maximum independent normalized constraint residual was
+9.86752230273e-08, below the 1e-7 acceptance limit.
+Original candidate sets, benchmarks, costs, constraints and strict entitlement
+rules are preserved; imputation candidates were not used for account decisions.
+
+| Measure | Original strict run | Restored observations |
+|---|---:|---:|
+| Accounts reaching the research endpoint | 31 | 32 |
+| Published executable targets | 1548 | 1519 |
+| Accounts publishing zero targets | 26 | 26 |
+
+Completing computation does not mean completing the full research horizon or
+succeeding at every rebalance. Strict entitlement stops and infeasible original
+constraints are retained. Different stopping dates are not treated as comparable
+return improvements. `account-comparison.csv` includes every scenario, effective
+rebalance rates, longest no-target intervals, costs, drawdown, tracking error,
+timing and peak memory. Full failure and stop evidence remains in the recovery
+archive, together with input hashes and independent account checks.
+
+Status counts: `{"completed": 32, "stopped_on_execution_input": 30}`.
+Decision failure counts: `{"infeasible": 5519, "input_unavailable": 1257, "repair_failed": 41}`.
+
+Superseded intermediate replays remain preserved and are excluded from these
+final comparisons. This is retrospective engineering validation, not permission
+to replace default v1, modify frozen accounts or deploy a service.
