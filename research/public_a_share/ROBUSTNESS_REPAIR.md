@@ -32,6 +32,18 @@ Only labels matured by the end of 2023 select a candidate. All 2024–2026
 results are retrospective; block resampling uses 5,000 draws, ten dates per
 block and Bonferroni intervals. There are no new independent forward windows.
 
+`robustness_carry_sensitivity.py --source ... --coverage ... --out ...`
+artificially masks five observed assets per date with a fixed seed. The 1/3/5
+session stale-exposure comparisons use unchanged returns and covariance. This
+is sensitivity evidence, not observed truth for genuinely missing exposures.
+
+`robustness_field_estimator.py --baseline <original-panel.pkl> --source ...
+--out ...` crosses original/restored/four leave-one-field-out panels with OLS
+and the previously frozen enhanced estimator. It uses a shared causal daily
+regression sample and common complete residual histories. It does not select
+new parameters or replace the 22-estimator study. Active-cap portfolios are
+omitted because they are scalar duplicates of the capitalization direction.
+
 Acceptance separates coverage gains, constraint feasibility, integer search
 success, exact ledger validity and risk forecast quality. A lower loss without
 adequate calibration/coverage and independent evidence does not authorize model
