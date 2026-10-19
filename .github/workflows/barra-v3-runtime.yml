@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Ordinary installation from the exact study lock
-        run: python -m pip install --no-deps --requirement research/public_a_share/requirements-failure-repair.lock
+        run: python -m pip install --no-deps --requirement research/public_a_share/requirements-robustness-repair.lock
       - name: Verify exact-lock dependency consistency
         run: python -m pip check
       - name: Install the checked-out package without changing dependencies
