@@ -558,6 +558,12 @@ def _run_owned(
             raise ValueError("partial-history coverage binding changed")
         if digest(Path(__file__).with_name("repair_risk_coverage.py")) != binding["producer"]:
             raise ValueError("coverage producer changed; regenerate the versioned cache")
+        for name, sha in binding.get("policy_modules", {}).items():
+            if Path(name).name != name or digest(Path(__file__).with_name(name)) != sha:
+                raise ValueError("held-risk policy code differs from cache binding")
+        evidence = binding.get("lifecycle_events")
+        if evidence and digest(Path(evidence["path"])) != evidence["sha256"]:
+            raise ValueError("lifecycle evidence differs from coverage binding")
         for name, sha in binding["code_modules"].items():
             if digest(importlib.import_module(name).__file__) != sha:
                 raise ValueError("coverage estimation code differs from cache binding")

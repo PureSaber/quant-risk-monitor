@@ -23,7 +23,17 @@ from study_v3_archive import digest, write_json  # noqa: E402
 from study_v3_risk import model_definitions  # noqa: E402
 
 
-def extend_day(day, entry, panel, histories, definitions, statuses):
+def extend_day(
+    day,
+    entry,
+    panel,
+    histories,
+    definitions,
+    statuses,
+    *,
+    lifecycle=None,
+    held_exposure_carry_sessions=0,
+):
     assets = list(entry["assets"])
     result = {"assets": assets, "benchmark": entry["benchmark"].copy(), "models": {}}
     i = panel["dates"].get_loc(day)
@@ -57,10 +67,20 @@ def extend_day(day, entry, panel, histories, definitions, statuses):
         }
         for asset in sorted(set(panel["assets"]) - set(assets)):
             info = {"status": "unavailable", "asset": asset, "proxy": False}
+            state = None if lifecycle is None else lifecycle.at[day, asset]
+            info["lifecycle_state"] = state
             marks = panel["prices"]["close"].loc[:day, asset].dropna()
             info["valuation_date"] = str(marks.index[-1].date()) if len(marks) else None
             info["valuation_source"] = "archived_raw_close; stale values are not returns"
             exposure = None
+            if state == "exited_a_share":
+                info.update(
+                    reason="exited_a_share_without_current_risk_evidence",
+                    recovery_condition="evidenced post-exit valuation and risk model",
+                    trading_status="exited_a_share",
+                )
+                coverage[asset] = info
+                continue
             if asset in snapshot.values.index:
                 exposure = snapshot.values.loc[[asset]]
                 info.update(exposure_date=str(day.date()), exposure_status="direct")
@@ -78,8 +98,22 @@ def extend_day(day, entry, panel, histories, definitions, statuses):
                             source="frozen_PIT_exposure_and_archived_daily_status",
                         )
                         break
+            elif held_exposure_carry_sessions:
+                from held_risk_policy import held_exposure_candidate
+
+                exposure, extra = held_exposure_candidate(
+                    day,
+                    asset,
+                    panel,
+                    snapshots,
+                    statuses,
+                    max_sessions=held_exposure_carry_sessions,
+                )
+                info.update(extra)
+                if exposure is not None:
+                    previous = pd.Timestamp(info["exposure_date"])
             if exposure is None:
-                info["reason"] = "missing_reliable_current_exposure"
+                info.setdefault("reason", "missing_reliable_current_exposure")
             elif set(exposure.columns) != set(data["exposures"].columns):
                 info["reason"] = "factor_basis_changed"
             elif asset not in residuals:
@@ -129,7 +163,9 @@ def extend_day(day, entry, panel, histories, definitions, statuses):
             "exposures": x,
             "D_daily_rate": d.to_numpy(),
             "coverage": coverage,
-            "coverage_version": "calendar-partial-v1",
+            "coverage_version": "held-coverage-v2"
+            if lifecycle is not None or held_exposure_carry_sessions
+            else "calendar-partial-v1",
         }
         records.extend(
             {"date": str(day.date()), "model": model, "asset": a, **info}
@@ -138,7 +174,9 @@ def extend_day(day, entry, panel, histories, definitions, statuses):
     return result, records
 
 
-def run(source, out):
+def run(source, out, *, lifecycle_events=None, held_exposure_carry_sessions=0):
+    if type(held_exposure_carry_sessions) is not int or not 0 <= held_exposure_carry_sessions <= 5:
+        raise ValueError("held exposure carry must be between 0 and 5 sessions")
     out.mkdir(parents=True, exist_ok=True)
     target = out / "portfolio-risk-models.pkl"
     if target.exists():
@@ -150,10 +188,24 @@ def run(source, out):
     with (source / "portfolio-risk-models.pkl").open("rb") as stream:
         original = pickle.load(stream)
     statuses = pd.read_parquet(source / "source-trading-status.parquet")
+    lifecycle = None
+    if lifecycle_events is not None:
+        from recovery_lifecycle import state_overlay
+
+        lifecycle = state_overlay(statuses, json.loads(lifecycle_events.read_text(encoding="utf8")))
     definitions = model_definitions(json.loads((source / "protocol.json").read_text()))
     models, records = {}, []
     for day, entry in original.items():
-        models[day], rows = extend_day(day, entry, panel, histories, definitions, statuses)
+        models[day], rows = extend_day(
+            day,
+            entry,
+            panel,
+            histories,
+            definitions,
+            statuses,
+            lifecycle=lifecycle,
+            held_exposure_carry_sessions=held_exposure_carry_sessions,
+        )
         records.extend(rows)
         print(
             json.dumps(
@@ -175,7 +227,13 @@ def run(source, out):
     write_json(
         out / "coverage-binding.json",
         {
-            "version": "calendar-partial-v1",
+            "version": "held-coverage-v2"
+            if lifecycle_events or held_exposure_carry_sessions
+            else "calendar-partial-v1",
+            "held_exposure_carry_sessions": held_exposure_carry_sessions,
+            "lifecycle_events": None
+            if lifecycle_events is None
+            else {"path": str(lifecycle_events), "sha256": digest(lifecycle_events)},
             "source": str(source),
             "inputs": {
                 name: digest(source / name)
@@ -187,6 +245,10 @@ def run(source, out):
                 )
             },
             "producer": digest(__file__),
+            "policy_modules": {
+                name: digest(Path(__file__).with_name(name))
+                for name in ("held_risk_policy.py", "recovery_lifecycle.py")
+            },
             "code_modules": {
                 module.__name__: digest(module.__file__)
                 for module in (
@@ -209,5 +271,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("--lifecycle-events", type=Path)
+    parser.add_argument("--held-exposure-carry-sessions", type=int, default=0)
     args = parser.parse_args()
-    run(args.source, args.out)
+    run(
+        args.source,
+        args.out,
+        lifecycle_events=args.lifecycle_events,
+        held_exposure_carry_sessions=args.held_exposure_carry_sessions,
+    )
