@@ -1,0 +1,54 @@
+{
+  "schema": "restored-observation-account-audit/1",
+  "producer_sha256": "71bfc95a759082d73949409bc3f2c8dd6db0998ea95a72e23402d926e91f2dda",
+  "coverage_binding": {
+    "version": "calendar-partial-v1",
+    "source": "..\\account-inputs-v5",
+    "inputs": {
+      "panel.pkl": "ee338c66577456bb9bbd7ef2c9e9f290ca7e63d56f94baee52f65972f6b6ef40",
+      "histories.pkl": "c5dc9ca596f2ee034bf8e337b8572403c3d7d821336e91344bf510c907febeb5",
+      "portfolio-risk-models.pkl": "0a68007c247d5740bd80247bb87d0b9ec77ba5a70008838562336465df058075",
+      "source-trading-status.parquet": "0f44929af290b55b623799e3c16d132fad38a71ebe148e53496c9add4c519488"
+    },
+    "producer": "a35ae946a6372891c72777d872c8ddbbe1188bdd17943d327686cccb04ff486b",
+    "code_modules": {
+      "quant_risk_monitor.coverage": "3173542e103bb9b99921781f1b0a61a1717d58b8c9209faba2cce392bf594fcf",
+      "quant_risk_monitor.risk_estimators": "e79273423265b83630bc29efee0c7840a65861f11e19df816314c0da67b391bf"
+    },
+    "output": "924376340ee14725f70756bd3922df6acd93033489de88e0b3acfe200a98e2fd",
+    "benchmark_preserved": true,
+    "investment_pool_preserved": true,
+    "complete_history_numerics_preserved": true,
+    "default_model_changed": false,
+    "stale_exposures": "explicit confirmed-suspension estimate, never observed return",
+    "industry_proxy_used": false
+  },
+  "scenarios": 62,
+  "independently_verified_accounts": 62,
+  "published_targets": 1519,
+  "old_published_targets": 1548,
+  "complete_horizon": 32,
+  "old_complete_horizon": 31,
+  "zero_target_scenarios": 26,
+  "old_zero_target_scenarios": 26,
+  "status_counts": {
+    "stopped_on_execution_input": 30,
+    "completed": 32
+  },
+  "failure_counts": {
+    "input_unavailable": 1257,
+    "infeasible": 5519,
+    "repair_failed": 41
+  },
+  "maximum_independent_residual": 9.867522302725584e-08,
+  "original_constraints_preserved": true,
+  "imputation_used_for_account_decisions": false,
+  "default_model_changed": false,
+  "model_promotion": "not_passed",
+  "outputs": {
+    "account-comparison.csv": "803ace9647bf57a808278b874f2334227eedd18a6ae8b64fc5decf9f768d12ef",
+    "account-failures.csv": "ca7d733b51277f34debdd627739db62c963cc43b3c7b00bb13fe0cd28525a09f",
+    "account-stops.json": "3e52bec9b7d5b73ad45643457c6f00cafad23165de15c1128fb03b5f09f72811",
+    "account-independent-checks.json": "12266b4e7656df2990958c3b39d61bd4d5bf1b41da90974ac95558bf2dc07190"
+  }
+}
