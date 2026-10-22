@@ -1,0 +1,39 @@
+{
+  "baseline_sha256_unchanged": true,
+  "finite_values_and_axes_checked": [
+    {
+      "field": "book_to_price",
+      "finite_observed_cells": 175761,
+      "no_lost_cells": true
+    },
+    {
+      "field": "earnings_yield_ttm",
+      "finite_observed_cells": 175624,
+      "no_lost_cells": true
+    },
+    {
+      "field": "earnings_growth_yoy",
+      "finite_observed_cells": 178455,
+      "no_lost_cells": true
+    },
+    {
+      "field": "book_leverage",
+      "finite_observed_cells": 175938,
+      "no_lost_cells": true
+    },
+    {
+      "field": "revenue_growth_3y",
+      "finite_observed_cells": 177834,
+      "no_lost_cells": true
+    },
+    {
+      "field": "profit_growth_3y",
+      "finite_observed_cells": 177592,
+      "no_lost_cells": true
+    }
+  ],
+  "unique_fact_vintages": 32193,
+  "new_original_vintages": 1044,
+  "reviewed_corrections": 18,
+  "independent_counting_method": "numpy finite masks on original and restored matrices; source SHA-256 rechecked"
+}
