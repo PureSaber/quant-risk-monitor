@@ -1,0 +1,168 @@
+{
+  "completed_scenarios": 62,
+  "missing_scenarios": [],
+  "counts": {
+    "baseline": {
+      "published": 1519,
+      "input_unavailable": 1257,
+      "infeasible": 5519,
+      "repair_failed": 41
+    },
+    "search": {
+      "published": 1607,
+      "input_unavailable": 671,
+      "infeasible": 5465,
+      "repair_failed": 25
+    },
+    "held": {
+      "published": 1627,
+      "input_unavailable": 651,
+      "infeasible": 5465,
+      "repair_failed": 25
+    }
+  },
+  "new_replays": 72,
+  "certified_reused_scenarios": 26,
+  "search_target_delta": 88,
+  "coverage_target_delta": 20,
+  "same_endpoints": 56,
+  "common_evaluated_decisions": 7768,
+  "common_counts": {
+    "baseline": {
+      "infeasible": 5421,
+      "published": 1519,
+      "input_unavailable": 787,
+      "repair_failed": 41
+    },
+    "search": {
+      "infeasible": 5465,
+      "published": 1607,
+      "input_unavailable": 671,
+      "repair_failed": 25
+    },
+    "held": {
+      "infeasible": 5465,
+      "published": 1627,
+      "input_unavailable": 651,
+      "repair_failed": 25
+    }
+  },
+  "common_search_target_delta": 88,
+  "common_coverage_target_delta": 20,
+  "full_horizon": {
+    "baseline": 32,
+    "search": 27,
+    "held": 27
+  },
+  "paired_transitions": {
+    "baseline_to_search": [
+      {
+        "baseline": "infeasible",
+        "search": "infeasible",
+        "count": 5420
+      },
+      {
+        "baseline": "infeasible",
+        "search": "repair_failed",
+        "count": 1
+      },
+      {
+        "baseline": "input_unavailable",
+        "search": "infeasible",
+        "count": 44
+      },
+      {
+        "baseline": "input_unavailable",
+        "search": "input_unavailable",
+        "count": 671
+      },
+      {
+        "baseline": "input_unavailable",
+        "search": "published",
+        "count": 70
+      },
+      {
+        "baseline": "input_unavailable",
+        "search": "repair_failed",
+        "count": 2
+      },
+      {
+        "baseline": "published",
+        "search": "published",
+        "count": 1516
+      },
+      {
+        "baseline": "published",
+        "search": "repair_failed",
+        "count": 3
+      },
+      {
+        "baseline": "repair_failed",
+        "search": "infeasible",
+        "count": 1
+      },
+      {
+        "baseline": "repair_failed",
+        "search": "published",
+        "count": 21
+      },
+      {
+        "baseline": "repair_failed",
+        "search": "repair_failed",
+        "count": 19
+      }
+    ],
+    "search_to_held": [
+      {
+        "search": "infeasible",
+        "held": "infeasible",
+        "count": 5460
+      },
+      {
+        "search": "infeasible",
+        "held": "input_unavailable",
+        "count": 3
+      },
+      {
+        "search": "infeasible",
+        "held": "repair_failed",
+        "count": 2
+      },
+      {
+        "search": "input_unavailable",
+        "held": "infeasible",
+        "count": 5
+      },
+      {
+        "search": "input_unavailable",
+        "held": "input_unavailable",
+        "count": 638
+      },
+      {
+        "search": "input_unavailable",
+        "held": "published",
+        "count": 28
+      },
+      {
+        "search": "published",
+        "held": "input_unavailable",
+        "count": 10
+      },
+      {
+        "search": "published",
+        "held": "published",
+        "count": 1597
+      },
+      {
+        "search": "repair_failed",
+        "held": "published",
+        "count": 2
+      },
+      {
+        "search": "repair_failed",
+        "held": "repair_failed",
+        "count": 23
+      }
+    ]
+  }
+}

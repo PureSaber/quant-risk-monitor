@@ -1,0 +1,154 @@
+{
+  "schema": "quant.pr37-scope-decision/v1",
+  "reviewed_at": "2026-10-22T10:24:14.627960+00:00",
+  "decision": "close_unmerged_preserve_research_reopen_on_demonstrated_need",
+  "use_case": "Personal investment decision support; current implemented pilot is four-ETF allocation.",
+  "pr_head": "ea8abbea34fef37c8e1e8332a301d56d109a7755",
+  "current_main": "e0e5631379cbdb6819a9622110e9f1c388324923",
+  "incremental_diff_after_already_merged_pr34": {
+    "files": 11,
+    "insertions": 1022,
+    "deletions": 8
+  },
+  "scenarios": 62,
+  "recorded_campaign_counts_recomputed_from_csv": {
+    "baseline": {
+      "published": 1519,
+      "full_horizon": 32
+    },
+    "search": {
+      "published": 1607,
+      "full_horizon": 27
+    },
+    "held": {
+      "published": 1627,
+      "full_horizon": 27
+    }
+  },
+  "same_observation_dates": 7768,
+  "search_to_held_transitions": [
+    {
+      "search": "infeasible",
+      "held": "infeasible",
+      "count": 5460
+    },
+    {
+      "search": "infeasible",
+      "held": "input_unavailable",
+      "count": 3
+    },
+    {
+      "search": "infeasible",
+      "held": "repair_failed",
+      "count": 2
+    },
+    {
+      "search": "input_unavailable",
+      "held": "infeasible",
+      "count": 5
+    },
+    {
+      "search": "input_unavailable",
+      "held": "input_unavailable",
+      "count": 638
+    },
+    {
+      "search": "input_unavailable",
+      "held": "published",
+      "count": 28
+    },
+    {
+      "search": "published",
+      "held": "input_unavailable",
+      "count": 10
+    },
+    {
+      "search": "published",
+      "held": "published",
+      "count": 1597
+    },
+    {
+      "search": "repair_failed",
+      "held": "published",
+      "count": 2
+    },
+    {
+      "search": "repair_failed",
+      "held": "repair_failed",
+      "count": 23
+    }
+  ],
+  "recorded_audits_reconciled": {
+    "count": 72,
+    "published_targets": 3234,
+    "all_exact_journals_balanced": true
+  },
+  "carry_five_session_sensitivity": [
+    {
+      "model": "enhanced_s0.1_f90_d60_p10",
+      "mean_loss_delta": 0.00031333564900714705,
+      "interval": [
+        -0.0002926768579397448,
+        0.0008397780371932365
+      ]
+    },
+    {
+      "model": "legacy_enhanced",
+      "mean_loss_delta": 0.0002690967088232066,
+      "interval": [
+        -0.0004174312890443402,
+        0.0008246171203518087
+      ]
+    },
+    {
+      "model": "legacy_ols",
+      "mean_loss_delta": 0.0004187511761173024,
+      "interval": [
+        -0.00027196616016207843,
+        0.0010347512193620335
+      ]
+    },
+    {
+      "model": "repaired_ols",
+      "mean_loss_delta": 0.0005093767638283486,
+      "interval": [
+        -0.00017544937303672206,
+        0.0011209913487925606
+      ]
+    },
+    {
+      "model": "residual_enhanced",
+      "mean_loss_delta": 0.00039202983689139436,
+      "interval": [
+        -0.00023852704821370564,
+        0.0009707583563335759
+      ]
+    },
+    {
+      "model": "residual_ols",
+      "mean_loss_delta": 0.0005431538364370869,
+      "interval": [
+        -0.00014868516183053806,
+        0.0011579548511810912
+      ]
+    }
+  ],
+  "sensitivity_scope": "Artificially masked known exposures, not recovered truth for genuinely missing exposures; lower QLIKE is better.",
+  "new_forward_evidence": false,
+  "default_model_promoted": false,
+  "research_rerun_in_this_review": false,
+  "verification_scope": "Reconciled saved CSVs and 72 audit receipts, verified 13 original-input hashes, and verified every archived member; did not rerun the model study or certify investment use.",
+  "archive": {
+    "members": 3607,
+    "uncompressed_bytes": 1428273512,
+    "zip_bytes": 785895986,
+    "zip_sha256": "b49970e5a23edb405ecfed6c355a2106cc7b36e09e5abe3f99443007cace2e27",
+    "manifest_sha256": "eb15ba7104eaefc3f4f79e6da32b8e0b7449201e98bc72c56b1ba47ccdf39ac0",
+    "original_inputs_verified": 13
+  },
+  "reopen_conditions": [
+    "A concrete single-stock portfolio decision is blocked by a documented exposure gap that this policy actually addresses.",
+    "A newly registered comparison measures net decision benefit, calibration, uncertainty and operational cost against simpler handling.",
+    "New independent evidence or a demonstrated defect invalidating the existing result warrants work; current promotion requirements remain in force."
+  ]
+}
